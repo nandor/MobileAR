@@ -7,24 +7,35 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A5B46A11BCF163B003F87BE /* ARMainViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B469F1BCF163B003F87BE /* ARMainViewController.mm */; settings = {ASSET_TAGS = (); }; };
+		7A5B46A41BCF169F003F87BE /* ARAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46A31BCF169F003F87BE /* ARAppDelegate.mm */; settings = {ASSET_TAGS = (); }; };
+		7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */; };
+		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
+		7A5B46AC1BCFA8F2003F87BE /* ARShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */; settings = {ASSET_TAGS = (); }; };
+		7A5B46AE1BCFAB1D003F87BE /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */; };
+		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
+		7A5B46B31BCFBBE1003F87BE /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A5B46B21BCFBBE1003F87BE /* Default-568h@2x.png */; settings = {ASSET_TAGS = (); }; };
+		7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */; settings = {ASSET_TAGS = (); }; };
 		7AFCF83D1BCE40CB00A108F9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFCF83C1BCE40CB00A108F9 /* main.m */; };
-		7AFCF8401BCE40CB00A108F9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFCF83F1BCE40CB00A108F9 /* AppDelegate.m */; };
-		7AFCF8431BCE40CB00A108F9 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFCF8421BCE40CB00A108F9 /* ViewController.m */; };
-		7AFCF8461BCE40CB00A108F9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8441BCE40CB00A108F9 /* Main.storyboard */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
-		7AFCF84B1BCE40CB00A108F9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8491BCE40CB00A108F9 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7A5B469F1BCF163B003F87BE /* ARMainViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARMainViewController.mm; sourceTree = "<group>"; };
+		7A5B46A21BCF169F003F87BE /* ARAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARAppDelegate.h; sourceTree = "<group>"; };
+		7A5B46A31BCF169F003F87BE /* ARAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARAppDelegate.mm; sourceTree = "<group>"; };
+		7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARShader.metal; sourceTree = "<group>"; };
+		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		7A5B46AF1BCFBB83003F87BE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
+		7A5B46B11BCFBBA1003F87BE /* UIImage+cvMat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIImage+cvMat.h"; sourceTree = "<group>"; };
+		7A5B46B21BCFBBE1003F87BE /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "UIImage+cvMat.mm"; sourceTree = "<group>"; };
 		7AFCF8381BCE40CB00A108F9 /* MobileAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFCF83C1BCE40CB00A108F9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		7AFCF83E1BCE40CB00A108F9 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		7AFCF83F1BCE40CB00A108F9 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		7AFCF8411BCE40CB00A108F9 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		7AFCF8421BCE40CB00A108F9 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		7AFCF8451BCE40CB00A108F9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		7AFCF8411BCE40CB00A108F9 /* ARMainViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ARMainViewController.h; sourceTree = "<group>"; };
 		7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		7AFCF84A1BCE40CB00A108F9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7AFCF84C1BCE40CB00A108F9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -33,6 +44,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */,
+				7A5B46AE1BCFAB1D003F87BE /* MetalKit.framework in Frameworks */,
+				7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */,
+				7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,6 +57,11 @@
 		7AFCF82F1BCE40CB00A108F9 = {
 			isa = PBXGroup;
 			children = (
+				7A5B46B21BCFBBE1003F87BE /* Default-568h@2x.png */,
+				7A5B46AF1BCFBB83003F87BE /* opencv2.framework */,
+				7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */,
+				7A5B46A91BCF2247003F87BE /* CoreMedia.framework */,
+				7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */,
 				7AFCF83A1BCE40CB00A108F9 /* MobileAR */,
 				7AFCF8391BCE40CB00A108F9 /* Products */,
 			);
@@ -58,25 +78,18 @@
 		7AFCF83A1BCE40CB00A108F9 /* MobileAR */ = {
 			isa = PBXGroup;
 			children = (
-				7AFCF83E1BCE40CB00A108F9 /* AppDelegate.h */,
-				7AFCF83F1BCE40CB00A108F9 /* AppDelegate.m */,
-				7AFCF8411BCE40CB00A108F9 /* ViewController.h */,
-				7AFCF8421BCE40CB00A108F9 /* ViewController.m */,
-				7AFCF8441BCE40CB00A108F9 /* Main.storyboard */,
-				7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */,
-				7AFCF8491BCE40CB00A108F9 /* LaunchScreen.storyboard */,
+				7A5B46A21BCF169F003F87BE /* ARAppDelegate.h */,
+				7A5B46A31BCF169F003F87BE /* ARAppDelegate.mm */,
+				7A5B469F1BCF163B003F87BE /* ARMainViewController.mm */,
+				7AFCF8411BCE40CB00A108F9 /* ARMainViewController.h */,
+				7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */,
+				7A5B46B11BCFBBA1003F87BE /* UIImage+cvMat.h */,
+				7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */,
+				7AFCF83C1BCE40CB00A108F9 /* main.m */,
 				7AFCF84C1BCE40CB00A108F9 /* Info.plist */,
-				7AFCF83B1BCE40CB00A108F9 /* Supporting Files */,
+				7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */,
 			);
 			path = MobileAR;
-			sourceTree = "<group>";
-		};
-		7AFCF83B1BCE40CB00A108F9 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				7AFCF83C1BCE40CB00A108F9 /* main.m */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,9 +149,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AFCF84B1BCE40CB00A108F9 /* LaunchScreen.storyboard in Resources */,
 				7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */,
-				7AFCF8461BCE40CB00A108F9 /* Main.storyboard in Resources */,
+				7A5B46B31BCFBBE1003F87BE /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,32 +161,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AFCF8431BCE40CB00A108F9 /* ViewController.m in Sources */,
-				7AFCF8401BCE40CB00A108F9 /* AppDelegate.m in Sources */,
+				7A5B46A11BCF163B003F87BE /* ARMainViewController.mm in Sources */,
+				7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */,
+				7A5B46AC1BCFA8F2003F87BE /* ARShader.metal in Sources */,
+				7A5B46A41BCF169F003F87BE /* ARAppDelegate.mm in Sources */,
 				7AFCF83D1BCE40CB00A108F9 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		7AFCF8441BCE40CB00A108F9 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				7AFCF8451BCE40CB00A108F9 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		7AFCF8491BCE40CB00A108F9 /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				7AFCF84A1BCE40CB00A108F9 /* Base */,
-			);
-			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		7AFCF84D1BCE40CB00A108F9 /* Debug */ = {
@@ -263,9 +258,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Frameworks,
+				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = ic.ac.uk.MobileAR;
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -274,9 +274,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Frameworks,
+				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = ic.ac.uk.MobileAR;
+				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -300,6 +305,7 @@
 				7AFCF8511BCE40CB00A108F9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
