@@ -7,15 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A5B46A11BCF163B003F87BE /* ARMainViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B469F1BCF163B003F87BE /* ARMainViewController.mm */; settings = {ASSET_TAGS = (); }; };
-		7A5B46A41BCF169F003F87BE /* ARAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46A31BCF169F003F87BE /* ARAppDelegate.mm */; settings = {ASSET_TAGS = (); }; };
+		7A5B46A11BCF163B003F87BE /* ARMainViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B469F1BCF163B003F87BE /* ARMainViewController.mm */; };
+		7A5B46A41BCF169F003F87BE /* ARAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46A31BCF169F003F87BE /* ARAppDelegate.mm */; };
 		7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */; };
 		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
-		7A5B46AC1BCFA8F2003F87BE /* ARShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */; settings = {ASSET_TAGS = (); }; };
-		7A5B46AE1BCFAB1D003F87BE /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */; };
+		7A5B46AC1BCFA8F2003F87BE /* ARShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */; };
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
-		7A5B46B31BCFBBE1003F87BE /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A5B46B21BCFBBE1003F87BE /* Default-568h@2x.png */; settings = {ASSET_TAGS = (); }; };
-		7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */; settings = {ASSET_TAGS = (); }; };
+		7A5B46B31BCFBBE1003F87BE /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A5B46B21BCFBBE1003F87BE /* Default-568h@2x.png */; };
+		7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */; };
 		7AFCF83D1BCE40CB00A108F9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFCF83C1BCE40CB00A108F9 /* main.m */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -45,7 +44,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */,
-				7A5B46AE1BCFAB1D003F87BE /* MetalKit.framework in Frameworks */,
 				7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */,
 				7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */,
 			);
