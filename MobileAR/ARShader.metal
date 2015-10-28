@@ -4,11 +4,13 @@
 
 #include <metal_graphics>
 #include <metal_matrix>
-#include <metal_geometric>
 #include <metal_math>
-#include <metal_texture>
 using namespace metal;
 
+
+/**
+ Structure connecting the vertex shader to the fragment shader.
+ */
 struct VertexInOut
 {
   float4 position [[position]];

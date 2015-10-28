@@ -2,18 +2,27 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import <AVFoundation/AVFoundation.h>
-#import <CoreMedia/CoreMedia.h>
-
+#import "ARCamera.h"
 #import "ARMainViewController.h"
+#import "ARRenderer.h"
 #import "UIImage+cvMat.h"
 
 #include <stdexcept>
 #include <vector>
 
-constexpr size_t kCalibrationPoints = 15;
-static const cv::Size kPatternSize(4, 11);
+namespace {
 
+/**
+ Number of snapshots taken for calibration.
+ */
+const size_t kCalibrationPoints = 15;
+  
+/**
+ Size of the asymetric circle pattern.
+ */
+const cv::Size kPatternSize(4, 11);
+
+}
 
 enum class State {
   CAPTURE,
@@ -24,26 +33,21 @@ enum class State {
 
 @implementation ARMainViewController
 {
-  // Camera capture with an AV session.
-  AVCaptureSession *captureSession;
-  AVCaptureDevice *videoCaptureDevice;
-  AVCaptureDeviceInput *videoInput;
-  AVCaptureVideoDataOutput *videoOutput;
-  
-  // Synchronisation stuff.
-  dispatch_queue_t queue;
-  
   // UI elements.
   UIImageView *imageView;
   UIProgressView *progressView;
   UIActivityIndicatorView *spinnerView;
   UILabel *textView;
   
+  // Submodules.
+  ARRenderer *renderer;
+  ARCamera *camera;
+  
   // Application state.
   State state;
   
   // OpenCV images.
-  cv::Mat gray, rgb, bgra;
+  cv::Mat gray, rgb;
   
   // Buffer for calibration points.
   std::vector<std::vector<cv::Point2f>> imagePoints;
@@ -60,11 +64,19 @@ enum class State {
 {
   [super viewDidLoad];
   [self setupView];
-  [self setupCamera];
   
+  renderer = [[ARRenderer alloc] init];
+  
+  // Initialize the camera.
+  camera = [[ARCamera alloc] initWithCallback:^(cv::Mat mat) {
+    [self onFrameCallback:mat];
+  }];
+  
+  // Start capturing images for calibration.
   state = State::CAPTURE;
   imagePoints.reserve(kCalibrationPoints);
   
+  // Initialize the OpenCV grid.
   for (int i = 0; i < kPatternSize.height; i++ ) {
     for (int j = 0; j < kPatternSize.width; j++) {
       grid.emplace_back((2 * j + i % 2) * 1.0f, i * 1.0f, 0.0f);
@@ -75,25 +87,21 @@ enum class State {
 
 - (void)viewDidAppear:(BOOL)animated
 {
-  [captureSession startRunning];
+  [camera startRecording];
 }
 
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-  [captureSession stopRunning];
+  [camera stopRecording];
 }
 
 
 /**
  Receives a frame from the camera.
  */
-- (void)captureOutput:(AVCaptureOutput *)captureOutput
-didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-       fromConnection:(AVCaptureConnection *)connection
+- (void)onFrameCallback:(cv::Mat)bgra
 {
-  bgra = [self matrixFromSampleBuffer: sampleBuffer];
-  
   cv::cvtColor(bgra, rgb, CV_BGRA2RGB);
   cv::cvtColor(rgb, gray, CV_RGB2GRAY);
   
@@ -167,7 +175,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         cv::Rodrigues(rvec, rvecR);
 
         std::vector<cv::Point2d> points;
-        std::vector<cv::Point3d> objectPoints{cv::Point3d(0, 0, 0.0)};
+        std::vector<cv::Point3d> objectPoints{cv::Point3d(3.0, 3.0, 0.0)};
         
         cv::projectPoints(
             objectPoints,
@@ -189,55 +197,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   dispatch_async(dispatch_get_main_queue(), ^{
     [imageView setImage:image];
   });
-}
-
-
-/**
- Sets up the camera.
- */
-- (void)setupCamera
-{
-  try {
-    NSError *error = nil;
-    
-    // Open the camera for video playback.
-    videoCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-    if (!videoCaptureDevice) {
-      throw std::runtime_error("Cannot capture video output.");
-    }
-    if ([videoCaptureDevice lockForConfiguration:nil]) {
-      videoCaptureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, 15);
-      [videoCaptureDevice unlockForConfiguration];
-    }
-    
-    videoInput = [AVCaptureDeviceInput deviceInputWithDevice:videoCaptureDevice error:&error];
-    if (!videoInput) {
-      throw std::runtime_error([[error localizedDescription] UTF8String]);
-    }
-    
-    // Capture raw image from the camera through the output object.
-    videoOutput = [[AVCaptureVideoDataOutput alloc] init];
-    if (!videoOutput) {
-      throw std::runtime_error("Cannot capture video output.");
-    }
-    queue = dispatch_queue_create("MobileAR", DISPATCH_QUEUE_SERIAL);
-    [videoOutput setSampleBufferDelegate:(id)self queue:queue];
-    videoOutput.videoSettings = @{
-        (id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)
-    };
-    
-    
-    // Create a new capture session.
-    captureSession = [[AVCaptureSession alloc] init];
-    if (!captureSession) {
-      throw std::runtime_error("Cannot open capture session.");
-    }
-    captureSession.sessionPreset = AVCaptureSessionPresetMedium;
-    [captureSession addInput:videoInput];
-    [captureSession addOutput:videoOutput];
-  } catch (const std::exception &ex) {
-    [self alert:@(ex.what())];
-  }
 }
 
 
@@ -297,51 +256,5 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   
   [spinnerView startAnimating];
 }
-
-
-/**
- Create a UIImage from sample buffer data.
- */
-- (cv::Mat)matrixFromSampleBuffer:(CMSampleBufferRef)sampleBuffer
-{
-  cv::Mat mat;
-  
-  // Lock on the buffer & copy data.
-  auto imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-  CVPixelBufferLockBaseAddress(imageBuffer, 0);
-  {
-    mat = cv::Mat(
-        cv::Size(
-            static_cast<int>(CVPixelBufferGetWidth(imageBuffer)),
-            static_cast<int>(CVPixelBufferGetHeight(imageBuffer))
-        ),
-        CV_8UC4,
-        CVPixelBufferGetBaseAddress(imageBuffer),
-        CVPixelBufferGetBytesPerRow(imageBuffer));
-  }
-  CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
-  
-  return mat;
-}
-
-
-/**
- Displays an alert with a message.
- */
-- (void)alert:(NSString * const)message
-{
-  UIAlertController *alertController = [UIAlertController
-      alertControllerWithTitle: @"Error"
-      message: message
-      preferredStyle: UIAlertControllerStyleAlert
-  ];
-  [alertController addAction:[UIAlertAction
-      actionWithTitle: @"Exit"
-      style: UIAlertActionStyleDefault
-      handler:^(UIAlertAction *) {
-          exit(0);
-      }
-  ]];
-  [self presentViewController:alertController animated:YES completion:nil];}
 
 @end
