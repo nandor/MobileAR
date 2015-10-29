@@ -48,7 +48,7 @@ enum class State {
   State state;
   
   // OpenCV images.
-  cv::Mat gray, rgb;
+  cv::Mat gray, rgb, bgra;
   
   // Buffer for calibration points.
   std::vector<std::vector<cv::Point2f>> imagePoints;
@@ -212,6 +212,9 @@ enum class State {
       break;
     }
   }
+  
+  cv::cvtColor(rgb, bgra, CV_RGB2BGRA);
+  [renderer setTexture:bgra];
 }
 
 

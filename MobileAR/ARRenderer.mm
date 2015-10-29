@@ -26,12 +26,13 @@ static const float kQuadVertexData[] =
   dispatch_semaphore_t commandSemaphore;
   
   // Metal renderer state.
-  id <MTLDevice> device;
-  id <MTLCommandQueue> commandQueue;
-  id <MTLLibrary> library;
-  id <MTLRenderPipelineState> pipelineState;
-  id <MTLDepthStencilState> depthState;
-  id <MTLBuffer> vertexBuffer;
+  id<MTLDevice> device;
+  id<MTLCommandQueue> commandQueue;
+  id<MTLLibrary> library;
+  id<MTLRenderPipelineState> pipelineState;
+  id<MTLDepthStencilState> depthState;
+  id<MTLBuffer> vertexBuffer;
+  id<MTLTexture> videoTexture;
   
   // Camera parameters.
   simd::float3x3 cameraMatrix;
@@ -43,6 +44,8 @@ static const float kQuadVertexData[] =
   
   // Render timer.
   CADisplayLink *timer;
+  
+  cv::Mat image;
 }
 
 
@@ -73,16 +76,20 @@ static const float kQuadVertexData[] =
     NSLog(@"Cannot create default library.");
     return nil;
   }
-  if (![self createVertexBuffer]) {
+  if (!(vertexBuffer = [self createVertexBuffer])) {
     NSLog(@"Cannot create vertex buffer.");
     return nil;
   }
-  if (![self createPipelineState]) {
+  if (!(pipelineState = [self createPipelineState])) {
     NSLog(@"Cannot create pipeline state.");
     return nil;
   }
-  if (![self createDepthState]) {
+  if (!(depthState = [self createDepthStencilState])) {
     NSLog(@"Cannot create depth state.");
+    return nil;
+  }
+  if (!(videoTexture = [self createTexture])) {
+    NSLog(@"Cannot create texture.");
     return nil;
   }
   
@@ -94,6 +101,20 @@ static const float kQuadVertexData[] =
 
 
 /**
+ Changes the video frame.
+ */
+- (void)setTexture:(cv::Mat)texture
+{
+  [videoTexture
+      replaceRegion: MTLRegionMake2D(0, 0, texture.cols, texture.rows)
+      mipmapLevel: 0
+      withBytes: texture.data
+      bytesPerRow: texture.step[0]
+   ];
+}
+
+
+/**
  Renders a frame.
  */
 -(void)render
@@ -101,10 +122,11 @@ static const float kQuadVertexData[] =
   @autoreleasepool {
     dispatch_semaphore_wait(commandSemaphore, DISPATCH_TIME_FOREVER);
     
-    id <MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-    {
-      auto drawable = [layer nextDrawable];
-     
+    id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+    
+    // Ensure the drawable has a renderable texture.
+    auto drawable = [layer nextDrawable];
+    if (drawable.texture) {
       // Create a render pass descriptor.
       auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
       auto colorAttachment = renderPassDescriptor.colorAttachments[0];
@@ -113,12 +135,13 @@ static const float kQuadVertexData[] =
       colorAttachment.clearColor = MTLClearColorMake(0.0f, 0.0f, 0.0f, 0.0f);
       colorAttachment.storeAction = MTLStoreActionStore;
       
-      // create a render command encoder so we can render into something
+      // Enqueue all render calls.
       auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
       [renderEncoder setCullMode:MTLCullModeBack];
       [renderEncoder setDepthStencilState:depthState];
       [renderEncoder setRenderPipelineState:pipelineState];
       [renderEncoder setVertexBuffer:vertexBuffer offset:0 atIndex:0 ];
+      [renderEncoder setFragmentTexture:videoTexture atIndex:0];
       [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
       [renderEncoder endEncoding];
       
@@ -146,6 +169,7 @@ static const float kQuadVertexData[] =
   [timer addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
 }
 
+
 /**
  Stops rendering.
  */
@@ -159,18 +183,18 @@ static const float kQuadVertexData[] =
 /**
  Creates the pipeline state.
  */
-- (BOOL)createPipelineState
+- (id<MTLRenderPipelineState>)createPipelineState
 {
   // Fetch the vertex & fragment shaders.
   id <MTLFunction> fragmentProgram = [library newFunctionWithName:@"testFragment"];
   if (!fragmentProgram) {
     NSLog(@"Cannot load fragment shader 'testFragment'.");
-    return NO;
+    return nil;
   }
   id <MTLFunction> vertexProgram = [library newFunctionWithName:@"testVertex"];
   if (!vertexProgram) {
     NSLog(@"Cannot load vertex shader 'testVertex'.");
-    return NO;
+    return nil;
   }
   
   // Create a pipeline state descriptor.
@@ -183,43 +207,57 @@ static const float kQuadVertexData[] =
   
   // Create the pipeline state.
   NSError *error = nil;
-  pipelineState = [device
-      newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
-      error:&error
-  ];
-  if (!pipelineState) {
-    NSLog(@"Cannot create pipeline state.");
-    return NO;
-  }
-  
-  return YES;
+  return [device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
 }
 
 
 /**
  Initializes the depth & stencil state.
  */
-- (BOOL)createDepthState
+- (id<MTLDepthStencilState>)createDepthStencilState
 {
-  auto depthStateDesc = [[MTLDepthStencilDescriptor alloc] init];
-  depthStateDesc.depthCompareFunction = MTLCompareFunctionLess;
-  depthStateDesc.depthWriteEnabled = YES;
-  depthState = [device newDepthStencilStateWithDescriptor:depthStateDesc];
-  return YES;
+  auto desc = [[MTLDepthStencilDescriptor alloc] init];
+  desc.depthCompareFunction = MTLCompareFunctionLess;
+  desc.depthWriteEnabled = YES;
+
+  return [device newDepthStencilStateWithDescriptor:desc];
 }
+
 
 /**
  Initializes the vertex buffer.
  */
-- (BOOL)createVertexBuffer
+- (id<MTLBuffer>)createVertexBuffer
 {
-  vertexBuffer = [device
+  auto buffer = [device
      newBufferWithBytes: kQuadVertexData
      length: sizeof(kQuadVertexData)
      options: MTLResourceOptionCPUCacheModeDefault
   ];
-  vertexBuffer.label = @"Quad Vertices";
-  return YES;
+  if (!buffer) {
+    return nil;
+  }
+  
+  buffer.label = @"Quad Vertices";
+  return buffer;
+}
+
+
+/**
+ Initializes the video texture
+ */
+- (id<MTLTexture>)createTexture
+{
+  auto desc = [[MTLTextureDescriptor alloc] init];
+  desc.textureType = MTLTextureType2D;
+  desc.height = 360;
+  desc.width = 480;
+  desc.depth = 1;
+  desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
+  desc.arrayLength = 1;
+  desc.mipmapLevelCount = 1;
+               
+  return [device newTextureWithDescriptor:desc];
 }
 
 @end

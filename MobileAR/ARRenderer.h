@@ -4,11 +4,15 @@
 
 #import <UIKit/UIKit.h>
 
+#include <opencv2/opencv.hpp>
+
+
 @interface ARRenderer : NSObject
 
 - (id)initWithView:(UIView*)uiView;
 - (void)render;
 - (void)start;
 - (void)stop;
+- (void)setTexture:(cv::Mat)texture;
 
 @end
