@@ -20,19 +20,18 @@ struct VertexInOut
 /**
  Vertex shader.
  */
-vertex VertexInOut texturedQuadVertex(
-    constant float4         *pPosition   [[ buffer(0) ]],
-    constant float4x4       *pMVP        [[ buffer(1) ]],
-    uint                     vid         [[ vertex_id ]])
+vertex VertexInOut testVertex(
+    constant float2         *inPosition   [[ buffer(0) ]],
+    uint                     id           [[ vertex_id ]])
 {
-  return { *pMVP * pPosition[vid] };
+  return { {inPosition[id].x, inPosition[id].y, 0.0, 1.0} };
 }
 
 
 /**
  Fragment shader.
  */
-fragment half4 texturedQuadFragment(
+fragment half4 testFragment(
     VertexInOut     inFrag    [[ stage_in ]])
 {
   return half4(1.0, 0.0, 0.0, 1.0);

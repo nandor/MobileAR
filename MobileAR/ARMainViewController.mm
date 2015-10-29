@@ -3,6 +3,7 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARCamera.h"
+#import "ARMainView.h"
 #import "ARMainViewController.h"
 #import "ARRenderer.h"
 #import "UIImage+cvMat.h"
@@ -34,10 +35,10 @@ enum class State {
 @implementation ARMainViewController
 {
   // UI elements.
-  UIImageView *imageView;
   UIProgressView *progressView;
   UIActivityIndicatorView *spinnerView;
   UILabel *textView;
+  ARMainView *mainView;
   
   // Submodules.
   ARRenderer *renderer;
@@ -58,22 +59,15 @@ enum class State {
 
 
 /**
- Called when the view is loaded.
+ Initializes the controller.
  */
-- (void)viewDidLoad
+- (id)init
 {
-  [super viewDidLoad];
-  [self setupView];
+  if (!(self = [super init])) {
+    return nil;
+  }
   
-  renderer = [[ARRenderer alloc] init];
-  
-  // Initialize the camera.
-  camera = [[ARCamera alloc] initWithCallback:^(cv::Mat mat) {
-    [self onFrameCallback:mat];
-  }];
-  
-  // Start capturing images for calibration.
-  state = State::CAPTURE;
+  // Reserve storage for the point sets.
   imagePoints.reserve(kCalibrationPoints);
   
   // Initialize the OpenCV grid.
@@ -82,18 +76,44 @@ enum class State {
       grid.emplace_back((2 * j + i % 2) * 1.0f, i * 1.0f, 0.0f);
     }
   }
+  
+  return self;
+}
+
+
+/**
+ Called when the view is loaded.
+ */
+- (void)viewDidLoad
+{
+  [super viewDidLoad];
+  
+  [self setupView];
+  
+  // Initialize the Metal renderer.
+  renderer = [[ARRenderer alloc] initWithView:mainView];
+  
+  // Initialize the camera.
+  camera = [[ARCamera alloc] initWithCallback:^(cv::Mat mat) {
+    [self onFrameCallback:mat];
+  }];
+  
+  // Start capturing images for calibration.
+  state = State::CAPTURE;
 }
 
 
 - (void)viewDidAppear:(BOOL)animated
 {
-  [camera startRecording];
+  [camera start];
+  [renderer start];
 }
 
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-  [camera stopRecording];
+  [renderer stop];
+  [camera stop];
 }
 
 
@@ -192,11 +212,6 @@ enum class State {
       break;
     }
   }
-
-  auto image = [UIImage imageWithCvMat:rgb];
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [imageView setImage:image];
-  });
 }
 
 
@@ -209,13 +224,13 @@ enum class State {
   
   // Create an image in the center.
   {
-    CGRect imageRect;
-    imageRect.size.height = frame.size.height;
-    imageRect.size.width = frame.size.height * 640.0f / 480.0f;
-    imageRect.origin.x = (frame.size.width - imageRect.size.width) /2;
-    imageRect.origin.y = 0;
-    imageView = [[UIImageView alloc] initWithFrame:imageRect];
-    [self.view addSubview:imageView];
+    CGRect mainRect;
+    mainRect.size.height = frame.size.height;
+    mainRect.size.width = frame.size.height * 640.0f / 480.0f;
+    mainRect.origin.x = (frame.size.width - mainRect.size.width) /2;
+    mainRect.origin.y = 0;
+    mainView = [[ARMainView alloc] initWithFrame:mainRect];
+    [self.view addSubview:mainView];
   }
   
   // Progress bar on top of the image.

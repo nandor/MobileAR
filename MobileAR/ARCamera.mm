@@ -100,14 +100,14 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
   
   // Execute the callback.
-  callback(mat);
+  @autoreleasepool { callback(mat); }
 }
 
 
 /**
  Starts recording frames.
  */
-- (void)startRecording
+- (void)start
 {
   [captureSession startRunning];
 }
@@ -116,7 +116,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 /**
  Stops recording frames.
  */
-- (void)stopRecording
+- (void)stop
 {
   [captureSession stopRunning];
 }

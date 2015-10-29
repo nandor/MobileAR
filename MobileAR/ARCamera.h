@@ -10,7 +10,7 @@
 @interface ARCamera : NSObject
 
 - (id)initWithCallback:(void(^)(cv::Mat))block;
-- (void)startRecording;
-- (void)stopRecording;
+- (void)start;
+- (void)stop;
 
 @end

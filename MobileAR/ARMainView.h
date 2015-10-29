@@ -4,11 +4,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ARRenderer : NSObject
+@interface ARMainView : UIView
 
-- (id)initWithView:(UIView*)uiView;
-- (void)render;
-- (void)start;
-- (void)stop;
+- (id)initWithFrame:(CGRect)frame;
 
 @end

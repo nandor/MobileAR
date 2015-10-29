@@ -3,6 +3,7 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARAppDelegate.h"
+#import "ARMainView.h"
 #import "ARMainViewController.h"
 
 @implementation ARAppDelegate
@@ -17,10 +18,6 @@
   [_window setRootViewController:[[ARMainViewController alloc] init]];
   [_window makeKeyAndVisible];
   return YES;
-}
-
-- (void)applicationWillTerminate:(UIApplication *)application
-{
 }
 
 @end
