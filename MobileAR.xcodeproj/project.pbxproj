@@ -18,6 +18,7 @@
 		7AE9AB681BE167FA00F30DC5 /* ARRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9AB671BE167FA00F30DC5 /* ARRenderer.mm */; };
 		7AE9AB6D1BE16F8400F30DC5 /* ARCamera.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9AB6C1BE16F8400F30DC5 /* ARCamera.mm */; };
 		7AE9AB721BE17AEE00F30DC5 /* ARMainView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9AB711BE17AEE00F30DC5 /* ARMainView.mm */; };
+		7AE9AB771BE2962500F30DC5 /* ARObject.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9AB761BE2962500F30DC5 /* ARObject.mm */; };
 		7AFCF83D1BCE40CB00A108F9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFCF83C1BCE40CB00A108F9 /* main.m */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -40,6 +41,9 @@
 		7AE9AB6C1BE16F8400F30DC5 /* ARCamera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCamera.mm; sourceTree = "<group>"; };
 		7AE9AB6E1BE178F400F30DC5 /* ARMainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARMainView.h; sourceTree = "<group>"; };
 		7AE9AB711BE17AEE00F30DC5 /* ARMainView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARMainView.mm; sourceTree = "<group>"; };
+		7AE9AB731BE2960D00F30DC5 /* ARObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARObject.h; sourceTree = "<group>"; };
+		7AE9AB761BE2962500F30DC5 /* ARObject.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARObject.mm; sourceTree = "<group>"; };
+		7AE9AB781BE297F500F30DC5 /* ARParams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ARParams.h; sourceTree = "<group>"; };
 		7AFCF8381BCE40CB00A108F9 /* MobileAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFCF83C1BCE40CB00A108F9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		7AFCF8411BCE40CB00A108F9 /* ARMainViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ARMainViewController.h; sourceTree = "<group>"; };
@@ -85,17 +89,20 @@
 		7AFCF83A1BCE40CB00A108F9 /* MobileAR */ = {
 			isa = PBXGroup;
 			children = (
+				7AE9AB731BE2960D00F30DC5 /* ARObject.h */,
+				7AE9AB761BE2962500F30DC5 /* ARObject.mm */,
 				7AE9AB6E1BE178F400F30DC5 /* ARMainView.h */,
 				7AE9AB711BE17AEE00F30DC5 /* ARMainView.mm */,
 				7AE9AB691BE16F1300F30DC5 /* ARCamera.h */,
 				7AE9AB6C1BE16F8400F30DC5 /* ARCamera.mm */,
 				7AE9AB641BE167CE00F30DC5 /* ARRenderer.h */,
 				7AE9AB671BE167FA00F30DC5 /* ARRenderer.mm */,
+				7AE9AB781BE297F500F30DC5 /* ARParams.h */,
+				7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */,
 				7A5B46A21BCF169F003F87BE /* ARAppDelegate.h */,
 				7A5B46A31BCF169F003F87BE /* ARAppDelegate.mm */,
 				7A5B469F1BCF163B003F87BE /* ARMainViewController.mm */,
 				7AFCF8411BCE40CB00A108F9 /* ARMainViewController.h */,
-				7A5B46AB1BCFA8F2003F87BE /* ARShader.metal */,
 				7A5B46B11BCFBBA1003F87BE /* UIImage+cvMat.h */,
 				7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */,
 				7AFCF83C1BCE40CB00A108F9 /* main.m */,
@@ -178,6 +185,7 @@
 				7A5B46A11BCF163B003F87BE /* ARMainViewController.mm in Sources */,
 				7AE9AB681BE167FA00F30DC5 /* ARRenderer.mm in Sources */,
 				7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */,
+				7AE9AB771BE2962500F30DC5 /* ARObject.mm in Sources */,
 				7A5B46AC1BCFA8F2003F87BE /* ARShader.metal in Sources */,
 				7AE9AB721BE17AEE00F30DC5 /* ARMainView.mm in Sources */,
 				7A5B46A41BCF169F003F87BE /* ARAppDelegate.mm in Sources */,

@@ -13,6 +13,6 @@
 - (void)render;
 - (void)start;
 - (void)stop;
-- (void)setTexture:(cv::Mat)texture;
+- (void)update:(cv::Mat)texture K:(cv::Mat)K r:(cv::Mat)r t:(cv::Mat)t d:(cv::Mat)d;
 
 @end

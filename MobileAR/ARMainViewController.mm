@@ -16,7 +16,7 @@ namespace {
 /**
  Number of snapshots taken for calibration.
  */
-const size_t kCalibrationPoints = 15;
+const size_t kCalibrationPoints = 32;
   
 /**
  Size of the asymetric circle pattern.
@@ -48,13 +48,16 @@ enum class State {
   State state;
   
   // OpenCV images.
-  cv::Mat gray, rgb, bgra;
+  cv::Mat gray, rgb;
   
   // Buffer for calibration points.
   std::vector<std::vector<cv::Point2f>> imagePoints;
   std::vector<cv::Point3f> grid;
   cv::Mat cameraMatrix;
   cv::Mat distCoeffs;
+  
+  cv::Mat rvec;
+  cv::Mat tvec;
 }
 
 
@@ -67,6 +70,12 @@ enum class State {
     return nil;
   }
   
+  // Initialize matrices.
+  rvec = cv::Mat(3, 1, CV_32F);
+  tvec = cv::Mat(3, 1, CV_32F);
+  cameraMatrix = cv::Mat::eye(3, 3, CV_32F);
+  distCoeffs = cv::Mat::zeros(4, 1, CV_32F);
+
   // Reserve storage for the point sets.
   imagePoints.reserve(kCalibrationPoints);
   
@@ -105,6 +114,8 @@ enum class State {
 
 - (void)viewDidAppear:(BOOL)animated
 {
+  [super viewDidAppear:animated];
+  
   [camera start];
   [renderer start];
 }
@@ -112,6 +123,8 @@ enum class State {
 
 - (void)viewWillDisappear:(BOOL)animated
 {
+  [super viewWillDisappear:animated];
+  
   [renderer stop];
   [camera stop];
 }
@@ -150,8 +163,8 @@ enum class State {
       } else {
         state = State::CALIBRATE;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-          cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
-          distCoeffs = cv::Mat::zeros(4, 1, CV_64F);
+          cameraMatrix = cv::Mat::eye(3, 3, CV_32F);
+          distCoeffs = cv::Mat::zeros(4, 1, CV_32F);
           
           std::vector<cv::Mat> rvecs, tvecs;
           float rms = cv::calibrateCamera(
@@ -164,6 +177,8 @@ enum class State {
               tvecs,
               0
           );
+          cameraMatrix.convertTo(cameraMatrix, CV_32F);
+          distCoeffs.convertTo(distCoeffs, CV_32F);
           
           NSLog(@"RMS: %f", rms);
           state = State::AUGMENT;
@@ -187,26 +202,9 @@ enum class State {
       });
       
       if (found) {
-        cv::Mat rvec(3, 1, CV_64F);
-        cv::Mat tvec(3, 1, CV_64F);
-        cv::Mat rvecR(3, 1, CV_64F);
-        
         cv::solvePnP(grid, corners, cameraMatrix, distCoeffs, rvec, tvec);
-        cv::Rodrigues(rvec, rvecR);
-
-        std::vector<cv::Point2d> points;
-        std::vector<cv::Point3d> objectPoints{cv::Point3d(3.0, 3.0, 0.0)};
-        
-        cv::projectPoints(
-            objectPoints,
-            rvec,
-            tvec,
-            cameraMatrix,
-            distCoeffs,
-            points
-        );
-        auto point = points[0];
-        cv::circle(rgb, points[0], 10, cv::Scalar(255, 0, 0));
+        rvec.convertTo(rvec, CV_32F);
+        tvec.convertTo(tvec, CV_32F);
       }
       
       break;
@@ -214,7 +212,7 @@ enum class State {
   }
   
   cv::cvtColor(rgb, bgra, CV_RGB2BGRA);
-  [renderer setTexture:bgra];
+  [renderer update:bgra K:cameraMatrix r:rvec t:tvec d:distCoeffs];
 }
 
 
@@ -229,7 +227,7 @@ enum class State {
   {
     CGRect mainRect;
     mainRect.size.height = frame.size.height;
-    mainRect.size.width = frame.size.height * 640.0f / 480.0f;
+    mainRect.size.width = frame.size.height * 480.0f / 360.0f;
     mainRect.origin.x = (frame.size.width - mainRect.size.width) /2;
     mainRect.origin.y = 0;
     mainView = [[ARMainView alloc] initWithFrame:mainRect];
