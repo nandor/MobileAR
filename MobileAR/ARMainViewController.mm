@@ -16,7 +16,7 @@ namespace {
 /**
  Number of snapshots taken for calibration.
  */
-const size_t kCalibrationPoints = 32;
+const size_t kCalibrationPoints = 16;
   
 /**
  Size of the asymetric circle pattern.
@@ -167,7 +167,7 @@ enum class State {
           distCoeffs = cv::Mat::zeros(4, 1, CV_32F);
           
           std::vector<cv::Mat> rvecs, tvecs;
-          float rms = cv::calibrateCamera(
+          double rms = cv::calibrateCamera(
               std::vector<std::vector<cv::Point3f>>(kCalibrationPoints, grid),
               imagePoints,
               rgb.size(),
@@ -180,7 +180,7 @@ enum class State {
           cameraMatrix.convertTo(cameraMatrix, CV_32F);
           distCoeffs.convertTo(distCoeffs, CV_32F);
           
-          NSLog(@"RMS: %f", rms);
+          NSLog(@"RMS: %g", rms);
           state = State::AUGMENT;
         });
       }

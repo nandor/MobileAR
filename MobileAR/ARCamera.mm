@@ -65,6 +65,7 @@
   if (!captureSession) {
     return nil;
   }
+
   captureSession.sessionPreset = AVCaptureSessionPresetMedium;
   [captureSession addInput:videoInput];
   [captureSession addOutput:videoOutput];
