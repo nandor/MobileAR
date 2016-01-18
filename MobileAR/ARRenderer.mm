@@ -2,12 +2,15 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
+#import <TargetConditionals.h>
+
 #import <simd/simd.h>
-#import <Metal/Metal.h>
 
 #import "ARParams.h"
 #import "ARRenderer.h"
 
+#if !(TARGET_IPHONE_SIMULATOR)
+#import <Metal/Metal.h>
 
 static const float kQuadVertexData[] =
 {
@@ -418,3 +421,35 @@ static const float kCubeVertexData[] =
 }
 
 @end
+
+#else
+
+@implementation ARRenderer : NSObject
+
+- (id)initWithView:(UIView*)uiView
+{
+  if (!(self = [super init])) {
+    return nil;
+  }
+  return self;
+}
+
+- (void)render
+{
+}
+
+- (void)start
+{
+}
+
+- (void)stop
+{
+}
+
+- (void)update:(cv::Mat)texture K:(cv::Mat)K r:(cv::Mat)r t:(cv::Mat)t d:(cv::Mat)d
+{
+}
+
+@end
+
+#endif

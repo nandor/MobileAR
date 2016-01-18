@@ -2,4 +2,10 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#include "ARSceneViewController.h"
+#import "ARSphereStore.h"
+
+
+@implementation ARSphereStore {
+
+}
+@end

@@ -2,8 +2,10 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import <UIKit/UIKit.h>
+#import "ARSphereListViewController.h"
 
 
-@interface ARSceneViewController : UIViewController
+@implementation ARSphereListViewController {
+
+}
 @end

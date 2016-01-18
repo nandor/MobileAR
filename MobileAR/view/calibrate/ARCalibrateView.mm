@@ -2,8 +2,11 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import <Metal/Metal.h>
 
+#import <TargetConditionals.h>
+#if !(TARGET_IPHONE_SIMULATOR)
+#import <Metal/Metal.h>
+#endif
 #import "ARCalibrateView.h"
 
 @implementation ARCalibrateView
@@ -13,7 +16,11 @@
  */
 + (Class)layerClass
 {
+#if !(TARGET_IPHONE_SIMULATOR)
   return [CAMetalLayer class];
+#else
+  return [super layerClass];
+#endif
 }
 
 
@@ -30,3 +37,4 @@
 }
 
 @end
+

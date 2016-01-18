@@ -3,20 +3,34 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARAppDelegate.h"
-#import "ARCalibrateView.h"
-#import "ARCalibrateViewController.h"
+#import "ARParametersStore.h"
+#import "view/calibrate/ARCalibrateViewController.h"
+#import "view/scene/ARSceneViewController.h"
+
 
 @implementation ARAppDelegate
 {
-  
+  UIWindow *window;
+  UIViewController *controller;
+  ARParametersStore *params;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  _window.backgroundColor = [UIColor blackColor];
-  [_window setRootViewController:[[ARCalibrateViewController alloc] init]];
-  [_window makeKeyAndVisible];
+
+  // Load the saved parameters.
+  params = [[ARParametersStore alloc] init];
+  if ([params load]) {
+    controller = [[ARSceneViewController alloc] init];
+  } else {
+    controller = [[ARCalibrateViewController alloc] init];
+  }
+
+  // Create the window.
+  window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  window.backgroundColor = [UIColor blackColor];
+  [window setRootViewController:controller];
+  [window makeKeyAndVisible];
   return YES;
 }
 
