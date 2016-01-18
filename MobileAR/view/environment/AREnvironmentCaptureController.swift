@@ -14,5 +14,7 @@ class AREnvironmentCaptureController : UIViewController {
 
     // Set the title of the view.
     self.title = "Capture"
+
+    self.view.backgroundColor = UIColor.blackColor();
   }
 }

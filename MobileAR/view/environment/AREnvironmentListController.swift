@@ -8,7 +8,22 @@ import UIKit
 /**
  View controller responsible with displaying a list of prepared environments.
  */
-class AREnvironmentListController: UIViewController {
+class AREnvironmentListController : UIViewController, UITableViewDelegate, UITableViewDataSource {
+  private var environments : [AREnvironment] = []
+
+  /**
+   Called when the view is loaded.
+   */
+  override func viewDidLoad() {
+    super.viewDidLoad();
+
+    // Create the table view.
+    let table = UITableView(frame: view.frame, style: .Plain)
+    table.registerClass(UITableViewCell.self, forCellReuseIdentifier: "environment")
+    table.delegate = self
+    table.dataSource = self
+    view = table
+  }
 
   /**
    Called before the view is displayed.
@@ -26,27 +41,17 @@ class AREnvironmentListController: UIViewController {
         target: self,
         action: Selector("onCapture")
     )
+
+    // Reload the data in the table view.
+    environments = AREnvironment.all();
+    (view as? UITableView)?.reloadData()
   }
 
   /**
    Called after the view is displayed.
    */
   override func viewDidAppear(animated: Bool) {
-    let path = (NSSearchPathForDirectoriesInDomains(
-        .DocumentDirectory,
-        .UserDomainMask,
-        true
-    )[0] as NSString).stringByAppendingPathComponent("Environments")
-
-    NSLog(path)
-    /*
-    let fileManager = NSFileManager.defaultManager()
-    let enumerator:NSDirectoryEnumerator = fileManager.enumeratorAtPath(folderPath)
-
-    while let element = enumerator?.nextObject() as? String {
-      if element.hasSuffix("ext") {
-      }
-    }*/
+    super.viewDidAppear(animated)
   }
 
   /**
@@ -57,5 +62,23 @@ class AREnvironmentListController: UIViewController {
         AREnvironmentCaptureController(),
         animated: true
     );
+  }
+
+  /**
+   Returns the number of environments.
+   */
+  func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    return environments.count
+  }
+
+  /**
+   Creates a cell in a table for an item.
+   */
+  func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    let env = environments[indexPath.indexAtPosition(0)]
+
+    var cell = tableView.dequeueReusableCellWithIdentifier("environment") as UITableViewCell!
+    cell.textLabel?.text = "LOL"
+    return cell
   }
 }
