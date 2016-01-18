@@ -50,6 +50,8 @@
   cameraParameters_.k3 = [obj[@"k3"] floatValue];
   cameraParameters_.r1 = [obj[@"r1"] floatValue];
   cameraParameters_.r2 = [obj[@"r2"] floatValue];
+
+  return YES;
 }
 
 

@@ -2,8 +2,11 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import <Foundation/Foundation.h>
+import UIKit
 
+class AREnvironmentViewController : UIViewController {
 
-@interface ARSphereListView : NSObject
-@end
+  override func viewWillAppear(animated: Bool) {
+
+  }
+}

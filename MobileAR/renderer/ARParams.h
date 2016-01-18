@@ -11,17 +11,11 @@
  Parameters passed to metal shaders.
  */
 typedef struct {
-  /**
-   Instrinsic camera parameters.
-   */
+  /// Intrinsic camera parameters.
   simd::float4x4 K;
-  /**
-   Pose (rotation + translation).
-   */
+  /// Pose (rotation + translation).
   simd::float4x4 P;
-  /**
-   Radial & Tangential distortion.
-   */
+  /// Radial & Tangential distortion.
   simd::float4 dist;
 } ARParams;
 

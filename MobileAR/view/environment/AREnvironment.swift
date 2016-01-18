@@ -2,8 +2,7 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import <Foundation/Foundation.h>
+import Foundation
 
-
-@interface ARSphereListViewController : NSObject
-@end
+class ARSphere {
+}

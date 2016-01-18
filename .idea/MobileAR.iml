@@ -2,47 +2,41 @@
 <module type="CIDR_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARParams.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARObject.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARRenderer.mm" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARRenderer.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARObject.mm" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARShader.metal" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARParams.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARParametersStore.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/main.m" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARAppDelegate.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARSphereStore.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARRenderer.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/Info.plist" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARCamera.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/Assets.xcassets" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARParametersStore.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/UIImage+cvMat.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARRenderer.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARObject.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARSphereStore.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARCamera.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARShader.metal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/MedianCutSampler.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/PhotoSphereBuilder.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/PhotoSphereBuilder.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/VarianceCutSampler.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/MedianCutSampler.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/VarianceCutSampler.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARBridgingHeader.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateViewController.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateViewController.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateView.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateView.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereListViewController.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereViewController.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereView.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereListView.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereViewController.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereView.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereListViewController.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/sphere/ARSphereListView.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/scene/ARSceneView.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/scene/ARSceneViewController.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/scene/ARSceneView.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/scene/ARSceneViewController.mm" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/scene/ARSceneViewController.swift" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentListController.swift" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentViewController.swift" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironment.swift" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentCaptureController.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARAppDelegate.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/UIImage+cvMat.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARObject.mm" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">

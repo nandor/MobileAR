@@ -4,32 +4,28 @@
 
 #import "ARAppDelegate.h"
 #import "ARParametersStore.h"
-#import "view/calibrate/ARCalibrateViewController.h"
-#import "view/scene/ARSceneViewController.h"
+#import "MobileAR-Swift.h"
 
 
 @implementation ARAppDelegate
 {
   UIWindow *window;
-  UIViewController *controller;
+  UINavigationController *navigation;
   ARParametersStore *params;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-
   // Load the saved parameters.
   params = [[ARParametersStore alloc] init];
-  if ([params load]) {
-    controller = [[ARSceneViewController alloc] init];
-  } else {
-    controller = [[ARCalibrateViewController alloc] init];
-  }
+
+  // Create the navigation controller.
+  navigation = [[UINavigationController alloc] initWithRootViewController:[[ARSceneViewController alloc] init]];
 
   // Create the window.
   window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   window.backgroundColor = [UIColor blackColor];
-  [window setRootViewController:controller];
+  window.rootViewController = navigation;
   [window makeKeyAndVisible];
   return YES;
 }

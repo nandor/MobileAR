@@ -4,8 +4,6 @@
 
 #import <UIKit/UIKit.h>
 
-
 @interface ARAppDelegate : UIResponder<UIApplicationDelegate>
-
 @end
 
