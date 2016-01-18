@@ -3,8 +3,8 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARAppDelegate.h"
-#import "ARMainView.h"
-#import "ARMainViewController.h"
+#import "ARCalibrateView.h"
+#import "ARCalibrateViewController.h"
 
 @implementation ARAppDelegate
 {
@@ -15,7 +15,7 @@
 {
   _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   _window.backgroundColor = [UIColor blackColor];
-  [_window setRootViewController:[[ARMainViewController alloc] init]];
+  [_window setRootViewController:[[ARCalibrateViewController alloc] init]];
   [_window makeKeyAndVisible];
   return YES;
 }
