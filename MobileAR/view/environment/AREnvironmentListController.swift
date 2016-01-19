@@ -32,10 +32,10 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
     super.viewWillAppear(animated)
 
     // Set the title of the view.
-    self.title = "Select"
+    title = "Select"
 
     // Add a button to navigate to sphere capture.
-    self.navigationItem.rightBarButtonItem = UIBarButtonItem(
+    navigationItem.rightBarButtonItem = UIBarButtonItem(
         title: "Capture",
         style: .Plain,
         target: self,
@@ -61,7 +61,7 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
     self.navigationController?.pushViewController(
         AREnvironmentCaptureController(),
         animated: true
-    );
+    )
   }
 
   /**
@@ -80,5 +80,17 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
     var cell = tableView.dequeueReusableCellWithIdentifier("environment") as UITableViewCell!
     cell.textLabel?.text = "LOL"
     return cell
+  }
+
+  /**
+   Displays the chosen environment.
+   */
+  func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    let env = environments[indexPath.indexAtPosition(0)]
+
+    self.navigationController?.pushViewController(
+        AREnvironmentViewController(),
+        animated: true
+    )
   }
 }
