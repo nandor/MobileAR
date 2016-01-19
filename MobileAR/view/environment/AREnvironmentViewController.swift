@@ -9,6 +9,12 @@ class AREnvironmentViewController : UIViewController {
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
 
+    // Hide the toolbar and show the navbar.
+    if let nav = navigationController {
+      nav.setToolbarHidden(true, animated: animated)
+      nav.setNavigationBarHidden(false, animated: animated)
+    }
+
     // Back background colour to avoid ugly animations.
     view.backgroundColor = UIColor.blackColor();
 

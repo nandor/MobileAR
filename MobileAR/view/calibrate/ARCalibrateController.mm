@@ -114,7 +114,9 @@ enum class State {
 - (void)viewDidAppear:(BOOL)animated
 {
   [super viewDidAppear:animated];
-  
+
+  [[self navigationController] setNavigationBarHidden:NO];
+
   [camera start];
   [renderer start];
 }

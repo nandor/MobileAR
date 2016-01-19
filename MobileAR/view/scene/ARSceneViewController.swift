@@ -10,6 +10,11 @@ import UIKit
 @objc class ARSceneViewController : UIViewController {
   var params: ARParameters?
   var environment: AREnvironment?
+  var timer: NSTimer?
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+  }
 
   /**
    Called when the view is about to be loaded.
@@ -20,12 +25,40 @@ import UIKit
     // Set the title of the view.
     title = "MobileAR"
 
-    // Hide the navigation bar in this view.
-    navigationController?.setNavigationBarHidden(true, animated: false)
+    // Hide both the navigation bar and the toolbar.
+    if let nav = navigationController {
+      nav.setToolbarHidden(true, animated: true)
+      nav.setNavigationBarHidden(true, animated: true)
+
+      let space = UIBarButtonItem(
+          barButtonSystemItem: .FlexibleSpace,
+          target: nil,
+          action: nil
+      )
+      let btnCalibrate = UIBarButtonItem(
+          barButtonSystemItem: .Camera,
+          target: self,
+          action: Selector("onCalibrate")
+      )
+      let btnBrowse = UIBarButtonItem(
+          barButtonSystemItem: .Search,
+          target: self,
+          action: Selector("onSelect")
+      )
+
+      setToolbarItems([btnCalibrate, space, btnBrowse], animated: false)
+    }
 
     // Fetch camera parameters & environment.
-    obtainCalibration()
-    obtainEnvironment()
+    //obtainCalibration()
+    //obtainEnvironment()
+  }
+
+  /**
+   Cancels all timers.
+   */
+  override func viewWillDisappear(animated: Bool) {
+    timer?.invalidate()
   }
 
   /**
@@ -41,22 +74,17 @@ import UIKit
     }
 
     let alert = UIAlertController(
-    title: "Missing Calibration",
+        title: "Missing Calibration",
         message: "Please calibrate the camera",
         preferredStyle: .Alert
     );
+
     alert.addAction(UIAlertAction(
-    title: "Calibrate",
+        title: "Calibrate",
         style: .Default)
-    { (UIAlertAction) in
-      self.navigationController?.pushViewController(
-      ARCalibrateController(),
-          animated: true
-      );
-    });
+    { (UIAlertAction) in self.onCalibrate() })
 
     presentViewController(alert, animated: false) {}
-    navigationController?.setNavigationBarHidden(false, animated: false)
   }
 
   /**
@@ -77,32 +105,59 @@ import UIKit
     }
 
     let alert = UIAlertController(
-    title: "Missing Environment",
+        title: "Missing Environment",
         message: "Please capture or select the light sources",
         preferredStyle: .Alert
     );
 
     alert.addAction(UIAlertAction(
-    title: "Capture",
-        style: .Default) {
-      (UIAlertAction) in
-      self.navigationController?.pushViewController(
-      AREnvironmentCaptureController(),
-          animated: true
-      );
-    });
+        title: "Capture",
+        style: .Default)
+    { (UIAlertAction) in self.onCapture() })
 
     alert.addAction(UIAlertAction(
-    title: "Select",
-        style: .Default) {
-      (UIAlertAction) in
-      self.navigationController?.pushViewController(
-      AREnvironmentListController(),
-          animated: true
-      );
-    });
+        title: "Select",
+        style: .Default)
+    { (UIAlertAction) in self.onSelect() })
 
-    self.presentViewController(alert, animated: false) {}
-    self.navigationController?.setNavigationBarHidden(false, animated: false);
+    presentViewController(alert, animated: false) {}
+  }
+
+  /**
+   Shows the toolbar whenever the user touches the screen.
+   */
+  override func touchesBegan(touches: Set<UITouch>, withEvent: UIEvent?) {
+    navigationController?.setNavigationBarHidden(false, animated: true)
+    navigationController?.setToolbarHidden(false, animated: true)
+  }
+
+  /**
+   Hides the toolbar after the user lifts the figers from the screen.
+   */
+  override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
+    timer = NSTimer.scheduledTimerWithTimeInterval(
+        3,
+        target: self,
+        selector: Selector("onHide"),
+        userInfo: nil,
+        repeats: false
+    )
+  }
+
+  func onCalibrate() {
+    navigationController?.pushViewController(ARCalibrateController(), animated: true)
+  }
+
+  func onCapture() {
+    navigationController?.pushViewController(AREnvironmentCaptureController(), animated: true)
+  }
+
+  func onSelect() {
+    navigationController?.pushViewController(AREnvironmentListController(), animated: true)
+  }
+
+  func onHide() {
+    navigationController?.setNavigationBarHidden(true, animated: true)
+    navigationController?.setToolbarHidden(true, animated: true)
   }
 }

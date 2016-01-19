@@ -16,6 +16,8 @@
 {
   // Create the navigation controller.
   navigation = [[UINavigationController alloc] initWithRootViewController:[[ARSceneViewController alloc] init]];
+  [navigation setToolbarHidden:YES animated: NO];
+  [navigation setNavigationBarHidden:YES animated: NO];
 
   // Create the window.
   window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];

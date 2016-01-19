@@ -31,13 +31,18 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
 
+    // Hide the toolbar and show the navbar.
+    if let nav = navigationController {
+      nav.setToolbarHidden(true, animated: animated)
+      nav.setNavigationBarHidden(false, animated: animated)
+    }
+
     // Set the title of the view.
     title = "Select"
 
     // Add a button to navigate to sphere capture.
     navigationItem.rightBarButtonItem = UIBarButtonItem(
-        title: "Capture",
-        style: .Plain,
+        barButtonSystemItem: .Add,
         target: self,
         action: Selector("onCapture")
     )
