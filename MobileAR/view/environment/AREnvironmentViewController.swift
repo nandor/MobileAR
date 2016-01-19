@@ -10,7 +10,7 @@ class AREnvironmentViewController : UIViewController {
     super.viewWillAppear(animated)
 
     // Back background colour to avoid ugly animations.
-    self.view.backgroundColor = UIColor.blackColor();
+    view.backgroundColor = UIColor.blackColor();
 
     // Set the title of the view.
     title = "Environment"

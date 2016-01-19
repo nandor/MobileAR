@@ -38,17 +38,33 @@ class ARParameters {
   }
 
   static func load() -> ARParameters? {
-    return ARParameters(
-        fx: 0.0,
-        fy: 0.0,
-        cx: 0.0,
-        cy: 0.0,
-        k1: 0.0,
-        k2: 0.0,
-        k3: 0.0,
-        r1: 0.0,
-        r2: 0.0
-    )
+    do {
+      let fileManager = NSFileManager.defaultManager()
+      let documents = fileManager.URLsForDirectory(
+          .DocumentDirectory,
+          inDomains: .UserDomainMask
+      )[0]
+
+      let data = try NSData(
+          contentsOfURL: documents.URLByAppendingPathComponent("params.json"),
+          options: NSDataReadingOptions()
+      )
+      let json = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions())
+
+      return ARParameters(
+          fx: json["fx"] as! Float,
+          fy: json["fy"] as! Float,
+          cx: json["cx"] as! Float,
+          cy: json["cy"] as! Float,
+          k1: json["k1"] as! Float,
+          k2: json["k2"] as! Float,
+          k3: json["k3"] as! Float,
+          r1: json["r1"] as! Float,
+          r2: json["r2"] as! Float
+      )
+    } catch {
+      return nil
+    }
   }
 
   static func save(params: ARParameters) {

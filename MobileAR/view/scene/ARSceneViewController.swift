@@ -37,7 +37,7 @@ import UIKit
   private func obtainCalibration() {
     params = ARParameters.load()
     if params != nil {
-      return;
+      return
     }
 
     let alert = UIAlertController(
@@ -63,6 +63,10 @@ import UIKit
    Ensures that an environment is selected.
    */
   private func obtainEnvironment() {
+    if params == nil {
+      return
+    }
+
     if let path = NSUserDefaults().stringForKey("environment") {
       let url = NSURL.fileURLWithPath(path, isDirectory: true)
 
