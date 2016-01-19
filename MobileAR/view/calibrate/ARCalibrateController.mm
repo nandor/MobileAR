@@ -3,7 +3,6 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARCamera.h"
-#import "ARCalibrateView.h"
 #import "ARCalibrateController.h"
 #import "ARRenderer.h"
 #import "UIImage+cvMat.h"
@@ -38,7 +37,7 @@ enum class State {
   UIProgressView *progressView;
   UIActivityIndicatorView *spinnerView;
   UILabel *textView;
-  ARCalibrateView *mainView;
+  UIImageView *mainView;
   
   // Submodules.
   ARRenderer *renderer;
@@ -231,7 +230,7 @@ enum class State {
     mainRect.size.width = frame.size.height * 480.0f / 360.0f;
     mainRect.origin.x = (frame.size.width - mainRect.size.width) /2;
     mainRect.origin.y = 0;
-    mainView = [[ARCalibrateView alloc] initWithFrame:mainRect];
+    mainView = [[UIImageView alloc] initWithFrame:mainRect];
     [self.view addSubview:mainView];
   }
   

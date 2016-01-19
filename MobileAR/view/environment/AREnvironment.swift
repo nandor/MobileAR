@@ -5,11 +5,13 @@
 import Foundation
 
 class AREnvironment {
+  let path: NSURL
 
   /**
    Creates a new environment by reading its data from a directory.
    */
   init?(path: NSURL) {
+    self.path = path
   }
 
   /**

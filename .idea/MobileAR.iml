@@ -26,13 +26,12 @@
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/MedianCutSampler.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/VarianceCutSampler.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARBridgingHeader.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARParameters.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateController.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateController.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateView.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/calibrate/ARCalibrateView.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/scene/ARSceneViewController.swift" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentListController.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentViewController.swift" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentListController.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironment.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/view/environment/AREnvironmentCaptureController.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARAppDelegate.mm" isTestSource="false" />
