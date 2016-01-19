@@ -3,7 +3,6 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARAppDelegate.h"
-#import "ARParametersStore.h"
 #import "MobileAR-Swift.h"
 
 
@@ -11,14 +10,10 @@
 {
   UIWindow *window;
   UINavigationController *navigation;
-  ARParametersStore *params;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  // Load the saved parameters.
-  params = [[ARParametersStore alloc] init];
-
   // Create the navigation controller.
   navigation = [[UINavigationController alloc] initWithRootViewController:[[ARSceneViewController alloc] init]];
 
