@@ -4,7 +4,7 @@
 
 #import "ARCamera.h"
 #import "ARCalibrateView.h"
-#import "ARCalibrateViewController.h"
+#import "ARCalibrateController.h"
 #import "ARRenderer.h"
 #import "UIImage+cvMat.h"
 
@@ -32,7 +32,7 @@ enum class State {
 };
 
 
-@implementation ARCalibrateViewController
+@implementation ARCalibrateController
 {
   // UI elements.
   UIProgressView *progressView;

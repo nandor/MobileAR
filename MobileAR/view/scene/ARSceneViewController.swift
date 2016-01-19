@@ -8,6 +8,8 @@ import UIKit
  * Class responsible for displaying the main scene.
  */
 @objc class ARSceneViewController : UIViewController {
+  private var hasCalibration : Bool = false;
+  private var hasEnvironment : Bool = false;
 
   override func viewDidAppear(animated: Bool) {
     super.viewWillAppear(animated);
@@ -15,9 +17,9 @@ import UIKit
     self.title = "MobileAR";
     self.navigationController?.setNavigationBarHidden(true, animated: false);
 
-    if (false) {
+    if (!hasCalibration) {
       let alert = UIAlertController(
-          title: "Calibration",
+          title: "Missing Calibration",
           message: "Please calibrate the camera",
           preferredStyle: .Alert
       );
@@ -25,16 +27,19 @@ import UIKit
           title: "Calibrate",
           style: .Default)
       { (UIAlertAction) in
-
+        self.navigationController?.pushViewController(
+            ARCalibrateController(),
+            animated: true
+        );
       });
       self.presentViewController(alert, animated: false) {}
       self.navigationController?.setNavigationBarHidden(false, animated: false);
       return;
     }
 
-    if (true) {
+    if (!hasEnvironment) {
       let alert = UIAlertController(
-          title: "Environment",
+          title: "Missing Environment",
           message: "Please capture or select the light sources",
           preferredStyle: .Alert
       );

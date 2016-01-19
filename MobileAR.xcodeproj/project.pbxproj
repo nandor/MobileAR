@@ -17,7 +17,7 @@
 		7AFCF83D1BCE40CB00A108F9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFCF83C1BCE40CB00A108F9 /* main.m */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
 		C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */; };
-		C13F813845AA7A84921A0545 /* ARCalibrateViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F824D012A83E5DA457810 /* ARCalibrateViewController.mm */; };
+		C13F813845AA7A84921A0545 /* ARCalibrateController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F824D012A83E5DA457810 /* ARCalibrateController.mm */; };
 		C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F83205E36D9313B0C5705 /* PhotoSphereBuilder.cpp */; };
 		C13F82CE0BB83201040CFCF7 /* ARRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8235A5D999AD8ABB1078 /* ARRenderer.mm */; };
 		C13F83C7D6D822AD1B698612 /* AREnvironmentListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8D2939D5474196F13747 /* AREnvironmentListController.swift */; };
@@ -51,7 +51,7 @@
 		C13F80FE6B3B6F2AE0E31570 /* MedianCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MedianCutSampler.h; path = ar/MedianCutSampler.h; sourceTree = "<group>"; };
 		C13F81264D63E500B99200FB /* ARObject.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARObject.mm; sourceTree = "<group>"; };
 		C13F8235A5D999AD8ABB1078 /* ARRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARRenderer.mm; sourceTree = "<group>"; };
-		C13F824D012A83E5DA457810 /* ARCalibrateViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCalibrateViewController.mm; sourceTree = "<group>"; };
+		C13F824D012A83E5DA457810 /* ARCalibrateController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCalibrateController.mm; sourceTree = "<group>"; };
 		C13F83205E36D9313B0C5705 /* PhotoSphereBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PhotoSphereBuilder.cpp; path = ar/PhotoSphereBuilder.cpp; sourceTree = "<group>"; };
 		C13F83509F206419AEA33A35 /* AREnvironmentCaptureController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentCaptureController.swift; sourceTree = "<group>"; };
 		C13F86D9D8D85229A78A898B /* AREnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironment.swift; sourceTree = "<group>"; };
@@ -66,7 +66,7 @@
 		C13F8D2939D5474196F13747 /* AREnvironmentListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentListController.swift; sourceTree = "<group>"; };
 		C13F8D47B742CA53FFB1CA4A /* ARRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARRenderer.h; sourceTree = "<group>"; };
 		C13F8D54EDB938F397AE97AC /* AREnvironmentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentViewController.swift; sourceTree = "<group>"; };
-		C13F8DD874924EF30CC3F01C /* ARCalibrateViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCalibrateViewController.h; sourceTree = "<group>"; };
+		C13F8DD874924EF30CC3F01C /* ARCalibrateController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCalibrateController.h; sourceTree = "<group>"; };
 		C13F8E7AB65F2B19C88A7050 /* VarianceCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VarianceCutSampler.h; path = ar/VarianceCutSampler.h; sourceTree = "<group>"; };
 		C13F8E859E04FAAF7B7253D5 /* ARParametersStore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARParametersStore.mm; sourceTree = "<group>"; };
 		C13F8F3D075AAC07008D923C /* ARObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARObject.h; sourceTree = "<group>"; };
@@ -165,9 +165,9 @@
 		C13F891D40D45A7F4ED121F6 /* calibrate */ = {
 			isa = PBXGroup;
 			children = (
-				C13F824D012A83E5DA457810 /* ARCalibrateViewController.mm */,
+				C13F824D012A83E5DA457810 /* ARCalibrateController.mm */,
 				C13F888839929D4715B34CDC /* ARCalibrateView.h */,
-				C13F8DD874924EF30CC3F01C /* ARCalibrateViewController.h */,
+				C13F8DD874924EF30CC3F01C /* ARCalibrateController.h */,
 				C13F8ADD8F724CA96018438E /* ARCalibrateView.mm */,
 			);
 			path = calibrate;
@@ -279,7 +279,7 @@
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
 				C13F893F00C9900D0B43F99C /* ARSphereStore.mm in Sources */,
 				C13F88031ACF5DA99CB9AF50 /* ARParametersStore.mm in Sources */,
-				C13F813845AA7A84921A0545 /* ARCalibrateViewController.mm in Sources */,
+				C13F813845AA7A84921A0545 /* ARCalibrateController.mm in Sources */,
 				C13F86DB34DF1EB830FF8897 /* ARCalibrateView.mm in Sources */,
 				C13F8F8406A0619F3F6E937E /* ARObject.mm in Sources */,
 				C13F82CE0BB83201040CFCF7 /* ARRenderer.mm in Sources */,

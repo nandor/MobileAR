@@ -5,7 +5,4 @@
 #import <UIKit/UIKit.h>
 
 @interface ARCalibrateView : UIView
-
-- (id) initWithFrame:(CGRect)frame;
-
 @end

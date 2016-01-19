@@ -4,5 +4,5 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ARCalibrateViewController : UIViewController
+@interface ARCalibrateController : UIViewController
 @end
