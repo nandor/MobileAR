@@ -6,6 +6,7 @@
 #import "ARCalibrateController.h"
 #import "ARRenderer.h"
 #import "UIImage+cvMat.h"
+#import "MobileAR-Swift.h"
 
 #include <stdexcept>
 #include <vector>
@@ -120,6 +121,10 @@ enum class State {
   [self.navigationController setNavigationBarHidden: NO animated: animated];
   self.navigationController.hidesBarsOnSwipe = YES;
 
+  self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]
+      initWithBarButtonSystemItem: UIBarButtonSystemItemAction
+                           target: self
+                           action: @selector(onView:)];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -282,6 +287,11 @@ enum class State {
   }
   
   [spinnerView startAnimating];
+}
+
+- (void) onView:(id)sender
+{
+  [self.navigationController pushViewController:[[ARParametersView alloc] init] animated: true];
 }
 
 @end

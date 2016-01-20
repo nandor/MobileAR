@@ -4,6 +4,10 @@
 
 import UIKit
 
+
+/**
+ Class that handles interactions between the system and the aplication.
+ */
 @UIApplicationMain
 class ARAppDelegate: UIResponder, UIApplicationDelegate {
   /**
@@ -19,7 +23,11 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
   /**
    Called when the application finished loading and stuff is ready to be set up.
    */
-  func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+  func application(
+      application: UIApplication,
+      didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?
+  ) -> Bool
+  {
 
     // Create the navigation controller.
     navigation = UINavigationController()
