@@ -17,20 +17,18 @@
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARRenderer.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARObject.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/renderer/ARParams.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/main.m" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/MedianCutSampler.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/PhotoSphereBuilder.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/PhotoSphereBuilder.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/MedianCutSampler.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/VarianceCutSampler.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/VarianceCutSampler.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARAppDelegate.mm" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARAppDelegate.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/Info.plist" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/Assets.xcassets" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARCamera.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARCamera.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/UIImage+cvMat.mm" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/ARAppDelegate.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/UIImage+cvMat.h" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />

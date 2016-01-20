@@ -108,14 +108,23 @@ enum class State {
   
   // Start capturing images for calibration.
   state = State::CAPTURE;
+
+  // Set the title.
+  self.title = @"Calibrate";
 }
 
+- (void) viewWillAppear:(BOOL) animated
+{
+  [super viewWillAppear: animated];
+
+  [self.navigationController setNavigationBarHidden: NO animated: animated];
+  self.navigationController.hidesBarsOnSwipe = YES;
+
+}
 
 - (void)viewDidAppear:(BOOL)animated
 {
   [super viewDidAppear:animated];
-
-  [[self navigationController] setNavigationBarHidden:NO];
 
   [camera start];
   [renderer start];

@@ -10,44 +10,37 @@ import UIKit
 @objc class ARSceneViewController : UIViewController {
   var params: ARParameters?
   var environment: AREnvironment?
-  var timer: NSTimer?
 
+  /**
+   Callend when the window is first created.
+   */
   override func viewDidLoad() {
     super.viewDidLoad()
+
+    title = "MobilerAR"
   }
 
   /**
    Called when the view is about to be loaded.
    */
-  override func viewDidAppear(animated: Bool) {
-    super.viewDidAppear(animated)
+  override func viewWillAppear(animated: Bool) {
+    super.viewWillAppear(animated)
 
-    // Set the title of the view.
-    title = "MobileAR"
+    // Display the toolbar and navigation bar, but allow them to be hidden.
+    navigationController?.setNavigationBarHidden(false, animated: animated)
+    navigationController?.hidesBarsOnSwipe = true;
 
-    // Hide both the navigation bar and the toolbar.
-    if let nav = navigationController {
-      nav.setToolbarHidden(true, animated: true)
-      nav.setNavigationBarHidden(true, animated: true)
-
-      let space = UIBarButtonItem(
-          barButtonSystemItem: .FlexibleSpace,
-          target: nil,
-          action: nil
-      )
-      let btnCalibrate = UIBarButtonItem(
-          barButtonSystemItem: .Camera,
-          target: self,
-          action: Selector("onCalibrate")
-      )
-      let btnBrowse = UIBarButtonItem(
-          barButtonSystemItem: .Search,
-          target: self,
-          action: Selector("onSelect")
-      )
-
-      setToolbarItems([btnCalibrate, space, btnBrowse], animated: false)
-    }
+    // Set up the toolbar items.
+    navigationItem.rightBarButtonItem = UIBarButtonItem(
+        barButtonSystemItem: .Camera,
+        target: self,
+        action: Selector("onCalibrate")
+    )
+    navigationItem.leftBarButtonItem = UIBarButtonItem(
+        barButtonSystemItem: .Search,
+        target: self,
+        action: Selector("onSelect")
+    )
 
     // Fetch camera parameters & environment.
     //obtainCalibration()
@@ -55,10 +48,9 @@ import UIKit
   }
 
   /**
-   Cancels all timers.
+   Called when the view will disapper.
    */
   override func viewWillDisappear(animated: Bool) {
-    timer?.invalidate()
   }
 
   /**
@@ -84,7 +76,7 @@ import UIKit
         style: .Default)
     { (UIAlertAction) in self.onCalibrate() })
 
-    presentViewController(alert, animated: false) {}
+    presentViewController(alert, animated: true) {}
   }
 
   /**
@@ -120,28 +112,7 @@ import UIKit
         style: .Default)
     { (UIAlertAction) in self.onSelect() })
 
-    presentViewController(alert, animated: false) {}
-  }
-
-  /**
-   Shows the toolbar whenever the user touches the screen.
-   */
-  override func touchesBegan(touches: Set<UITouch>, withEvent: UIEvent?) {
-    navigationController?.setNavigationBarHidden(false, animated: true)
-    navigationController?.setToolbarHidden(false, animated: true)
-  }
-
-  /**
-   Hides the toolbar after the user lifts the figers from the screen.
-   */
-  override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
-    timer = NSTimer.scheduledTimerWithTimeInterval(
-        3,
-        target: self,
-        selector: Selector("onHide"),
-        userInfo: nil,
-        repeats: false
-    )
+    presentViewController(alert, animated: true) {}
   }
 
   func onCalibrate() {
@@ -154,10 +125,5 @@ import UIKit
 
   func onSelect() {
     navigationController?.pushViewController(AREnvironmentListController(), animated: true)
-  }
-
-  func onHide() {
-    navigationController?.setNavigationBarHidden(true, animated: true)
-    navigationController?.setToolbarHidden(true, animated: true)
   }
 }
