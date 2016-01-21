@@ -16,8 +16,6 @@ import UIKit
    */
   override func viewDidLoad() {
     super.viewDidLoad()
-
-    title = "MobilerAR"
   }
 
   /**
@@ -41,6 +39,9 @@ import UIKit
         target: self,
         action: Selector("onSelect")
     )
+
+    // Reset the title.
+    title = "MobilerAR"
   }
 
   /**
@@ -98,6 +99,7 @@ import UIKit
 
       environment = try? AREnvironment(path: url)
       if environment != nil {
+        title = "MobileAR - \(environment!.name)"
         return
       }
     }

@@ -157,7 +157,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
 
       alert.addAction(UIAlertAction(
           title: "Retry",
-          style: .Cancel)
+          style: .Destructive)
       { (UIAlertAction) in
         self.calibrator = ARCalibrator(delegate: self)
       })

@@ -16,12 +16,25 @@ class AREnvironment {
   var name: String!
 
   // GPS coordinate where the image was taken.
-  var location: CLLocation!
+  var location: CLLocation?
+
+  /**
+   Creates a new environment.
+   */
+  init(
+      path: NSURL,
+      name: String,
+      location: CLLocation?)
+  {
+    self.path = path
+    self.name = name
+    self.location = location
+  }
 
   /**
    Creates a new environment by reading its data from a directory.
    */
-  required init(path: NSURL) throws {
+  init(path: NSURL) throws {
     self.path = path
 
     // Load the metadata.
@@ -31,28 +44,53 @@ class AREnvironment {
     )
     let meta = try NSJSONSerialization.JSONObjectWithData(
         data,
-        options: NSJSONReadingOptions())
+        options: NSJSONReadingOptions()
+    )
 
     // Unwrap the name.
     guard let name = meta["name"] as? String else { throw AREnvironmentError.MalformedData }
     self.name = name
 
-    // Unwrap the location.
-    guard let loc = meta["location"] as? [String:AnyObject] else {
-      throw AREnvironmentError.MalformedData
+    // Unwrap the location if it exists.
+    if let loc = meta["location"] as? [String : AnyObject] {
+      guard let lat = loc["lat"] as? Double else { throw AREnvironmentError.MalformedData }
+      guard let lng = loc["lng"] as? Double else { throw AREnvironmentError.MalformedData }
+      guard let alt = loc["alt"] as? Double else { throw AREnvironmentError.MalformedData }
+      self.location = CLLocation(
+          coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+          altitude: alt,
+          horizontalAccuracy: 0,
+          verticalAccuracy: 0,
+          timestamp: NSDate()
+      )
     }
-    guard let lat = loc["lat"] as? Double else { throw AREnvironmentError.MalformedData }
-    guard let lng = loc["lng"] as? Double else { throw AREnvironmentError.MalformedData }
-    guard let altitude = loc["altitude"] as? Double else { throw AREnvironmentError.MalformedData }
-    guard let accVert = loc["accVert"] as? Double else { throw AREnvironmentError.MalformedData }
-    guard let accHorz = loc["accHorz"] as? Double else { throw AREnvironmentError.MalformedData }
-    self.location = CLLocation(
-        coordinate: CLLocationCoordinate2D(latitude:lat, longitude: lng),
-        altitude: altitude,
-        horizontalAccuracy: accHorz,
-        verticalAccuracy: accVert,
-        timestamp: NSDate()
+  }
+
+  /**
+   Saves the environment.
+   */
+  func save() {
+
+    // Create the directory where the environment will be stored.
+    try! NSFileManager.defaultManager().createDirectoryAtURL(
+        path,
+        withIntermediateDirectories: true,
+        attributes: nil
     )
+
+    // Write the data to the json file.
+    var data : [String : AnyObject ] = [ "name": name ]
+    if let loc = location {
+      data["location"] = [
+          "lat": loc.coordinate.latitude,
+          "lng": loc.coordinate.longitude,
+          "alt": loc.altitude
+      ]
+    }
+    (try! NSJSONSerialization.dataWithJSONObject(
+        data,
+        options: NSJSONWritingOptions()
+    )).writeToURL(path.URLByAppendingPathComponent("data.json"), atomically: true)
   }
 
   /**
@@ -60,12 +98,9 @@ class AREnvironment {
    */
   static func all() -> [AREnvironment] {
 
-    let fileManager = NSFileManager.defaultManager()
-
     // Create an enumerator for the Environments directory.
-    let documents = fileManager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
-    let enumerator = fileManager.enumeratorAtURL(
-        documents.URLByAppendingPathComponent("Environments"),
+    let enumerator = NSFileManager.defaultManager().enumeratorAtURL(
+        getEnvironmentsDirectoryURL(),
         includingPropertiesForKeys: [ NSURLIsDirectoryKey ],
         options: .SkipsSubdirectoryDescendants)
     { (NSURL url, NSError err) in
@@ -87,5 +122,15 @@ class AREnvironment {
       }
     }
     return environments;
+  }
+
+  /**
+   Returns the directory storing the environments.
+   */
+  static func getEnvironmentsDirectoryURL() -> NSURL{
+    return NSFileManager.defaultManager().URLsForDirectory(
+        .DocumentDirectory,
+        inDomains: .UserDomainMask
+    )[0].URLByAppendingPathComponent("Environments")
   }
 }

@@ -53,6 +53,7 @@ class AREnvironmentViewController : UIViewController {
    Called if the user wants to select the environment.
    */
   func onSelect() {
+    NSUserDefaults().setObject(environment.path.path!, forKey: "environment")
     navigationController?.popToRootViewControllerAnimated(true)
   }
 }

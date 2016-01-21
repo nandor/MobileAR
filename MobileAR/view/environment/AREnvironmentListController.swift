@@ -85,8 +85,10 @@ class AREnvironmentListController
     manager.stopUpdatingLocation()
 
     // Sort environments by distance from current location.
-    environments.sortInPlace({
-      loc.distanceFromLocation($0.location) < loc.distanceFromLocation($1.location)
+    environments.sortInPlace({ (AREnvironment env0, AREnvironment env1) in
+      guard let l0 = env0.location else { return false }
+      guard let l1 = env1.location else { return false }
+      return l0.distanceFromLocation(loc) < l1.distanceFromLocation(loc)
     })
 
     // Refresh the table.
@@ -111,6 +113,13 @@ class AREnvironmentListController
   }
 
   /**
+   Allow all rows to be editable.
+   */
+  func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+    return true
+  }
+
+  /**
    Creates a cell in a table for an item.
    */
   func tableView(
@@ -119,8 +128,28 @@ class AREnvironmentListController
   ) -> UITableViewCell
   {
     let cell = tableView.dequeueReusableCellWithIdentifier("environment") as UITableViewCell!
-    cell.textLabel?.text = environments[indexPath.indexAtPosition(1)].name
+    cell.textLabel?.text = environments[indexPath.row].name
     return cell
+  }
+
+  /**
+   Implements deletion for a row.
+   */
+  func tableView(
+      tableView: UITableView,
+      commitEditingStyle editingStyle:UITableViewCellEditingStyle,
+      forRowAtIndexPath indexPath: NSIndexPath)
+  {
+    if (editingStyle != .Delete) {
+      return
+    }
+
+    // Delete the folder of the environment.
+    try! NSFileManager.defaultManager().removeItemAtURL(environments[indexPath.row].path)
+    environments.removeAtIndex(indexPath.row)
+
+    // Delete the row from the table.
+    tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
   }
 
   /**
@@ -128,7 +157,7 @@ class AREnvironmentListController
    */
   func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
     self.navigationController?.pushViewController(
-        AREnvironmentViewController(environment: environments[indexPath.indexAtPosition(1)]),
+        AREnvironmentViewController(environment: environments[indexPath.row]),
         animated: true
     )
   }
