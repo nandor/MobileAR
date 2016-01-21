@@ -12,20 +12,21 @@
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
 		7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */; };
 		7A85388B1C4D6AE1002499C4 /* ARSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A85388A1C4D6AE1002499C4 /* ARSceneViewController.swift */; };
-		7AE9AB6D1BE16F8400F30DC5 /* ARCamera.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7AE9AB6C1BE16F8400F30DC5 /* ARCamera.mm */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
 		C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */; };
-		C13F813845AA7A84921A0545 /* ARCalibrateController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F824D012A83E5DA457810 /* ARCalibrateController.mm */; };
 		C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F83205E36D9313B0C5705 /* PhotoSphereBuilder.cpp */; };
+		C13F823D19EA783B3F93F425 /* ARCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F84D42A6E03F08933A7C4 /* ARCamera.swift */; };
 		C13F82CE0BB83201040CFCF7 /* ARRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8235A5D999AD8ABB1078 /* ARRenderer.mm */; };
 		C13F83C7D6D822AD1B698612 /* AREnvironmentListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8D2939D5474196F13747 /* AREnvironmentListController.swift */; };
 		C13F845C0484D71FD4CEC8C8 /* MedianCutSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F87AF09D79753A79B4B45 /* MedianCutSampler.cpp */; };
 		C13F8465223C526AEB48BDBF /* ARShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = C13F88F7823F881D9CAE6387 /* ARShader.metal */; };
 		C13F84B7D21EC753B98A7D08 /* ARParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F825EDE9100716CC48317 /* ARParameters.swift */; };
 		C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8DAF8EBDD0C4C7F91DCF /* ARAppDelegate.swift */; };
+		C13F88E9838BC26E92D85F1C /* ARCalibrator.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8E09BD69792D84436A26 /* ARCalibrator.mm */; };
 		C13F890C49C594F00ADCE618 /* AREnvironmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8D54EDB938F397AE97AC /* AREnvironmentViewController.swift */; };
 		C13F89422A545E79B15B81C1 /* AREnvironmentCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F83509F206419AEA33A35 /* AREnvironmentCaptureController.swift */; };
-		C13F8A2197D794F5C2B3078C /* ARParametersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8135F4414B868F27857D /* ARParametersView.swift */; };
+		C13F8A2197D794F5C2B3078C /* ARParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8135F4414B868F27857D /* ARParametersViewController.swift */; };
+		C13F8DF0A7A5193F3B4D7786 /* ARCalibrateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8C23FB9CB49925A731FC /* ARCalibrateController.swift */; };
 		C13F8F8406A0619F3F6E937E /* ARObject.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F81264D63E500B99200FB /* ARObject.mm */; };
 		C13F8FA133CD14975F5D5F76 /* AREnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F86D9D8D85229A78A898B /* AREnvironment.swift */; };
 /* End PBXBuildFile section */
@@ -38,30 +39,30 @@
 		7A5B46B11BCFBBA1003F87BE /* UIImage+cvMat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIImage+cvMat.h"; sourceTree = "<group>"; };
 		7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "UIImage+cvMat.mm"; sourceTree = "<group>"; };
 		7A85388A1C4D6AE1002499C4 /* ARSceneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARSceneViewController.swift; sourceTree = "<group>"; };
-		7AE9AB691BE16F1300F30DC5 /* ARCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCamera.h; sourceTree = "<group>"; };
-		7AE9AB6C1BE16F8400F30DC5 /* ARCamera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCamera.mm; sourceTree = "<group>"; };
 		7AFCF8381BCE40CB00A108F9 /* MobileAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7AFCF84C1BCE40CB00A108F9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C13F80FE6B3B6F2AE0E31570 /* MedianCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MedianCutSampler.h; path = ar/MedianCutSampler.h; sourceTree = "<group>"; };
 		C13F81264D63E500B99200FB /* ARObject.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARObject.mm; sourceTree = "<group>"; };
-		C13F8135F4414B868F27857D /* ARParametersView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARParametersView.swift; sourceTree = "<group>"; };
+		C13F8135F4414B868F27857D /* ARParametersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARParametersViewController.swift; sourceTree = "<group>"; };
 		C13F8235A5D999AD8ABB1078 /* ARRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARRenderer.mm; sourceTree = "<group>"; };
-		C13F824D012A83E5DA457810 /* ARCalibrateController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCalibrateController.mm; sourceTree = "<group>"; };
 		C13F825EDE9100716CC48317 /* ARParameters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARParameters.swift; sourceTree = "<group>"; };
 		C13F83205E36D9313B0C5705 /* PhotoSphereBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PhotoSphereBuilder.cpp; path = ar/PhotoSphereBuilder.cpp; sourceTree = "<group>"; };
 		C13F83509F206419AEA33A35 /* AREnvironmentCaptureController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentCaptureController.swift; sourceTree = "<group>"; };
+		C13F8416C9A94DD887595FB4 /* ARCalibrator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCalibrator.h; sourceTree = "<group>"; };
+		C13F84D42A6E03F08933A7C4 /* ARCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARCamera.swift; sourceTree = "<group>"; };
 		C13F86D9D8D85229A78A898B /* AREnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironment.swift; sourceTree = "<group>"; };
 		C13F87AF09D79753A79B4B45 /* MedianCutSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MedianCutSampler.cpp; path = ar/MedianCutSampler.cpp; sourceTree = "<group>"; };
 		C13F88F7823F881D9CAE6387 /* ARShader.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARShader.metal; sourceTree = "<group>"; };
 		C13F8997FE8D785C9DF59E5D /* ARParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARParams.h; sourceTree = "<group>"; };
 		C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VarianceCutSampler.cpp; path = ar/VarianceCutSampler.cpp; sourceTree = "<group>"; };
+		C13F8C23FB9CB49925A731FC /* ARCalibrateController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARCalibrateController.swift; sourceTree = "<group>"; };
 		C13F8CDBEC9991947940753F /* ARBridgingHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARBridgingHeader.h; sourceTree = "<group>"; };
 		C13F8D2939D5474196F13747 /* AREnvironmentListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentListController.swift; sourceTree = "<group>"; };
 		C13F8D47B742CA53FFB1CA4A /* ARRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARRenderer.h; sourceTree = "<group>"; };
 		C13F8D54EDB938F397AE97AC /* AREnvironmentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentViewController.swift; sourceTree = "<group>"; };
 		C13F8DAF8EBDD0C4C7F91DCF /* ARAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARAppDelegate.swift; sourceTree = "<group>"; };
-		C13F8DD874924EF30CC3F01C /* ARCalibrateController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCalibrateController.h; sourceTree = "<group>"; };
+		C13F8E09BD69792D84436A26 /* ARCalibrator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCalibrator.mm; sourceTree = "<group>"; };
 		C13F8E7AB65F2B19C88A7050 /* VarianceCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VarianceCutSampler.h; path = ar/VarianceCutSampler.h; sourceTree = "<group>"; };
 		C13F8F3D075AAC07008D923C /* ARObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARObject.h; sourceTree = "<group>"; };
 		C13F8FA8928E90CB2384D35B /* PhotoSphereBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PhotoSphereBuilder.h; path = ar/PhotoSphereBuilder.h; sourceTree = "<group>"; };
@@ -104,8 +105,6 @@
 		7AFCF83A1BCE40CB00A108F9 /* MobileAR */ = {
 			isa = PBXGroup;
 			children = (
-				7AE9AB691BE16F1300F30DC5 /* ARCamera.h */,
-				7AE9AB6C1BE16F8400F30DC5 /* ARCamera.mm */,
 				7A5B46B11BCFBBA1003F87BE /* UIImage+cvMat.h */,
 				7A5B46B41BCFBC03003F87BE /* UIImage+cvMat.mm */,
 				7AFCF84C1BCE40CB00A108F9 /* Info.plist */,
@@ -115,6 +114,9 @@
 				C13F8F6C5043EBA1EE525308 /* renderer */,
 				C13F8CDBEC9991947940753F /* ARBridgingHeader.h */,
 				C13F8DAF8EBDD0C4C7F91DCF /* ARAppDelegate.swift */,
+				C13F84D42A6E03F08933A7C4 /* ARCamera.swift */,
+				C13F8E09BD69792D84436A26 /* ARCalibrator.mm */,
+				C13F8416C9A94DD887595FB4 /* ARCalibrator.h */,
 			);
 			path = MobileAR;
 			sourceTree = "<group>";
@@ -151,10 +153,9 @@
 		C13F891D40D45A7F4ED121F6 /* calibrate */ = {
 			isa = PBXGroup;
 			children = (
-				C13F824D012A83E5DA457810 /* ARCalibrateController.mm */,
-				C13F8DD874924EF30CC3F01C /* ARCalibrateController.h */,
 				C13F825EDE9100716CC48317 /* ARParameters.swift */,
-				C13F8135F4414B868F27857D /* ARParametersView.swift */,
+				C13F8135F4414B868F27857D /* ARParametersViewController.swift */,
+				C13F8C23FB9CB49925A731FC /* ARCalibrateController.swift */,
 			);
 			path = calibrate;
 			sourceTree = "<group>";
@@ -255,13 +256,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7AE9AB6D1BE16F8400F30DC5 /* ARCamera.mm in Sources */,
 				7A5B46B51BCFBC03003F87BE /* UIImage+cvMat.mm in Sources */,
 				C13F845C0484D71FD4CEC8C8 /* MedianCutSampler.cpp in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
 				7A85388B1C4D6AE1002499C4 /* ARSceneViewController.swift in Sources */,
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
-				C13F813845AA7A84921A0545 /* ARCalibrateController.mm in Sources */,
 				C13F8F8406A0619F3F6E937E /* ARObject.mm in Sources */,
 				C13F82CE0BB83201040CFCF7 /* ARRenderer.mm in Sources */,
 				C13F8465223C526AEB48BDBF /* ARShader.metal in Sources */,
@@ -271,7 +270,10 @@
 				C13F89422A545E79B15B81C1 /* AREnvironmentCaptureController.swift in Sources */,
 				C13F84B7D21EC753B98A7D08 /* ARParameters.swift in Sources */,
 				C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */,
-				C13F8A2197D794F5C2B3078C /* ARParametersView.swift in Sources */,
+				C13F8A2197D794F5C2B3078C /* ARParametersViewController.swift in Sources */,
+				C13F8DF0A7A5193F3B4D7786 /* ARCalibrateController.swift in Sources */,
+				C13F823D19EA783B3F93F425 /* ARCamera.swift in Sources */,
+				C13F88E9838BC26E92D85F1C /* ARCalibrator.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

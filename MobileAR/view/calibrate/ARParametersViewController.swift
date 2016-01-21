@@ -2,9 +2,9 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-import Foundation
+import UIKit
 
-@objc class ARParametersView : UIViewController {
+class ARParametersViewController : UIViewController {
   /**
    Called before the view is displayed.
    */
@@ -23,7 +23,7 @@ import Foundation
 
     // Display the intrinsic matrix & distortion in MathML.
     var content : String = ""
-    if let params = ARParameters.load() {
+    if let params = try? ARParameters.loadFromFile() {
         content =
           "<div>" +
             "<h3>Intrinsic matrix K</h3>" +
@@ -84,7 +84,7 @@ import Foundation
             "</math>" +
           "</div>"
     } else {
-      content = "<h3>Camera not calibrated</h3>"
+      content = "<div><h3>Camera not calibrated</h3></div>"
     }
 
     // Display content in a WebView.

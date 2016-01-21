@@ -51,6 +51,7 @@ import UIKit
    Called when the view will disapper.
    */
   override func viewWillDisappear(animated: Bool) {
+    super.viewWillDisappear(animated)
   }
 
   /**
@@ -60,8 +61,7 @@ import UIKit
    Otherwise, the user is promted to navigate to the calibration view.
    */
   private func obtainCalibration() {
-    params = ARParameters.load()
-    if params != nil {
+    if let params = try? ARParameters.loadFromFile() {
       return
     }
 
@@ -76,7 +76,7 @@ import UIKit
         style: .Default)
     { (UIAlertAction) in self.onCalibrate() })
 
-    presentViewController(alert, animated: true) {}
+    presentViewController(alert, animated: true, completion: nil)
   }
 
   /**
@@ -90,7 +90,7 @@ import UIKit
     if let path = NSUserDefaults().stringForKey("environment") {
       let url = NSURL.fileURLWithPath(path, isDirectory: true)
 
-      environment = try AREnvironment(path: url)
+      environment = AREnvironment(path: url)
       if environment != nil {
         return
       }
@@ -112,7 +112,7 @@ import UIKit
         style: .Default)
     { (UIAlertAction) in self.onSelect() })
 
-    presentViewController(alert, animated: true) {}
+    presentViewController(alert, animated: true, completion: nil)
   }
 
   func onCalibrate() {

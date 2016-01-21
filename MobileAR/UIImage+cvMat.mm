@@ -26,8 +26,8 @@
   auto data = [NSData dataWithBytes:mtx.data length: mtx.step[0] * mtx.rows];
   auto provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
   CGImageRef imageRef = CGImageCreate(
-      mtx.cols,                                      // width
-      mtx.rows,                                      // height
+      static_cast<size_t>(mtx.cols),                 // width
+      static_cast<size_t>(mtx.rows),                 // height
       8,                                             // bits per component
       8 * mtx.elemSize(),                            // bits per pixel
       mtx.step[0],                                   // bytesPerRow
@@ -47,6 +47,30 @@
   CGColorSpaceRelease(colorSpace);
 
   return image;
+}
+
+- (void)toCvMat:(cv::Mat &)mtx
+{
+  CGColorSpaceRef colorSpace = CGImageGetColorSpace(self.CGImage);
+
+  mtx.create(
+      static_cast<int>(self.size.height),
+      static_cast<int>(self.size.width),
+      CV_8UC4
+  );
+
+  CGContextRef contextRef = CGBitmapContextCreate(
+      mtx.data,
+      static_cast<size_t>(mtx.cols),
+      static_cast<size_t>(mtx.rows),
+      8,
+      mtx.step[0],
+      colorSpace,
+      kCGImageAlphaNoneSkipLast | kCGBitmapByteOrderDefault
+  );
+  CGContextDrawImage(contextRef, CGRectMake(0, 0, mtx.cols, mtx.rows), self.CGImage);
+  CGContextRelease(contextRef);
+
 }
 
 @end

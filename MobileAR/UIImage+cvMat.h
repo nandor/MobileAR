@@ -13,4 +13,9 @@
  */
 + (UIImage *)imageWithCvMat:(const cv::Mat &)mtx;
 
+/**
+ Converts a UIImage to an OpenCV matrix.
+ */
+- (void)toCvMat:(cv::Mat &)mtx;
+
 @end

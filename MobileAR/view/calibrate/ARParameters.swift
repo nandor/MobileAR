@@ -4,7 +4,7 @@
 
 import Foundation
 
-class ARParameters {
+@objc class ARParameters : NSObject {
   let fx: Float
   let fy: Float
   let cx: Float
@@ -15,7 +15,7 @@ class ARParameters {
   let r1: Float
   let r2: Float
 
-  required init(
+  @objc required init(
     fx : Float,
     fy : Float,
     cx : Float,
@@ -37,36 +37,32 @@ class ARParameters {
     self.r2 = r2
   }
 
-  static func load() -> ARParameters? {
-    do {
-      let fileManager = NSFileManager.defaultManager()
-      let documents = fileManager.URLsForDirectory(
-          .DocumentDirectory,
-          inDomains: .UserDomainMask
-      )[0]
+  static func loadFromFile() throws -> ARParameters {
+    let fileManager = NSFileManager.defaultManager()
+    let documents = fileManager.URLsForDirectory(
+        .DocumentDirectory,
+        inDomains: .UserDomainMask
+    )[0]
 
-      let data = try NSData(
-          contentsOfURL: documents.URLByAppendingPathComponent("params.json"),
-          options: NSDataReadingOptions()
-      )
-      let json = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions())
+    let data = try NSData(
+        contentsOfURL: documents.URLByAppendingPathComponent("params.json"),
+        options: NSDataReadingOptions()
+    )
+    let json = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions())
 
-      return ARParameters(
-          fx: json["fx"] as! Float,
-          fy: json["fy"] as! Float,
-          cx: json["cx"] as! Float,
-          cy: json["cy"] as! Float,
-          k1: json["k1"] as! Float,
-          k2: json["k2"] as! Float,
-          k3: json["k3"] as! Float,
-          r1: json["r1"] as! Float,
-          r2: json["r2"] as! Float
-      )
-    } catch {
-      return nil
-    }
+    return ARParameters(
+        fx: json["fx"] as! Float,
+        fy: json["fy"] as! Float,
+        cx: json["cx"] as! Float,
+        cy: json["cy"] as! Float,
+        k1: json["k1"] as! Float,
+        k2: json["k2"] as! Float,
+        k3: json["k3"] as! Float,
+        r1: json["r1"] as! Float,
+        r2: json["r2"] as! Float
+    )
   }
 
-  static func save(params: ARParameters) {
+  static func saveToFile(params: ARParameters) {
   }
 }
