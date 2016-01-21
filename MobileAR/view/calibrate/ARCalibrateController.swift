@@ -4,8 +4,8 @@
 
 import UIKit
 
-class ARCalibrateController : UIViewController, ARCameraDelegate {
-
+class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDelegate
+{
   // UI Elements.
   var imageView : UIImageView?
   var spinnerView : UIActivityIndicatorView?
@@ -24,9 +24,8 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
   override func viewDidLoad() {
     super.viewDidLoad()
 
+    calibrator = ARCalibrator(delegate: self)
     createUI()
-    createCalibrator()
-    createCamera()
   }
 
   /**
@@ -52,6 +51,10 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
         target: self,
         action: Selector("onViewParameters")
     )
+    guard let _ = try? ARParameters.loadFromFile() else {
+      navigationItem.rightBarButtonItem?.enabled = false
+      return
+    }
   }
 
   /**
@@ -60,6 +63,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
   override func viewDidAppear(animated: Bool) {
     super.viewDidAppear(animated)
 
+    createCamera()
     camera?.start()
   }
 
@@ -88,10 +92,10 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
 
     // Create an image in the center.
     var imageRect = CGRect()
+    imageRect.size.width = frame.size.height * 640.0 / 480.0
+    imageRect.size.height = frame.size.height
     imageRect.origin.x = (frame.size.width - imageRect.size.width) / 2
     imageRect.origin.y = 0
-    imageRect.size.width = frame.size.height * 480.0 / 360.0
-    imageRect.size.height = frame.size.height
     imageView = UIImageView(frame: imageRect)
     view.addSubview(imageView!)
 
@@ -129,32 +133,59 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
   }
 
   /**
-   Create the calibrator.
+   Called when the calibration process is completed.
    */
-  func createCalibrator() {
+  func onComplete(rms: Float, params: ARParameters) {
+    dispatch_async(dispatch_get_main_queue()) {
+      self.textView!.hidden = true
+      self.progressView!.hidden = true
+      self.spinnerView!.stopAnimating()
 
-    calibrator = ARCalibrator()
-    calibrator!.onComplete() {
-      (float rms, ARParameters params) in
+      let alert = UIAlertController(
+          title: "Save",
+          message: "Reprojection Error = \(rms)",
+          preferredStyle: .Alert
+      )
+
+      alert.addAction(UIAlertAction(
+         title: "Use",
+          style: .Default)
+      { (UIAlertAction) in
+        self.navigationItem.rightBarButtonItem?.enabled = true
+        ARParameters.saveToFile(params)
+      })
+
+      alert.addAction(UIAlertAction(
+          title: "Retry",
+          style: .Cancel)
+      { (UIAlertAction) in
+        self.calibrator = ARCalibrator(delegate: self)
+      })
+
+      self.presentViewController(alert, animated: true, completion: nil)
     }
-    calibrator!.onProgress() {
-      (float progress) in dispatch_sync(dispatch_get_main_queue()) {
-        if (progress < 1.0) {
-          self.textView!.hidden = false
-          self.textView!.text = "Capturing data"
+  }
 
-          self.progressView!.hidden = false
-          self.progressView!.progress = progress
+  /**
+   Called when an image is processed by the calibrator.
+   */
+  func onProgress(progress: Float) {
+    dispatch_async(dispatch_get_main_queue()) {
+      if (progress < 1.0) {
+        self.textView!.hidden = false
+        self.textView!.text = "Capturing data"
 
-          self.spinnerView!.stopAnimating()
-        } else {
-          self.textView!.hidden = false
-          self.textView!.text = "Calibrating"
+        self.progressView!.hidden = false
+        self.progressView!.progress = progress
 
-          self.progressView!.hidden = true
+        self.spinnerView!.stopAnimating()
+      } else {
+        self.textView!.hidden = false
+        self.textView!.text = "Calibrating"
 
-          self.spinnerView!.startAnimating()
-        }
+        self.progressView!.hidden = true
+
+        self.spinnerView!.startAnimating()
       }
     }
   }
@@ -163,7 +194,9 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
    Handles a frame from the camera.
    */
   func onFrame(frame: UIImage) {
-    imageView?.image = calibrator?.findPattern(frame)
+    dispatch_async(dispatch_get_main_queue()) {
+      self.imageView?.image = self.calibrator?.findPattern(frame)
+    }
   }
 
   /**
@@ -180,12 +213,17 @@ class ARCalibrateController : UIViewController, ARCameraDelegate {
         title: "Camera Permission",
         message: "Please enable the camera in Settings > MobileAR",
         preferredStyle: .Alert
-    );
+    )
 
     alert.addAction(UIAlertAction(
         title: "Okay",
         style: .Default)
     { (UIAlertAction) in self.createCamera() })
+
+    alert.addAction(UIAlertAction(
+        title: "Back",
+        style: .Cancel)
+    { (UIAlertAction) in self.navigationController?.popToRootViewControllerAnimated(true) })
 
     presentViewController(alert, animated: true, completion: nil)
   }

@@ -9,9 +9,12 @@
 
 @class ARParameters;
 
-typedef void(^ARCalibratorProgressCallback)(float);
-typedef void(^ARCalibratorCompleteCallback)(float, ARParameters *);
+@protocol ARCalibratorDelegate <NSObject>
 
+- (void) onProgress:(float)progress;
+- (void) onComplete:(float)rms params:(ARParameters*)params;
+
+@end
 
 /**
  Class that encapsulates calibration logic.
@@ -21,21 +24,11 @@ typedef void(^ARCalibratorCompleteCallback)(float, ARParameters *);
 /**
  Initializes the calibrator object.
  */
-- (instancetype)init;
+- (instancetype)initWithDelegate:(id)delegate;
 
 /**
  Finds a pattern in a frame and highlights it.
  */
 - (UIImage *)findPattern:(UIImage *)frame;
-
-/**
- Sets the callback for calibration progress.
- */
-- (void)onProgress:(ARCalibratorProgressCallback)callback;
-
-/**
- Sets the callback for calibration completion.
- */
-- (void)onComplete:(ARCalibratorCompleteCallback)callback;
 
 @end

@@ -37,15 +37,13 @@ import Foundation
     self.r2 = r2
   }
 
+  /**
+   Loads the calibration parameters from a file.
+   */
   static func loadFromFile() throws -> ARParameters {
-    let fileManager = NSFileManager.defaultManager()
-    let documents = fileManager.URLsForDirectory(
-        .DocumentDirectory,
-        inDomains: .UserDomainMask
-    )[0]
 
     let data = try NSData(
-        contentsOfURL: documents.URLByAppendingPathComponent("params.json"),
+        contentsOfURL: paramFileURL(),
         options: NSDataReadingOptions()
     )
     let json = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions())
@@ -63,6 +61,33 @@ import Foundation
     )
   }
 
+  /**
+   Saves the calibration file.
+   */
   static func saveToFile(params: ARParameters) {
+    let outputData = try? NSJSONSerialization.dataWithJSONObject([
+          "fx": params.fx,
+          "fy": params.fy,
+          "cx": params.cx,
+          "cy": params.cy,
+          "k1": params.k1,
+          "k2": params.k2,
+          "k3": params.k3,
+          "r1": params.r1,
+          "r2": params.r2
+        ],
+        options: NSJSONWritingOptions()
+    )
+    outputData?.writeToURL(paramFileURL(), atomically: true)
+  }
+
+  /**
+   Returns the URL to the file storing the parameters.
+   */
+  static func paramFileURL() -> NSURL {
+    return NSFileManager.defaultManager().URLsForDirectory(
+        .DocumentDirectory,
+        inDomains: .UserDomainMask
+    )[0].URLByAppendingPathComponent("params.json")
   }
 }

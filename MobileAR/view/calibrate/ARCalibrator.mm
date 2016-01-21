@@ -18,11 +18,10 @@ static const size_t kCalibrationPoints = 16;
 static const cv::Size kPatternSize(4, 11);
 
 
-@implementation ARCalibrator
-{
+@implementation ARCalibrator {
   // OpenCV images.
   cv::Mat gray;
-  cv::Mat rgb;
+  cv::Mat bgr;
   cv::Mat bgra;
 
   // Buffer for calibration points.
@@ -32,22 +31,20 @@ static const cv::Size kPatternSize(4, 11);
   // Computed parameters.
   cv::Mat cameraMatrix;
   cv::Mat distCoeffs;
-  cv::Mat rvec;
-  cv::Mat tvec;
 
-  // Callbacks.
-  ARCalibratorProgressCallback onProgress;
-  ARCalibratorCompleteCallback onComplete;
+  // Delegate that handles events.
+  id<ARCalibratorDelegate> delegate;
 }
 
-- (instancetype)init
+- (instancetype)initWithDelegate:(id)delegate_
 {
   if (!(self = [super init])) {
     return nil;
   }
 
-  rvec = cv::Mat(3, 1, CV_64F);
-  tvec = cv::Mat(3, 1, CV_64F);
+  delegate = delegate_;
+
+  // Initialize the intrinsic parameters.
   cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
   distCoeffs = cv::Mat::zeros(5, 1, CV_64F);
 
@@ -67,8 +64,8 @@ static const cv::Size kPatternSize(4, 11);
 - (UIImage*)findPattern:(UIImage*)frame
 {
   [frame toCvMat:bgra];
-  cv::cvtColor(bgra, rgb, CV_BGRA2RGB);
-  cv::cvtColor(rgb, gray, CV_RGB2GRAY);
+  cv::cvtColor(bgra, bgr, CV_BGRA2BGR);
+  cv::cvtColor(bgr, gray, CV_RGB2GRAY);
 
   // Find the chessboard.
   std::vector<cv::Point2f> corners;
@@ -83,58 +80,51 @@ static const cv::Size kPatternSize(4, 11);
   }
 
   // Draw the detected pattern.
-  cv::drawChessboardCorners(rgb, kPatternSize, cv::Mat(corners), found);
+  cv::drawChessboardCorners(bgr, kPatternSize, cv::Mat(corners), found);
   if (imagePoints.size() >= kCalibrationPoints) {
-    return [UIImage imageWithCvMat:rgb];
+    return [UIImage imageWithCvMat:bgr];
   }
 
   // Add the point to the set of calibration points and report progress.
   imagePoints.push_back(corners);
-  if (onProgress) {
-    onProgress(static_cast<float>(imagePoints.size()) / kCalibrationPoints);
+  if ([delegate respondsToSelector:@selector(onProgress:)]) {
+    [delegate onProgress:static_cast<float>(imagePoints.size()) / kCalibrationPoints];
   }
 
   // If enough points were recorded, start calibrating in a backgroud thread.
   if (imagePoints.size() == kCalibrationPoints) {
     // Otherwise, calibrate in a background thread.
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      double rms = cv::calibrateCamera(
-          { grid },
+      auto rms = static_cast<float>(cv::calibrateCamera(
+          std::vector<std::vector<cv::Point3f>>(kCalibrationPoints, grid),
           imagePoints,
-          rgb.size(),
+          bgr.size(),
           cameraMatrix,
           distCoeffs,
           {},
           {},
           0
-      );
+      ));
+      cameraMatrix.convertTo(cameraMatrix, CV_32F);
+      distCoeffs.convertTo(distCoeffs, CV_32F);
 
-      if (onComplete) {
-        auto params = [[ARParameters alloc]
-            initWithFx: cameraMatrix.at<double>(0, 0)
-                    fy: cameraMatrix.at<double>(1, 1)
-                    cx: cameraMatrix.at<double>(0, 2)
-                    cy: cameraMatrix.at<double>(1, 2)
-                    k1: distCoeffs.at<double>(0, 0)
-                    k2: distCoeffs.at<double>(1, 0)
-                    k3: distCoeffs.at<double>(4, 0)
-                    r1: distCoeffs.at<double>(2, 0)
-                    r2: distCoeffs.at<double>(3, 0)];
+      if ([delegate respondsToSelector:@selector(onComplete:params:)]) {
+        [delegate onComplete:rms params:[[ARParameters alloc]
+            initWithFx: cameraMatrix.at<float>(0, 0)
+                    fy: cameraMatrix.at<float>(1, 1)
+                    cx: cameraMatrix.at<float>(0, 2)
+                    cy: cameraMatrix.at<float>(1, 2)
+                    k1: distCoeffs.at<float>(0, 0)
+                    k2: distCoeffs.at<float>(1, 0)
+                    k3: distCoeffs.at<float>(4, 0)
+                    r1: distCoeffs.at<float>(2, 0)
+                    r2: distCoeffs.at<float>(3, 0)]];
+
       }
     });
   }
 
-  return [UIImage imageWithCvMat:rgb];
-}
-
-- (void)onProgress:(ARCalibratorProgressCallback)callback
-{
-  onProgress = callback;
-}
-
-- (void)onComplete:(ARCalibratorCompleteCallback)callback
-{
-  onComplete = callback;
+  return [UIImage imageWithCvMat:bgr];
 }
 
 @end

@@ -64,7 +64,9 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         kCVPixelBufferPixelFormatTypeKey: Int(kCVPixelFormatType_32BGRA)
     ]
 
+
     // Create a new capture session.
+    captureSession.sessionPreset = AVCaptureSessionPreset640x480;
     captureSession.addInput(videoInput)
     captureSession.addOutput(videoOutput)
   }
