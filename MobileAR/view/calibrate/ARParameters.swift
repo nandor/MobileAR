@@ -42,10 +42,7 @@ import Foundation
    */
   static func loadFromFile() throws -> ARParameters {
 
-    let data = try NSData(
-        contentsOfURL: paramFileURL(),
-        options: NSDataReadingOptions()
-    )
+    let data = try NSData(contentsOfURL: paramFileURL(), options: NSDataReadingOptions())
     let json = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions())
 
     return ARParameters(

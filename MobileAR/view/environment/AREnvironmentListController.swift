@@ -3,19 +3,36 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 import UIKit
+import CoreLocation
 
 
 /**
  View controller responsible with displaying a list of prepared environments.
  */
-class AREnvironmentListController : UIViewController, UITableViewDelegate, UITableViewDataSource {
+class AREnvironmentListController
+    : UIViewController
+    , UITableViewDelegate
+    , UITableViewDataSource
+    , CLLocationManagerDelegate
+{
+  // List of environments to be displayed.
   private var environments : [AREnvironment] = []
+
+  // Location manager used to sort environments by distance.
+  private var locationManager : CLLocationManager!
 
   /**
    Called when the view is loaded.
    */
   override func viewDidLoad() {
     super.viewDidLoad();
+
+    // Set up the location manager.
+    locationManager = CLLocationManager()
+    locationManager.delegate = self
+    locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    locationManager.requestWhenInUseAuthorization()
+    locationManager.startUpdatingLocation()
 
     // Create the table view.
     let table = UITableView(frame: view.frame, style: .Plain)
@@ -58,6 +75,25 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
   }
 
   /**
+   Called when new location information is available.
+   */
+  func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    // Fetch location & stop tracking. We are not evil.
+    guard let loc = manager.location else {
+      return
+    }
+    manager.stopUpdatingLocation()
+
+    // Sort environments by distance from current location.
+    environments.sortInPlace({
+      loc.distanceFromLocation($0.location) < loc.distanceFromLocation($1.location)
+    })
+
+    // Refresh the table.
+    (view as? UITableView)?.reloadData()
+  }
+
+  /**
    Called when the user clicks the Capture button.
    */
   func onCapture() {
@@ -77,11 +113,13 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
   /**
    Creates a cell in a table for an item.
    */
-  func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-    let env = environments[indexPath.indexAtPosition(0)]
-
-    var cell = tableView.dequeueReusableCellWithIdentifier("environment") as UITableViewCell!
-    cell.textLabel?.text = "LOL"
+  func tableView(
+      tableView: UITableView,
+      cellForRowAtIndexPath indexPath: NSIndexPath
+  ) -> UITableViewCell
+  {
+    let cell = tableView.dequeueReusableCellWithIdentifier("environment") as UITableViewCell!
+    cell.textLabel?.text = environments[indexPath.indexAtPosition(1)].name
     return cell
   }
 
@@ -89,10 +127,8 @@ class AREnvironmentListController : UIViewController, UITableViewDelegate, UITab
    Displays the chosen environment.
    */
   func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-    let env = environments[indexPath.indexAtPosition(0)]
-
     self.navigationController?.pushViewController(
-        AREnvironmentViewController(),
+        AREnvironmentViewController(environment: environments[indexPath.indexAtPosition(1)]),
         animated: true
     )
   }

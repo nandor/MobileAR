@@ -41,10 +41,15 @@ import UIKit
         target: self,
         action: Selector("onSelect")
     )
+  }
 
+  /**
+   Called after the view was loaded.
+   */
+  override func viewDidAppear(animated: Bool) {
     // Fetch camera parameters & environment.
-    //obtainCalibration()
-    //obtainEnvironment()
+    obtainCalibration()
+    obtainEnvironment()
   }
 
   /**
@@ -61,7 +66,8 @@ import UIKit
    Otherwise, the user is promted to navigate to the calibration view.
    */
   private func obtainCalibration() {
-    if let params = try? ARParameters.loadFromFile() {
+    if let calibrationParams = try? ARParameters.loadFromFile() {
+      params = calibrationParams
       return
     }
 
@@ -90,7 +96,7 @@ import UIKit
     if let path = NSUserDefaults().stringForKey("environment") {
       let url = NSURL.fileURLWithPath(path, isDirectory: true)
 
-      environment = AREnvironment(path: url)
+      environment = try? AREnvironment(path: url)
       if environment != nil {
         return
       }

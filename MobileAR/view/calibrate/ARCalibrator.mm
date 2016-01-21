@@ -3,6 +3,7 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import <AVFoundation/AVFoundation.h>
+#import <CoreLocation/CoreLocation.h>
 
 #import "ARCalibrator.h"
 #import "UIImage+cvMat.h"

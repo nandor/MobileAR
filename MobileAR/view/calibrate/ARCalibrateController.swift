@@ -7,16 +7,16 @@ import UIKit
 class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDelegate
 {
   // UI Elements.
-  var imageView : UIImageView?
-  var spinnerView : UIActivityIndicatorView?
-  var textView : UILabel?
-  var progressView : UIProgressView?
+  private var imageView : UIImageView!
+  private var spinnerView : UIActivityIndicatorView!
+  private var textView : UILabel!
+  private var progressView : UIProgressView!
 
   // Camera wrapper.
-  var camera : ARCamera?
+  private var camera : ARCamera!
 
   // Calibrator context.
-  var calibrator : ARCalibrator?
+  private var calibrator : ARCalibrator!
 
   /**
    Called when the view is first loaded.
@@ -97,7 +97,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
     imageRect.origin.x = (frame.size.width - imageRect.size.width) / 2
     imageRect.origin.y = 0
     imageView = UIImageView(frame: imageRect)
-    view.addSubview(imageView!)
+    view.addSubview(imageView)
 
     // Progress bar on top of the image.
     var progressRect = CGRect()
@@ -107,7 +107,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
     progressRect.origin.y = (frame.size.height - progressRect.size.height) / 2
     progressView = UIProgressView(frame: progressRect)
     progressView!.hidden = true
-    view.addSubview(progressView!)
+    view.addSubview(progressView)
 
     // Spinner shown during calibration.
     var spinnerRect = CGRect()
@@ -116,7 +116,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
     spinnerRect.origin.x = (frame.size.width - spinnerRect.size.width) / 2
     spinnerRect.origin.y = (frame.size.height - spinnerRect.size.height) / 2
     spinnerView = UIActivityIndicatorView(frame: spinnerRect)
-    view.addSubview(spinnerView!)
+    view.addSubview(spinnerView)
 
     // Text view indicating status.
     var textRect = CGRect()
@@ -129,7 +129,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
     textView!.textAlignment = .Center
     textView!.text = ""
     textView!.hidden = true
-    view.addSubview(textView!)
+    view.addSubview(textView)
   }
 
   /**
@@ -137,9 +137,9 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
    */
   func onComplete(rms: Float, params: ARParameters) {
     dispatch_async(dispatch_get_main_queue()) {
-      self.textView!.hidden = true
-      self.progressView!.hidden = true
-      self.spinnerView!.stopAnimating()
+      self.textView.hidden = true
+      self.progressView.hidden = true
+      self.spinnerView.stopAnimating()
 
       let alert = UIAlertController(
           title: "Save",
@@ -172,20 +172,20 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
   func onProgress(progress: Float) {
     dispatch_async(dispatch_get_main_queue()) {
       if (progress < 1.0) {
-        self.textView!.hidden = false
-        self.textView!.text = "Capturing data"
+        self.textView.hidden = false
+        self.textView.text = "Capturing data"
 
-        self.progressView!.hidden = false
-        self.progressView!.progress = progress
+        self.progressView.hidden = false
+        self.progressView.progress = progress
 
-        self.spinnerView!.stopAnimating()
+        self.spinnerView.stopAnimating()
       } else {
-        self.textView!.hidden = false
-        self.textView!.text = "Calibrating"
+        self.textView.hidden = false
+        self.textView.text = "Calibrating"
 
-        self.progressView!.hidden = true
+        self.progressView.hidden = true
 
-        self.spinnerView!.startAnimating()
+        self.spinnerView.startAnimating()
       }
     }
   }
@@ -195,7 +195,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
    */
   func onFrame(frame: UIImage) {
     dispatch_async(dispatch_get_main_queue()) {
-      self.imageView?.image = self.calibrator?.findPattern(frame)
+      self.imageView.image = self.calibrator.findPattern(frame)
     }
   }
 
