@@ -8,7 +8,10 @@ import UIKit
  * Class responsible for displaying the main scene.
  */
 @objc class ARSceneViewController : UIViewController {
+  // Camera parameters.
   var params: ARParameters?
+
+  // Environment being used.
   var environment: AREnvironment?
 
   /**

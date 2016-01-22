@@ -22,8 +22,8 @@ static const cv::Size kPatternSize(4, 11);
 @implementation ARCalibrator {
   // OpenCV images.
   cv::Mat gray;
-  cv::Mat bgr;
-  cv::Mat bgra;
+  cv::Mat rgb;
+  cv::Mat rgba;
 
   // Buffer for calibration points.
   std::vector<std::vector<cv::Point2f>> imagePoints;
@@ -64,9 +64,9 @@ static const cv::Size kPatternSize(4, 11);
 
 - (UIImage*)findPattern:(UIImage*)frame
 {
-  [frame toCvMat:bgra];
-  cv::cvtColor(bgra, bgr, CV_BGRA2BGR);
-  cv::cvtColor(bgr, gray, CV_RGB2GRAY);
+  [frame toCvMat:rgba];
+  cv::cvtColor(rgba, rgb, CV_RGBA2RGB);
+  cv::cvtColor(rgb, gray, CV_RGB2GRAY);
 
   // Find the chessboard.
   std::vector<cv::Point2f> corners;
@@ -81,9 +81,9 @@ static const cv::Size kPatternSize(4, 11);
   }
 
   // Draw the detected pattern.
-  cv::drawChessboardCorners(bgr, kPatternSize, cv::Mat(corners), found);
+  cv::drawChessboardCorners(rgb, kPatternSize, cv::Mat(corners), found);
   if (imagePoints.size() >= kCalibrationPoints) {
-    return [UIImage imageWithCvMat:bgr];
+    return [UIImage imageWithCvMat:rgb];
   }
 
   // Add the point to the set of calibration points and report progress.
@@ -99,7 +99,7 @@ static const cv::Size kPatternSize(4, 11);
       auto rms = static_cast<float>(cv::calibrateCamera(
           std::vector<std::vector<cv::Point3f>>(kCalibrationPoints, grid),
           imagePoints,
-          bgr.size(),
+          rgb.size(),
           cameraMatrix,
           distCoeffs,
           {},
@@ -125,7 +125,7 @@ static const cv::Size kPatternSize(4, 11);
     });
   }
 
-  return [UIImage imageWithCvMat:bgr];
+  return [UIImage imageWithCvMat:rgb];
 }
 
 @end

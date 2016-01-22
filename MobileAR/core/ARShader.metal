@@ -4,10 +4,18 @@
 
 #include <metal_texture>
 #include <metal_matrix>
-
-#include "ARParams.h"
-
 using namespace metal;
+
+
+/**
+ Parameters passed to metal shaders.
+ */
+typedef struct {
+  /// Intrinsic camera parameters.
+  simd::float4x4 K;
+  /// Pose (rotation + translation).
+  simd::float4x4 P;
+} ARParams;
 
 
 /**

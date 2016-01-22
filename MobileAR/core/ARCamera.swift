@@ -73,6 +73,9 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
 
   /**
    Called when a frame is available. Executed on the queue.
+
+   The camera records at 640x480, but the image is cropped to 640x360
+   in order to maintain the 16:9 aspect ratio of the iPhone screen.
    */
   func captureOutput(
       captureOutput: AVCaptureOutput!,
@@ -93,17 +96,17 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     let context = CGBitmapContextCreate(
-        addr,
+        addr + 60 * bytesPerRow,
         width,
-        height,
+        height - 120,
         8,
         bytesPerRow,
         colorSpace,
         CGImageAlphaInfo.PremultipliedFirst.rawValue |
         CGBitmapInfo.ByteOrder32Little.rawValue
     )
-    let quartzImage = CGBitmapContextCreateImage(context)
 
+    let quartzImage = CGBitmapContextCreateImage(context)
     CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
 
     guard let image = quartzImage else {

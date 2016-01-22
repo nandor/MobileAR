@@ -70,7 +70,6 @@
   );
   CGContextDrawImage(contextRef, CGRectMake(0, 0, mtx.cols, mtx.rows), self.CGImage);
   CGContextRelease(contextRef);
-
 }
 
 @end

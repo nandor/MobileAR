@@ -4,8 +4,7 @@
 
 import UIKit
 
-class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDelegate
-{
+class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDelegate  {
   // UI Elements.
   private var imageView : UIImageView!
   private var spinnerView : UIActivityIndicatorView!
@@ -24,7 +23,6 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    calibrator = ARCalibrator(delegate: self)
     createUI()
   }
 
@@ -33,6 +31,9 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
    */
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
+
+    // Reset the calibrator.
+    calibrator = ARCalibrator(delegate: self)
 
     // Hide the toolbar and show the navigation bar.
     navigationController?.hidesBarsOnSwipe = true;
@@ -92,7 +93,7 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
 
     // Create an image in the center.
     var imageRect = CGRect()
-    imageRect.size.width = frame.size.height * 640.0 / 480.0
+    imageRect.size.width = frame.size.width
     imageRect.size.height = frame.size.height
     imageRect.origin.x = (frame.size.width - imageRect.size.width) / 2
     imageRect.origin.y = 0
