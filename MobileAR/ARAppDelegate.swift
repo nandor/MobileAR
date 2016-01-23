@@ -13,7 +13,7 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
   /**
    Main window used throughout the app.
    */
-  var window : UIWindow!
+  var window : UIWindow?
 
   /**
    Main navigation controller.
@@ -31,13 +31,13 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
 
     // Create the navigation controller.
     navigation = UINavigationController()
-    navigation.viewControllers = [AREnvironmentViewController()]
+    navigation.viewControllers = [AREnvironmentViewController(environment: AREnvironment.all()[0])]
 
     // Create the window.
     window = UIWindow(frame: UIScreen.mainScreen().bounds)
-    window.backgroundColor = UIColor.blackColor()
-    window.rootViewController = navigation
-    window.makeKeyAndVisible()
+    window?.backgroundColor = UIColor.blackColor()
+    window?.rootViewController = navigation
+    window?.makeKeyAndVisible()
 
     return true
   }

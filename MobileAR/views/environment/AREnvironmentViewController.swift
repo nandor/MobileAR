@@ -16,7 +16,7 @@ class AREnvironmentViewController : UIViewController {
   var environment: AREnvironment!
 
   // Motion manager used to capture attitude data.
-  var motion: CMMotionManager!
+  var motionManager: CMMotionManager!
 
   // Timer used to redraw frames.
   var timer: CADisplayLink!
@@ -45,15 +45,15 @@ class AREnvironmentViewController : UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    // Set up motion updates at a rate of 30Hz.
-    motion = CMMotionManager()
-    motion.deviceMotionUpdateInterval = 1 / 30.0
-    motion.startDeviceMotionUpdatesUsingReferenceFrame(
+    // Set up motionManager updates at a rate of 30Hz.
+    motionManager = CMMotionManager()
+    motionManager.deviceMotionUpdateInterval = 1 / 30.0
+    motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
         CMAttitudeReferenceFrame.XTrueNorthZVertical
     )
 
     // Initialize the renderer.
-    renderer = try! ARRenderer(view: view)
+    renderer = try! AREnvironmentViewRenderer(view: view, environment: environment)
   }
 
   /**
@@ -63,7 +63,7 @@ class AREnvironmentViewController : UIViewController {
     super.viewWillAppear(animated)
 
     // Sets the tile of the view.
-    title = environment?.name ?? "Environment"
+    title = environment.name ?? "Environment"
 
     // Hide the toolbar and show the navigation bar.
     navigationController?.hidesBarsOnSwipe = false;
@@ -71,7 +71,7 @@ class AREnvironmentViewController : UIViewController {
     navigationController?.setToolbarHidden(true, animated: animated)
 
     // Back background colour to avoid ugly animations.
-    view.backgroundColor = UIColor.blackColor();
+    view.backgroundColor = UIColor.whiteColor()
 
     // Add a button to select the environment.
     navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -114,6 +114,19 @@ class AREnvironmentViewController : UIViewController {
    Called when attitude is refreshed.
    */
   func onFrame() {
-    renderer.render()
+    guard let attitude = motionManager.deviceMotion?.attitude else {
+      return
+    }
+
+    renderer.updatePose(
+        rx: Float(attitude.pitch),
+        ry: Float(attitude.yaw),
+        rz: Float(attitude.roll),
+        tx: 0.0,
+        ty: 0.0,
+        tz: 0.0
+    )
+    
+    renderer.renderFrame()
   }
 }
