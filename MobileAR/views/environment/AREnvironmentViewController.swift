@@ -2,6 +2,7 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
+import Darwin
 import UIKit
 import CoreMotion
 import QuartzCore
@@ -71,7 +72,7 @@ class AREnvironmentViewController : UIViewController {
     navigationController?.setToolbarHidden(true, animated: animated)
 
     // Back background colour to avoid ugly animations.
-    view.backgroundColor = UIColor.whiteColor()
+    view.backgroundColor = UIColor.blackColor()
 
     // Add a button to select the environment.
     navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -119,14 +120,14 @@ class AREnvironmentViewController : UIViewController {
     }
 
     renderer.updatePose(
-        rx: Float(attitude.pitch),
-        ry: Float(attitude.yaw),
+        rx: -Float(attitude.pitch),
+        ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0
     )
-    
+
     renderer.renderFrame()
   }
 }

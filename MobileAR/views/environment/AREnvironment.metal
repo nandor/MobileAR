@@ -7,7 +7,7 @@
 using namespace metal;
 
 
-/**git@github.com:nandor/MobileAR.git
+/**
  Parameters passed to the environment shader.
  */
 struct ARParams {
@@ -23,7 +23,9 @@ struct ARParams {
  */
 struct ARSphereIn {
   /// Vertex position.
-  float2 vert;
+  packed_float3 vert;
+  /// Texture coordinate.
+  packed_float2 uv;
 };
 
 
@@ -40,13 +42,16 @@ struct ARSphereInOut {
  Vertex shader for the video background.
  */
 vertex ARSphereInOut sphereVert(
-    constant ARSphereIn* inPosition [[ buffer(0) ]],
-    uint                 id         [[ vertex_id ]])
+    constant ARSphereIn* in     [[ buffer(0) ]],
+    constant ARParams&   params [[ buffer(1) ]],
+    uint                 id     [[ vertex_id ]])
 {
-  float2 uv = (inPosition[id].vert + 1.0) / 2.0;
+  float3 vert = float3(in[id].vert);
+  float2 uv = float2(in[id].uv);
+
   return {
-    { inPosition[id].vert.x, inPosition[id].vert.y, 0.0, 1.0 },
-    { uv.x, 1.0 - uv.y },
+      params.proj * params.view * float4(vert.x, vert.y, vert.z, 1.0f),
+      uv
   };
 }
 
@@ -54,11 +59,12 @@ vertex ARSphereInOut sphereVert(
 /**
  Fragment shader for the video background.
  */
-fragment half4 sphereFrag(
+fragment float4 sphereFrag(
     ARSphereInOut   inFrag [[ stage_in ]],
     texture2d<half> map    [[ texture(0) ]])
 {
-  constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
-  return map.sample(texSampler, inFrag.uv);
+  return { inFrag.uv.x, inFrag.uv.y, 0, 1 };
+  //constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
+  //return map.sample(texSampler, inFrag.uv);
 }
 

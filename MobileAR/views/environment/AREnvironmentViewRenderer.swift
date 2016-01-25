@@ -2,7 +2,9 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
+import Darwin
 import Metal
+
 
 /**
  Renders an environment map over on a sphere around the origin.
@@ -23,6 +25,12 @@ class AREnvironmentViewRenderer : ARRenderer {
 
   // Index buffer for the spherical mesh.
   var sphereIBO: MTLBuffer!
+
+  // Number of slices in the sphere.
+  let kSlices: Int = 16
+
+  // Number of stacks in the sphere.
+  let kStacks: Int = 16
 
 
   /**
@@ -63,6 +71,53 @@ class AREnvironmentViewRenderer : ARRenderer {
     renderDesc.fragmentFunction = frag
     renderDesc.colorAttachments[0].pixelFormat = .BGRA8Unorm
     renderState = try device.newRenderPipelineStateWithDescriptor(renderDesc)
+
+    // Initialize the VBO of the sphere.
+    // The coordinate system is a bit funny since CoreMotion uses a coordinate
+    // system where X points to north and Z points upwards. Thus, we swap
+    // Z with Y and invert the Z axis.
+    var vbo = [Float](count: (kSlices + 1) * (kStacks + 1) * 5, repeatedValue: 0.0)
+    for st in 0...kStacks {
+      let s = Double(st) / Double(kStacks)
+      let phi = M_PI / 2.0 - s * M_PI
+
+      for sl in 0...kSlices {
+        let t = Double(sl) / Double(kSlices)
+        let theta = t * M_PI * 2.0
+        let idx = (st * (kSlices + 1) + sl) * 5
+
+        vbo[idx + 0] = Float(cos(phi) * sin(theta))
+        vbo[idx + 1] = Float(cos(phi) * cos(theta))
+        vbo[idx + 2] = -Float(sin(phi))
+        vbo[idx + 3] = Float(t)
+        vbo[idx + 4] = Float(s)
+      }
+    }
+    sphereVBO = device.newBufferWithBytes(
+        vbo,
+        length: sizeofValue(vbo[0]) * vbo.count,
+        options: MTLResourceOptions()
+    )
+
+    // Initialize the IBO of the sphere.
+    var ibo = [UInt32](count: kSlices * kStacks * 6, repeatedValue: 0)
+    for st in 0...kStacks - 1 {
+      for sl in 0...kSlices - 1 {
+
+        let idx = (st * kSlices + sl) * 6
+        ibo[idx + 0] = UInt32((st + 0) * (kSlices + 1) + sl + 0)
+        ibo[idx + 1] = UInt32((st + 1) * (kSlices + 1) + sl + 0)
+        ibo[idx + 2] = UInt32((st + 0) * (kSlices + 1) + sl + 1)
+        ibo[idx + 3] = UInt32((st + 0) * (kSlices + 1) + sl + 1)
+        ibo[idx + 4] = UInt32((st + 1) * (kSlices + 1) + sl + 0)
+        ibo[idx + 5] = UInt32((st + 1) * (kSlices + 1) + sl + 1)
+      }
+    }
+    sphereIBO = device.newBufferWithBytes(
+        ibo,
+        length: sizeofValue(ibo[0]) * ibo.count,
+        options: MTLResourceOptions()
+    )
   }
 
   /**
@@ -76,22 +131,21 @@ class AREnvironmentViewRenderer : ARRenderer {
     color.texture = texture
     color.loadAction = .Clear
     color.storeAction = .Store
-    color.clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0)
+    color.clearColor = MTLClearColorMake(0.0, 1.0, 0.0, 1.0)
     let encoder = buffer.renderCommandEncoderWithDescriptor(renderDesc)
 
     // Render the sphere.
     encoder.setDepthStencilState(depthState)
     encoder.setRenderPipelineState(renderState)
-    encoder.setVertexBuffer(params, offset: 0, atIndex: 0)
-    encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 1)
+    encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 0)
+    encoder.setVertexBuffer(params, offset: 0, atIndex: 1)
     encoder.drawIndexedPrimitives(
         .Triangle,
-        indexCount: 36,
-        indexType: .UInt16,
+        indexCount: kSlices * kStacks * 6,
+        indexType: .UInt32,
         indexBuffer: sphereIBO,
         indexBufferOffset: 0
     )
-
     encoder.endEncoding()
   }
 }

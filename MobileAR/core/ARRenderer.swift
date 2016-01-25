@@ -95,7 +95,7 @@ class ARRenderer {
         float4(1,        0,        0, 0),
         float4(0, +cos(rz), +sin(rz), 0),
         float4(0, -sin(rz), +cos(rz), 0),
-        float4(0,        0,        0, 0)
+        float4(0,        0,        0, 1)
     ])
 
     // Translation.
@@ -111,15 +111,16 @@ class ARRenderer {
 
     // Compute the projection matrix.
     let aspect = Float(view.frame.width) / Float(view.frame.height)
-    let yScale = Float(1.0 / tan(45.0 / 180.0 * M_PI / 2.0))
-    let xScale = yScale / aspect
+    let tanFOV = Float(tan((45.0 / 180.0 * M_PI) / 2.0))
+    let yScale = 1.0 / tanFOV
+    let xScale = 1.0 / (aspect * tanFOV)
     let f: Float = 200.0
     let n: Float = 0.1
     let projMat = float4x4([
-        float4(xScale,      0,           0,                0),
-        float4(     0, yScale,           0,                0),
-        float4(     0,      0, f / (f - n), -n * f / (f - n)),
-        float4(     0,      0,           1,                0)
+        float4(xScale,      0,                   0,  0),
+        float4(     0, yScale,                   0,  0),
+        float4(     0,      0,   (f + n) / (n - f), -1),
+        float4(     0,      0, 2 * n * f / (n - f),  0)
     ])
 
     // Upload stuff to the param buffer.
