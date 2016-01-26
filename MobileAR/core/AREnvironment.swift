@@ -7,6 +7,7 @@ import CoreLocation
 
 enum AREnvironmentError : ErrorType {
   case MalformedData
+  case MissingEnvironmentMap
 }
 
 class AREnvironment {
@@ -14,6 +15,9 @@ class AREnvironment {
 
   // Name of the environment, provided by user.
   var name: String!
+
+  // Environment map.
+  var map: UIImage!
 
   // GPS coordinate where the image was taken.
   var location: CLLocation?
@@ -48,7 +52,9 @@ class AREnvironment {
     )
 
     // Unwrap the name.
-    guard let name = meta["name"] as? String else { throw AREnvironmentError.MalformedData }
+    guard let name = meta["name"] as? String else {
+      throw AREnvironmentError.MalformedData
+    }
     self.name = name
 
     // Unwrap the location if it exists.
@@ -56,6 +62,7 @@ class AREnvironment {
       guard let lat = loc["lat"] as? Double else { throw AREnvironmentError.MalformedData }
       guard let lng = loc["lng"] as? Double else { throw AREnvironmentError.MalformedData }
       guard let alt = loc["alt"] as? Double else { throw AREnvironmentError.MalformedData }
+
       self.location = CLLocation(
           coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
           altitude: alt,
@@ -64,6 +71,15 @@ class AREnvironment {
           timestamp: NSDate()
       )
     }
+
+    // Load the environment map.
+    guard let environmentPath = path.URLByAppendingPathComponent("envmap.png").path else {
+      throw AREnvironmentError.MissingEnvironmentMap
+    }
+    guard NSFileManager.defaultManager().fileExistsAtPath(environmentPath) else {
+      throw AREnvironmentError.MissingEnvironmentMap
+    }
+    self.map = UIImage(contentsOfFile: environmentPath)
   }
 
   /**

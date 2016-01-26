@@ -39,17 +39,6 @@ class AREnvironmentViewRenderer : ARRenderer {
   init(view: UIView, environment: AREnvironment) throws {
     try super.init(view: view)
 
-    // Create the texture.
-    let texDesc = MTLTextureDescriptor()
-    texDesc.textureType = .Type2D
-    texDesc.height = 100
-    texDesc.width = 100
-    texDesc.depth = 1
-    texDesc.pixelFormat = .BGRA8Unorm
-    texDesc.arrayLength = 1
-    texDesc.mipmapLevelCount = 1
-    texture = device.newTextureWithDescriptor(texDesc)
-
     // Set up the depth state.
     let depthDesc = MTLDepthStencilDescriptor()
     depthDesc.depthCompareFunction = .LessEqual
@@ -118,17 +107,56 @@ class AREnvironmentViewRenderer : ARRenderer {
         length: sizeofValue(ibo[0]) * ibo.count,
         options: MTLResourceOptions()
     )
+
+    // Initialize the environment map texture.
+    let cgImage = environment.map.CGImage
+    let width = CGImageGetWidth(cgImage)
+    let height = CGImageGetHeight(cgImage)
+    let bytesPerRow = CGImageGetBytesPerRow(cgImage)
+
+    let rawData = calloc(height * bytesPerRow, sizeof(UInt8))
+    let colorSpace = CGColorSpaceCreateDeviceRGB();
+    let context = CGBitmapContextCreate(
+        rawData,
+        width,
+        height,
+        8,
+        bytesPerRow,
+        colorSpace,
+        CGImageAlphaInfo.PremultipliedFirst.rawValue |
+        CGBitmapInfo.ByteOrder32Little.rawValue
+    );
+    CGContextDrawImage(context, CGRectMake(0, 0, CGFloat(width), CGFloat(height)), cgImage);
+
+    // Create the texture.
+    let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+        .BGRA8Unorm   ,
+        width: width,
+        height: height,
+        mipmapped: false
+    )
+    texture = device.newTextureWithDescriptor(texDesc)
+    texture.replaceRegion(
+        MTLRegionMake2D(0, 0, width, height),
+        mipmapLevel: 0,
+        slice: 0,
+        withBytes: rawData,
+        bytesPerRow: bytesPerRow,
+        bytesPerImage: height * bytesPerRow
+    )
+    
+    free(rawData)
   }
 
   /**
    Renders the environment.
    */
-  override func renderScene(texture: MTLTexture, buffer: MTLCommandBuffer) {
+  override func renderScene(target: MTLTexture, buffer: MTLCommandBuffer) {
 
     // Create the render command descriptor.
     let renderDesc = MTLRenderPassDescriptor()
     let color = renderDesc.colorAttachments[0]
-    color.texture = texture
+    color.texture = target
     color.loadAction = .Clear
     color.storeAction = .Store
     color.clearColor = MTLClearColorMake(0.0, 1.0, 0.0, 1.0)
@@ -139,6 +167,7 @@ class AREnvironmentViewRenderer : ARRenderer {
     encoder.setRenderPipelineState(renderState)
     encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 0)
     encoder.setVertexBuffer(params, offset: 0, atIndex: 1)
+    encoder.setFragmentTexture(texture, atIndex: 0)
     encoder.drawIndexedPrimitives(
         .Triangle,
         indexCount: kSlices * kStacks * 6,

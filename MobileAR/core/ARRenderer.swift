@@ -161,6 +161,6 @@ class ARRenderer {
   /**
    Render a scene.
    */
-  func renderScene(texture: MTLTexture, buffer: MTLCommandBuffer) {
+  func renderScene(target: MTLTexture, buffer: MTLCommandBuffer) {
   }
 }

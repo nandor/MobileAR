@@ -59,12 +59,11 @@ vertex ARSphereInOut sphereVert(
 /**
  Fragment shader for the video background.
  */
-fragment float4 sphereFrag(
+fragment half4 sphereFrag(
     ARSphereInOut   inFrag [[ stage_in ]],
     texture2d<half> map    [[ texture(0) ]])
 {
-  return { inFrag.uv.x, inFrag.uv.y, 0, 1 };
-  //constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
-  //return map.sample(texSampler, inFrag.uv);
+  constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
+  return map.sample(texSampler, inFrag.uv);
 }
 
