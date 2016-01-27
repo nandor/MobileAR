@@ -65,7 +65,7 @@ class AREnvironmentViewRenderer : ARRenderer {
     // The coordinate system is a bit funny since CoreMotion uses a coordinate
     // system where X points to north and Z points upwards. Thus, we swap
     // Z with Y and invert the Z axis.
-    var vbo = [Float](count: (kSlices + 1) * (kStacks + 1) * 5, repeatedValue: 0.0)
+    var vbo = [Float](count: (kSlices + 1) * (kStacks + 1) * 3, repeatedValue: 0.0)
     for st in 0...kStacks {
       let s = Double(st) / Double(kStacks)
       let phi = M_PI / 2.0 - s * M_PI
@@ -73,13 +73,11 @@ class AREnvironmentViewRenderer : ARRenderer {
       for sl in 0...kSlices {
         let t = Double(sl) / Double(kSlices)
         let theta = t * M_PI * 2.0
-        let idx = (st * (kSlices + 1) + sl) * 5
+        let idx = (st * (kSlices + 1) + sl) * 3
 
         vbo[idx + 0] = Float(cos(phi) * sin(theta))
         vbo[idx + 1] = Float(cos(phi) * cos(theta))
         vbo[idx + 2] = -Float(sin(phi))
-        vbo[idx + 3] = Float(t)
-        vbo[idx + 4] = Float(s)
       }
     }
     sphereVBO = device.newBufferWithBytes(
@@ -115,18 +113,22 @@ class AREnvironmentViewRenderer : ARRenderer {
     let bytesPerRow = CGImageGetBytesPerRow(cgImage)
 
     let rawData = calloc(height * bytesPerRow, sizeof(UInt8))
-    let colorSpace = CGColorSpaceCreateDeviceRGB();
+    
     let context = CGBitmapContextCreate(
         rawData,
         width,
         height,
         8,
         bytesPerRow,
-        colorSpace,
+        CGColorSpaceCreateDeviceRGB(),
         CGImageAlphaInfo.PremultipliedFirst.rawValue |
         CGBitmapInfo.ByteOrder32Little.rawValue
-    );
-    CGContextDrawImage(context, CGRectMake(0, 0, CGFloat(width), CGFloat(height)), cgImage);
+    )
+    CGContextDrawImage(
+        context,
+        CGRectMake(0, 0, CGFloat(width), CGFloat(height)),
+        cgImage
+    )
 
     // Create the texture.
     let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
@@ -160,6 +162,8 @@ class AREnvironmentViewRenderer : ARRenderer {
     color.loadAction = .Clear
     color.storeAction = .Store
     color.clearColor = MTLClearColorMake(0.0, 1.0, 0.0, 1.0)
+
+
     let encoder = buffer.renderCommandEncoderWithDescriptor(renderDesc)
 
     // Render the sphere.
