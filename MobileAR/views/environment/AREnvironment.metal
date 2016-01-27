@@ -6,16 +6,25 @@
 #include <metal_matrix>
 #include <metal_stdlib>
 #include <metal_texture>
+
 using namespace metal;
 
-
-constant float PI = 3.1415926535897932384626433832795;
-constant float SPLIT = 10;
+/**
+ A digit is wrong.
+ */
+constant float PI = 3.1415926535897932384626433833795;
 
 /**
- Parameters passed to the environment shader.
+ Number of regions to split the sphere into.
  */
-struct ARParams {
+constant int SPLIT = 9;
+
+
+
+/**
+ Parameters passed to the shader.
+ */
+struct ARSphereParams {
   /// Perspective projection matrix.
   float4x4 proj;
   /// View matrix.
@@ -24,16 +33,7 @@ struct ARParams {
 
 
 /**
- Vertex shader input.
- */
-struct ARSphereIn {
-  /// Vertex position.
-  packed_float3 vert;
-};
-
-
-/**
- Video vertex shader to fragment shader.
+ Vertex shader to fragment shader.
  */
 struct ARSphereInOut {
   float3 vert     [[ user(world) ]];
@@ -41,20 +41,6 @@ struct ARSphereInOut {
 };
 
 
-/**
- Vertex shader for the video background.
- */
-vertex ARSphereInOut sphereVert(
-    constant ARSphereIn* in     [[ buffer(0) ]],
-    constant ARParams&   params [[ buffer(1) ]],
-    uint                 id     [[ vertex_id ]])
-{
-  float3 vert = float3(in[id].vert);
-  return {
-      vert,
-      params.proj * params.view * float4(vert.x, vert.y, vert.z, 1.0f)
-  };
-}
 
 /**
  Computes the intensity of a line, based on the distance from it.
@@ -62,23 +48,41 @@ vertex ARSphereInOut sphereVert(
  This is used to draw antialiased lines over the environment map.
  */
 template<typename T>
-static T alpha(T d, T w) {
+static inline T alpha(T d, T w) {
   return min(max(smoothstep(w - fwidth(d), w + fwidth(d), d), T(0)), T(1));
 }
+
+
+
+/**
+ Vertex shader for the sphere
+ */
+vertex ARSphereInOut sphereVert(
+    constant packed_float3*  in     [[ buffer(0) ]],
+    constant ARSphereParams& params [[ buffer(1) ]],
+    uint                     id     [[ vertex_id ]])
+{
+  float3 vert = float3(in[id]);
+  return {
+      vert,
+      params.proj * params.view * float4(vert.x, vert.y, vert.z, 1.0f)
+  };
+}
+
 
 /**
  Fragment shader for the video background.
  */
 fragment float4 sphereFrag(
-    ARSphereInOut   inFrag [[ stage_in ]],
-    texture2d<half> map    [[ texture(0) ]])
+    ARSphereInOut   in  [[ stage_in ]],
+    texture2d<half> map [[ texture(0) ]])
 {
   constexpr sampler texSampler(address::repeat, filter::linear);
   
   // Get the UV coordinate by converting cartesian to spherical.
-  float r = length(inFrag.vert);
-  float u = (atan2(inFrag.vert.y, inFrag.vert.x) - PI / 2) / (2 * PI);
-  float v = 1.0 - acos(-inFrag.vert.z / r) / PI;
+  float r = length(in.vert);
+  float u = (atan2(in.vert.y, in.vert.x) - PI / 2) / (2 * PI);
+  float v = 1.0 - acos(-in.vert.z / r) / PI;
   float2 uv = { u, v };
   
   // Compute contributions from guidelines.

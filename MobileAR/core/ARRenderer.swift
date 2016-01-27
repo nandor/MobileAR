@@ -63,6 +63,7 @@ class ARRenderer {
     layer.pixelFormat = .BGRA8Unorm
     layer.framebufferOnly = true
     layer.frame = view.layer.frame
+    view.layer.sublayers = nil
     view.layer.addSublayer(layer)
 
     // Set up the parameter buffer.
@@ -150,7 +151,7 @@ class ARRenderer {
       }
 
       // Render the scene.
-      renderScene(drawable.texture, buffer: buffer)
+      onRenderFrame(drawable.texture, buffer: buffer)
 
       // Commit the buffer.
       buffer.presentDrawable(drawable)
@@ -161,6 +162,6 @@ class ARRenderer {
   /**
    Render a scene.
    */
-  func renderScene(target: MTLTexture, buffer: MTLCommandBuffer) {
+  func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
   }
 }

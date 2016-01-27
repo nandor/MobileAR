@@ -49,7 +49,7 @@ class AREnvironment {
     let meta = try NSJSONSerialization.JSONObjectWithData(
         data,
         options: NSJSONReadingOptions()
-    )
+    ) as! [String: AnyObject]
 
     // Unwrap the name.
     guard let name = meta["name"] as? String else {

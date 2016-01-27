@@ -64,7 +64,10 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
   override func viewDidAppear(animated: Bool) {
     super.viewDidAppear(animated)
 
-    createCamera()
+    // Camera creation should always succeed since this view
+    // only appears after the scene view controller is shown
+    // which very kindly asks the user to enable the camera.
+    camera = try! ARCamera(delegate: self)
     camera?.start()
   }
 
@@ -194,38 +197,9 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
   /**
    Handles a frame from the camera.
    */
-  func onFrame(frame: UIImage) {
+  func onCameraFrame(frame: UIImage) {
     dispatch_async(dispatch_get_main_queue()) {
       self.imageView.image = self.calibrator.findPattern(frame)
     }
-  }
-
-  /**
-   Create the camera. If the user does not provide permission, ask for it.
-   */
-  func createCamera() {
-
-    if let cam = try? ARCamera(delegate: self) {
-      camera = cam
-      return
-    }
-
-    let alert = UIAlertController(
-        title: "Camera Permission",
-        message: "Please enable the camera in Settings > MobileAR",
-        preferredStyle: .Alert
-    )
-
-    alert.addAction(UIAlertAction(
-        title: "Okay",
-        style: .Default)
-    { (UIAlertAction) in self.createCamera() })
-
-    alert.addAction(UIAlertAction(
-        title: "Back",
-        style: .Cancel)
-    { (UIAlertAction) in self.navigationController?.popToRootViewControllerAnimated(true) })
-
-    presentViewController(alert, animated: true, completion: nil)
   }
 }

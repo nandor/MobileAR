@@ -43,7 +43,10 @@ import Foundation
   static func loadFromFile() throws -> ARParameters {
 
     let data = try NSData(contentsOfURL: getParametersFileURL(), options: NSDataReadingOptions())
-    let json = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions())
+    let json = try NSJSONSerialization.JSONObjectWithData(
+        data,
+        options: NSJSONReadingOptions()
+    ) as! [String: AnyObject]
 
     return ARParameters(
         fx: json["fx"] as! Float,

@@ -2,6 +2,7 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import "ARCalibrator.h"
-#import "ARSceneTracker.h"
-#import "UIImage+MTLTexture.h"
+import Foundation
+
+class ARObject {
+}

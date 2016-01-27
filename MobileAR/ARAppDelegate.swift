@@ -29,9 +29,12 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
   ) -> Bool
   {
 
+    let env = AREnvironment.all()[0]
+    NSUserDefaults().setObject(env.path.path!, forKey: "environment")
+
     // Create the navigation controller.
     navigation = UINavigationController()
-    navigation.viewControllers = [AREnvironmentViewController(environment: AREnvironment.all()[0])]
+    navigation.viewControllers = [ARSceneViewController()]
 
     // Create the window.
     window = UIWindow(frame: UIScreen.mainScreen().bounds)

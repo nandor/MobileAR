@@ -107,62 +107,27 @@ class AREnvironmentViewRenderer : ARRenderer {
     )
 
     // Initialize the environment map texture.
-    let cgImage = environment.map.CGImage
-    let width = CGImageGetWidth(cgImage)
-    let height = CGImageGetHeight(cgImage)
-    let bytesPerRow = CGImageGetBytesPerRow(cgImage)
-
-    let rawData = calloc(height * bytesPerRow, sizeof(UInt8))
-    
-    let context = CGBitmapContextCreate(
-        rawData,
-        width,
-        height,
-        8,
-        bytesPerRow,
-        CGColorSpaceCreateDeviceRGB(),
-        CGImageAlphaInfo.PremultipliedFirst.rawValue |
-        CGBitmapInfo.ByteOrder32Little.rawValue
-    )
-    CGContextDrawImage(
-        context,
-        CGRectMake(0, 0, CGFloat(width), CGFloat(height)),
-        cgImage
-    )
-
-    // Create the texture.
     let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-        .BGRA8Unorm   ,
-        width: width,
-        height: height,
+        .BGRA8Unorm,
+        width: Int(environment.map.size.width),
+        height: Int(environment.map.size.height),
         mipmapped: false
     )
     texture = device.newTextureWithDescriptor(texDesc)
-    texture.replaceRegion(
-        MTLRegionMake2D(0, 0, width, height),
-        mipmapLevel: 0,
-        slice: 0,
-        withBytes: rawData,
-        bytesPerRow: bytesPerRow,
-        bytesPerImage: height * bytesPerRow
-    )
-    
-    free(rawData)
+    environment.map.toMTLTexture(texture);
   }
 
   /**
    Renders the environment.
    */
-  override func renderScene(target: MTLTexture, buffer: MTLCommandBuffer) {
+  override func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
 
     // Create the render command descriptor.
     let renderDesc = MTLRenderPassDescriptor()
     let color = renderDesc.colorAttachments[0]
     color.texture = target
-    color.loadAction = .Clear
+    color.loadAction = .DontCare
     color.storeAction = .Store
-    color.clearColor = MTLClearColorMake(0.0, 1.0, 0.0, 1.0)
-
 
     let encoder = buffer.renderCommandEncoderWithDescriptor(renderDesc)
 

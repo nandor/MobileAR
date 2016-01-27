@@ -5,14 +5,40 @@
 import UIKit
 
 /**
- * Class responsible for displaying the main scene.
+ Object being rendered - references a model and a pose.
  */
-@objc class ARSceneViewController : UIViewController {
+class AREntity {
+
+}
+
+/**
+ Class responsible for displaying the main scene.
+ */
+@objc class ARSceneViewController : UIViewController, ARCameraDelegate {
   // Camera parameters.
-  var params: ARParameters?
+  internal var params: ARParameters?
 
   // Environment being used.
-  var environment: AREnvironment?
+  internal var environment: AREnvironment?
+
+  // Entities being rendered.
+  internal var entities: [AREntity] = []
+
+  // Camera wrapper.
+  internal var camera: ARCamera!
+
+  // Pose tracker.
+  internal var tracker: ARSceneTracker!
+
+  // Renderer used to draw the scene.
+  internal var renderer: ARSceneRenderer!
+
+  // Motion manager used to capture attitude data.
+  internal var motionManager: CMMotionManager!
+
+  // Timer used to redraw frames.
+  internal var timer: CADisplayLink!
+
 
   /**
    Callend when the window is first created.
@@ -51,9 +77,23 @@ import UIKit
    Called after the view was loaded.
    */
   override func viewDidAppear(animated: Bool) {
-    // Fetch camera parameters & environment.
+    // Obtain permission to use the camera. Fetch camera params & environment.
+    obtainCamera()
     obtainCalibration()
     obtainEnvironment()
+
+    // Initialize components.
+    tracker = ARSceneTracker()
+    renderer = try! ARSceneRenderer(view: view)
+    motionManager = CMMotionManager()
+    motionManager.deviceMotionUpdateInterval = 1 / 30.0
+    motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
+        CMAttitudeReferenceFrame.XTrueNorthZVertical
+    )
+
+    // Timer to run the rendering/update loop.
+    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
   }
 
   /**
@@ -126,15 +166,75 @@ import UIKit
     presentViewController(alert, animated: true, completion: nil)
   }
 
+  /**
+   Create the camera. If the user does not provide permission, ask for it.
+   */
+  func obtainCamera() {
+
+    if let cam = try? ARCamera(delegate: self) {
+      camera = cam
+      return
+    }
+
+    let alert = UIAlertController(
+    title: "Camera Permission",
+        message: "Please enable the camera in Settings > MobileAR",
+        preferredStyle: .Alert
+    )
+
+    alert.addAction(UIAlertAction(
+    title: "Okay",
+        style: .Default)
+    { (UIAlertAction) in self.obtainCamera() })
+
+    alert.addAction(UIAlertAction(
+    title: "Back",
+        style: .Cancel)
+    { (UIAlertAction) in self.navigationController?.popToRootViewControllerAnimated(true) })
+
+    presentViewController(alert, animated: true, completion: nil)
+  }
+
+  // Handle button taps.
   func onCalibrate() {
     navigationController?.pushViewController(ARCalibrateController(), animated: true)
   }
-
   func onCapture() {
     navigationController?.pushViewController(AREnvironmentCaptureController(), animated: true)
   }
-
   func onSelect() {
     navigationController?.pushViewController(AREnvironmentListController(), animated: true)
+  }
+
+  /**
+   Processes a frame from the device's camera.
+   */
+  func onCameraFrame(frame: UIImage) {
+    tracker.trackFrame(frame)
+  }
+
+  /**
+   Updates the tracker & renders a frame.
+   */
+  func onFrame() {
+
+    guard let attitude = motionManager.deviceMotion?.attitude else {
+      return
+    }
+    guard let acceleration = motionManager.deviceMotion?.userAcceleration else {
+      return
+    }
+
+    tracker.trackSensor(attitude, acceleration: acceleration)
+
+    renderer.updatePose(
+        rx: 0.0,
+        ry: 0.0,
+        rz: 0.0,
+        tx: 0.0,
+        ty: 0.0,
+        tz: -5.0
+    )
+    renderer.renderFrame()
   }
 }

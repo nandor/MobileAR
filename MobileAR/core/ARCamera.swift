@@ -19,7 +19,7 @@ enum ARCameraError : ErrorType {
  Protocol to handle frames.
  */
 protocol ARCameraDelegate {
-  func onFrame(frame: UIImage)
+  func onCameraFrame(frame: UIImage)
 }
 
 
@@ -113,7 +113,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
       return
     }
 
-    delegate.onFrame(UIImage(CGImage: image))
+    delegate.onCameraFrame(UIImage(CGImage: image))
   }
 
   /**

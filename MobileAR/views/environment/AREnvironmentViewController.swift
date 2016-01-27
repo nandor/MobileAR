@@ -81,13 +81,6 @@ class AREnvironmentViewController : UIViewController {
         target: self,
         action: Selector("onSelect")
     )
-  }
-
-  /**
-   Called after the view has appeared.
-   */
-  override func viewDidAppear(animated: Bool) {
-    super.viewDidAppear(animated)
 
     // Timer to run the rendering/update loop.
     timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
