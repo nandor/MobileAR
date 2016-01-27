@@ -9,10 +9,16 @@
 
 @implementation UIImage (MTLTexture)
 
+
 -(void) toMTLTexture:(id<MTLTexture>)texture
 {
   auto width = CGImageGetWidth(self.CGImage);
   auto height = CGImageGetHeight(self.CGImage);
+
+  if (width != texture.width || height != texture.height) {
+    return;
+  }
+
   auto bytesPerRow = CGImageGetBytesPerRow(self.CGImage);
 
   auto rawData = std::make_unique<uint8_t[]>(height * bytesPerRow);

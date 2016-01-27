@@ -82,6 +82,10 @@ class AREntity {
     obtainCalibration()
     obtainEnvironment()
 
+    if camera == nil || params == nil || environment == nil {
+      return
+    }
+
     // Initialize components.
     tracker = ARSceneTracker()
     renderer = try! ARSceneRenderer(view: view)
@@ -94,6 +98,9 @@ class AREntity {
     // Timer to run the rendering/update loop.
     timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+
+    // Start the camera.
+    camera.start()
   }
 
   /**
@@ -101,6 +108,7 @@ class AREntity {
    */
   override func viewWillDisappear(animated: Bool) {
     super.viewWillDisappear(animated)
+    camera.stop()
   }
 
   /**

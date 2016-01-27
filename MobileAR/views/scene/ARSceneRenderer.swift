@@ -14,8 +14,9 @@ class ARSceneRenderer : ARRenderer {
   private var quadDepthState: MTLDepthStencilState!
   private var quadVBO: MTLBuffer!
 
-  // Render states.
+  // Background render state.
   private var backgroundRenderState: MTLRenderPipelineState!
+  private var backgroundTexture: MTLTexture!
 
   /**
    Initializes the renderer.
@@ -59,12 +60,22 @@ class ARSceneRenderer : ARRenderer {
         length: sizeofValue(vbo[0]) * vbo.count,
         options: MTLResourceOptions()
     )
+
+    // Create the background texture.
+    let backgroundTextureDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+        .BGRA8Unorm,
+        width: Int(640),
+        height: Int(360),
+        mipmapped: false
+    )
+    backgroundTexture = device.newTextureWithDescriptor(backgroundTextureDesc)
   }
 
   /**
    Updates the camera texture.
    */
   func updateFrame(frame: UIImage) {
+    frame.toMTLTexture(backgroundTexture)
   }
 
   /**
@@ -84,6 +95,7 @@ class ARSceneRenderer : ARRenderer {
     encoder.setDepthStencilState(quadDepthState)
     encoder.setRenderPipelineState(backgroundRenderState)
     encoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
+    encoder.setFragmentTexture(backgroundTexture, atIndex: 0)
     encoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     encoder.endEncoding()
   }

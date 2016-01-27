@@ -40,7 +40,7 @@ vertex ARQuadInOut fullscreen(
   float2 vert = float2(in[id]);
   
   return {
-    (vert + 1.0) * 0.5,
+    { (vert.x + 1.0) * 0.5, (1.0 - vert.y) * 0.5 },
     { vert.x, vert.y, 0.0, 1.0 }
   };
 }
@@ -49,7 +49,10 @@ vertex ARQuadInOut fullscreen(
 /**
  Fragment shader for the video background.
  */
-fragment float4 background(ARQuadInOut in [[ stage_in ]])
+fragment float4 background(
+    ARQuadInOut     in         [[ stage_in ]],
+    texture2d<half> background [[ texture(0) ]])
 {
-  return { in.uv.x, in.uv.y, 0, 1 };
+  constexpr sampler backgroundSampler(address::clamp_to_edge, filter::linear);
+  return float4(background.sample(backgroundSampler, in.uv));
 }

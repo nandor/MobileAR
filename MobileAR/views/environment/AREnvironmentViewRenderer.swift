@@ -6,31 +6,31 @@ import Darwin
 import Metal
 
 
+// Number of slices in the sphere.
+let kSphereSlices: Int = 16
+
+// Number of stacks in the sphere.
+let kSphereStacks: Int = 16
+
 /**
  Renders an environment map over on a sphere around the origin.
  */
 class AREnvironmentViewRenderer : ARRenderer {
 
   // Spherical texture to be displayed.
-  var texture: MTLTexture!
+  private var texture: MTLTexture!
 
   // Depth buffer state.
-  var depthState: MTLDepthStencilState!
+  private var depthState: MTLDepthStencilState!
 
   // Renderer state.
-  var renderState: MTLRenderPipelineState!
+  private var renderState: MTLRenderPipelineState!
 
   // Vertex buffer for the spherical mesh.
-  var sphereVBO: MTLBuffer!
+  private var sphereVBO: MTLBuffer!
 
   // Index buffer for the spherical mesh.
-  var sphereIBO: MTLBuffer!
-
-  // Number of slices in the sphere.
-  let kSlices: Int = 16
-
-  // Number of stacks in the sphere.
-  let kStacks: Int = 16
+  private var sphereIBO: MTLBuffer!
 
 
   /**
@@ -65,15 +65,15 @@ class AREnvironmentViewRenderer : ARRenderer {
     // The coordinate system is a bit funny since CoreMotion uses a coordinate
     // system where X points to north and Z points upwards. Thus, we swap
     // Z with Y and invert the Z axis.
-    var vbo = [Float](count: (kSlices + 1) * (kStacks + 1) * 3, repeatedValue: 0.0)
-    for st in 0...kStacks {
-      let s = Double(st) / Double(kStacks)
+    var vbo = [Float](count: (kSphereSlices + 1) * (kSphereStacks + 1) * 3, repeatedValue: 0.0)
+    for st in 0...kSphereStacks {
+      let s = Double(st) / Double(kSphereStacks)
       let phi = M_PI / 2.0 - s * M_PI
 
-      for sl in 0...kSlices {
-        let t = Double(sl) / Double(kSlices)
+      for sl in 0...kSphereSlices {
+        let t = Double(sl) / Double(kSphereSlices)
         let theta = t * M_PI * 2.0
-        let idx = (st * (kSlices + 1) + sl) * 3
+        let idx = (st * (kSphereSlices + 1) + sl) * 3
 
         vbo[idx + 0] = Float(cos(phi) * sin(theta))
         vbo[idx + 1] = Float(cos(phi) * cos(theta))
@@ -87,17 +87,17 @@ class AREnvironmentViewRenderer : ARRenderer {
     )
 
     // Initialize the IBO of the sphere.
-    var ibo = [UInt32](count: kSlices * kStacks * 6, repeatedValue: 0)
-    for st in 0...kStacks - 1 {
-      for sl in 0...kSlices - 1 {
+    var ibo = [UInt32](count: kSphereSlices * kSphereStacks * 6, repeatedValue: 0)
+    for st in 0...kSphereStacks - 1 {
+      for sl in 0...kSphereSlices - 1 {
 
-        let idx = (st * kSlices + sl) * 6
-        ibo[idx + 0] = UInt32((st + 0) * (kSlices + 1) + sl + 0)
-        ibo[idx + 1] = UInt32((st + 1) * (kSlices + 1) + sl + 0)
-        ibo[idx + 2] = UInt32((st + 0) * (kSlices + 1) + sl + 1)
-        ibo[idx + 3] = UInt32((st + 0) * (kSlices + 1) + sl + 1)
-        ibo[idx + 4] = UInt32((st + 1) * (kSlices + 1) + sl + 0)
-        ibo[idx + 5] = UInt32((st + 1) * (kSlices + 1) + sl + 1)
+        let idx = (st * kSphereSlices + sl) * 6
+        ibo[idx + 0] = UInt32((st + 0) * (kSphereSlices + 1) + sl + 0)
+        ibo[idx + 1] = UInt32((st + 1) * (kSphereSlices + 1) + sl + 0)
+        ibo[idx + 2] = UInt32((st + 0) * (kSphereSlices + 1) + sl + 1)
+        ibo[idx + 3] = UInt32((st + 0) * (kSphereSlices + 1) + sl + 1)
+        ibo[idx + 4] = UInt32((st + 1) * (kSphereSlices + 1) + sl + 0)
+        ibo[idx + 5] = UInt32((st + 1) * (kSphereSlices + 1) + sl + 1)
       }
     }
     sphereIBO = device.newBufferWithBytes(
@@ -139,7 +139,7 @@ class AREnvironmentViewRenderer : ARRenderer {
     encoder.setFragmentTexture(texture, atIndex: 0)
     encoder.drawIndexedPrimitives(
         .Triangle,
-        indexCount: kSlices * kStacks * 6,
+        indexCount: kSphereSlices * kSphereStacks * 6,
         indexType: .UInt32,
         indexBuffer: sphereIBO,
         indexBufferOffset: 0
