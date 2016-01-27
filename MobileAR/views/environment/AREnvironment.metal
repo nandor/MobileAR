@@ -10,7 +10,7 @@ using namespace metal;
 
 
 constant float PI = 3.1415926535897932384626433832795;
-
+constant float SPLIT = 10;
 
 /**
  Parameters passed to the environment shader.
@@ -82,15 +82,15 @@ fragment float4 sphereFrag(
   float2 uv = { u, v };
   
   // Compute contributions from guidelines.
-  float2 a30 = fract(uv * 12);
+  float2 a30 = fract(uv * SPLIT);
   a30 = alpha(min(a30, 1.0 - a30), { 0.005, 0.010 });
-  float2 a10 = fract(uv * 36);
+  float2 a10 = fract(uv * SPLIT * 3);
   a10 = alpha(min(a10, 1.0 - a10), { 0.010, 0.020 });
   float grenwich = alpha(abs(u - 0.0), 0.001);
   float equator = alpha(abs(v - 0.5), 0.002);
   
   // Do not draw lines on the top and at the bottom of the sphere.
-  if (v < 1.0 / 12 || v > 1.0 * 11 / 12) {
+  if (v < 1.0 / SPLIT || v > 1.0 * (SPLIT - 1) / SPLIT) {
     a10.x = a10.y = a30.x = 1.0;
     grenwich = 1.0;
     equator = 1.0;
