@@ -211,6 +211,7 @@ class AREntity {
    */
   func onCameraFrame(frame: UIImage) {
     tracker.trackFrame(frame)
+    renderer.updateFrame(frame)
   }
 
   /**

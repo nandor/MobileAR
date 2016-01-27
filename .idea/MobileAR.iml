@@ -13,11 +13,12 @@
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/calibrator/ARCalibrator.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/calibrator/ARCalibrator.mm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/calibrator/ARCalibrateController.swift" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARObject.metal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARSceneTracker.mm" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARSceneViewController.swift" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARPostFX.metal" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARObject.metal" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARSceneRenderer.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARSceneTracker.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/MobileAR/views/scene/ARSceneViewController.swift" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/MedianCutSampler.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/PhotoSphereBuilder.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MobileAR/ar/PhotoSphereBuilder.h" isTestSource="false" />

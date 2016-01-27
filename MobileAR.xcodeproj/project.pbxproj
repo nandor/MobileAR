@@ -25,6 +25,7 @@
 		C13F86C929B9293243D5D9C1 /* AREnvironmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8ACBD08B6BB368F59ED9 /* AREnvironmentViewController.swift */; };
 		C13F875D61FE475D5A12851E /* ARCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8336ED5C5246986DFBC5 /* ARCamera.swift */; };
 		C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8DAF8EBDD0C4C7F91DCF /* ARAppDelegate.swift */; };
+		C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */ = {isa = PBXBuildFile; fileRef = C13F8B19027A11598919DBE2 /* ARPostFX.metal */; };
 		C13F8922F94928E19AF4B060 /* ARObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F805F9FDFCD673FF1121C /* ARObject.swift */; };
 		C13F89B716D272A8E7FB753A /* ARCalibrator.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8AD6D3544A89CEDE498B /* ARCalibrator.mm */; };
 		C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8CE8241A1256290EF954 /* UIImage+MTLTexture.mm */; };
@@ -66,6 +67,7 @@
 		C13F8AD6D3544A89CEDE498B /* ARCalibrator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARCalibrator.mm; sourceTree = "<group>"; };
 		C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VarianceCutSampler.cpp; path = ar/VarianceCutSampler.cpp; sourceTree = "<group>"; };
 		C13F8B00F4033A39182CAF94 /* AREnvironmentCaptureController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentCaptureController.swift; sourceTree = "<group>"; };
+		C13F8B19027A11598919DBE2 /* ARPostFX.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARPostFX.metal; sourceTree = "<group>"; };
 		C13F8B98261588D0EC7551E5 /* ARSceneTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARSceneTracker.h; sourceTree = "<group>"; };
 		C13F8BBCDA1335F81A093177 /* ARSceneRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARSceneRenderer.swift; sourceTree = "<group>"; };
 		C13F8C3B49A39FD13AC34AE3 /* ARPose.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARPose.swift; sourceTree = "<group>"; };
@@ -198,6 +200,7 @@
 				C13F8B98261588D0EC7551E5 /* ARSceneTracker.h */,
 				C13F8BBCDA1335F81A093177 /* ARSceneRenderer.swift */,
 				7A1E3BB81C5962AF00E63312 /* ARObject.metal */,
+				C13F8B19027A11598919DBE2 /* ARPostFX.metal */,
 			);
 			path = scene;
 			sourceTree = "<group>";
@@ -296,6 +299,7 @@
 				C13F8922F94928E19AF4B060 /* ARObject.swift in Sources */,
 				7A1E3BB91C5962AF00E63312 /* ARObject.metal in Sources */,
 				C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */,
+				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
