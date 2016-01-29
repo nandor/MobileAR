@@ -38,13 +38,13 @@ struct ARParams {
  */
 struct ARDirectionalLight {
   /// Light direction.
-  packed_float3 dir;
+  float3 dir;
   /// Diffuse colour.
-  packed_float3 ambient;
+  float3 ambient;
   /// Ambient colour.
-  packed_float3 diffuse;
+  float3 diffuse;
   /// Specular colour.
-  packed_float3 specular;
+  float3 specular;
 };
 
 
@@ -121,7 +121,7 @@ fragment float4 lighting(
   const float depth = texDepth.read(uv).x;
   
   // Decode normal vector, diffuse and specular and position.
-  const float3 n = { normal.x, normal.y, sqrt(1 - dot(normal.xy, normal.xy)) };
+  const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
   const float3 albedo = float3(material.xyz);
   const float  spec = float(material.w) * 100.0;
   const float4 vproj = params.invProj * float4(
@@ -142,16 +142,16 @@ fragment float4 lighting(
     constant ARDirectionalLight &light = lights[i];
     
     // Unpack light data.
-    const float3 l = normalize((params.norm * float4(float3(light.dir), 0.0)).xyz);
+    const float3 l = normalize((params.norm * float4(light.dir, 0.0)).xyz);
     
     // Compute light contribution.
     const float diffFact = max(0.0, -dot(n, l));
     const float specFact = max(0.0, -dot(reflect(l, n), e));
     
     colour += (
-        float3(light.ambient) +
-        float3(light.diffuse) * diffFact +
-        float3(light.specular) * pow(specFact, MU * spec)
+        light.ambient +
+        light.diffuse * diffFact +
+        light.specular * pow(specFact, MU * spec)
     );
   }
   

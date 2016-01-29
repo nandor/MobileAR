@@ -326,20 +326,27 @@ class ARSceneRenderer : ARRenderer {
    Initializes all light sources.
    */
   private func setupLightSources() throws {
-    var lightData = [Float](count: 12 * 32, repeatedValue: 0.0)
+    var lightData = [Float](count: 16 * 32, repeatedValue: 0.0)
     
     lightData[0] = -1.0;
     lightData[1] = -1.0;
     lightData[2] = -1.0;
-    lightData[3] = 1.0;
-    lightData[4] = 0.5;
+    lightData[3] = 0.0;
+    
+    lightData[4] = 1.0;
     lightData[5] = 0.5;
-    lightData[6] = 1.0;
-    lightData[7] = 0.5;
-    lightData[8] = 0.5;
-    lightData[9] = 1.0;
-    lightData[10] = 1.0;
-    lightData[11] = 1.0;
+    lightData[6] = 0.5;
+    lightData[7] = 0.0;
+    
+    lightData[8] = 1.0;
+    lightData[9] = 0.5;
+    lightData[10] = 0.5;
+    lightData[11] = 0.0;
+    
+    lightData[12] = 1.0;
+    lightData[13] = 1.0;
+    lightData[14] = 1.0;
+    lightData[15] = 1.0;
     
     lightBuffer = device.newBufferWithBytes(
       lightData,
