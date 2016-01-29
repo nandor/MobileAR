@@ -11,7 +11,8 @@ import Metal
 class ARSceneRenderer : ARRenderer {
 
   // Data to render the quad spanning the entire screen.
-  private var quadDepthState: MTLDepthStencilState!
+  private var quadDepthStateInclude: MTLDepthStencilState!
+  private var quadDepthStateExclude: MTLDepthStencilState!
   private var quadVBO: MTLBuffer!
 
   // Texture from the camera.
@@ -51,16 +52,27 @@ class ARSceneRenderer : ARRenderer {
     try super.init(view: view)
 
     // Set up the depth state.
-    let quadDepthDesc = MTLDepthStencilDescriptor()
-    quadDepthDesc.depthCompareFunction = .Always
-    quadDepthDesc.depthWriteEnabled = false
-    quadDepthDesc.frontFaceStencil.stencilCompareFunction = .NotEqual
-    quadDepthDesc.frontFaceStencil.stencilFailureOperation = .Keep
-    quadDepthDesc.frontFaceStencil.depthFailureOperation = .Keep
-    quadDepthDesc.frontFaceStencil.depthStencilPassOperation = .Keep
-    quadDepthDesc.frontFaceStencil.readMask = 0xFF
-    quadDepthDesc.frontFaceStencil.writeMask = 0x00
-    quadDepthState = device.newDepthStencilStateWithDescriptor(quadDepthDesc)
+    let quadDepthExcludeDesc = MTLDepthStencilDescriptor()
+    quadDepthExcludeDesc.depthCompareFunction = .Always
+    quadDepthExcludeDesc.depthWriteEnabled = false
+    quadDepthExcludeDesc.frontFaceStencil.stencilCompareFunction = .NotEqual
+    quadDepthExcludeDesc.frontFaceStencil.stencilFailureOperation = .Keep
+    quadDepthExcludeDesc.frontFaceStencil.depthFailureOperation = .Keep
+    quadDepthExcludeDesc.frontFaceStencil.depthStencilPassOperation = .Keep
+    quadDepthExcludeDesc.frontFaceStencil.readMask = 0xFF
+    quadDepthExcludeDesc.frontFaceStencil.writeMask = 0x00
+    quadDepthStateExclude = device.newDepthStencilStateWithDescriptor(quadDepthExcludeDesc)
+    
+    let quadDepthIncludeDesc = MTLDepthStencilDescriptor()
+    quadDepthIncludeDesc.depthCompareFunction = .Always
+    quadDepthIncludeDesc.depthWriteEnabled = false
+    quadDepthIncludeDesc.frontFaceStencil.stencilCompareFunction = .Equal
+    quadDepthIncludeDesc.frontFaceStencil.stencilFailureOperation = .Keep
+    quadDepthIncludeDesc.frontFaceStencil.depthFailureOperation = .Keep
+    quadDepthIncludeDesc.frontFaceStencil.depthStencilPassOperation = .Keep
+    quadDepthIncludeDesc.frontFaceStencil.readMask = 0xFF
+    quadDepthIncludeDesc.frontFaceStencil.writeMask = 0x00
+    quadDepthStateInclude = device.newDepthStencilStateWithDescriptor(quadDepthIncludeDesc)
 
     // Initialize the VBO of the full-screen quad.
     var vbo : [Float] = [
@@ -197,13 +209,26 @@ class ARSceneRenderer : ARRenderer {
     // occluded by objects rendered on top of the scene.
     fxEncoder.setCullMode(.Back)
     fxEncoder.setStencilReferenceValue(0xFF)
-    fxEncoder.setDepthStencilState(quadDepthState)
+    fxEncoder.setDepthStencilState(quadDepthStateExclude)
     fxEncoder.setRenderPipelineState(backgroundRenderState)
     fxEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
     fxEncoder.setFragmentTexture(backgroundTexture, atIndex: 0)
     fxEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     
-    // Run the lighting
+    // Apply all the light sources.
+    // Ligh sources are batched in groups of 32 and only those pixels are shaded
+    // which belong to an object that was rendered previously.
+    fxEncoder.setCullMode(.Back)
+    fxEncoder.setStencilReferenceValue(0xFF)
+    fxEncoder.setDepthStencilState(quadDepthStateInclude)
+    fxEncoder.setRenderPipelineState(lightingRenderState)
+    fxEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
+    fxEncoder.setVertexBuffer(params, offset: 0, atIndex: 1)
+    fxEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
+    fxEncoder.setFragmentTexture(fboNormal, atIndex: 1)
+    fxEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
+    fxEncoder.setFragmentTexture(fboAO, atIndex: 3)
+    fxEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     
     fxEncoder.endEncoding()
   }

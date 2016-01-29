@@ -49,7 +49,8 @@ struct ARObjectInOut {
  Output from the fragment shader.
  */
 struct ARObjectOut {
-  float4 albedo   [[ color(0) ]];
+  half2  normal     [[ color(0) ]];
+  float4 material   [[ color(1) ]];
 };
 
 
@@ -80,5 +81,8 @@ fragment ARObjectOut objectFrag(
     ARObjectInOut   in  [[ stage_in ]])
 {
   float3 norm = (in.norm + 1.0) * 0.5;
-  return { { norm.x, norm.y, norm.z, 1} };
+  return {
+    half2(norm.xy),
+    { 0.5, 0.5, 0.5, 0.0 }
+  };
 }

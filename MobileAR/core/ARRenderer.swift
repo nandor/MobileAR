@@ -131,7 +131,12 @@ class ARRenderer {
     ])
 
     // Upload stuff to the param buffer.
-    let paramsData = [projMat, viewMat, viewMat.inverse.transpose];
+    let paramsData = [
+        projMat,
+        viewMat,
+        viewMat.inverse.transpose,
+        projMat.inverse
+    ];
     params = device.newBufferWithBytes(
         paramsData,
         length: sizeofValue(paramsData[0]) * paramsData.count,

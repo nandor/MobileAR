@@ -9,6 +9,20 @@
 
 using namespace metal;
 
+/**
+ Parameters passed to the shader.
+ */
+struct ARObjectParams {
+  /// Perspective projection matrix.
+  float4x4 proj;
+  /// View matrix.
+  float4x4 view;
+  /// Normal matrix.
+  float4x4 norm;
+  /// Inverse projection matrix.
+  float4x4 invProj;
+};
+
 
 /**
  Vertex shader to fragment shader.
@@ -62,8 +76,13 @@ fragment float4 ssao(
  Fragment shader to apply the effects of a batch of directional lights.
  */
 fragment float4 lighting(
-    ARQuadInOut     in         [[ stage_in ]])
+    ARQuadInOut                   in          [[ stage_in ]],
+    texture2d<half, access::read> texMaterial [[ texture(2) ]])
 {
-  return { 1, 1, 1, 1 };
+  half4 material = texMaterial.read(uint2(
+      texMaterial.get_width() * in.uv.x,
+      texMaterial.get_height() * in.uv.y
+  ));
+  return { material.x, material.y, material.z, 1 };
 }
 
