@@ -38,7 +38,7 @@ class ARRenderer {
   internal let library: MTLLibrary
 
   // Buffer for view + projection matrix.
-  internal var params: MTLBuffer!
+  internal var paramBuffer: MTLBuffer!
   
   // Size of the view.
   internal let width: Int
@@ -73,7 +73,7 @@ class ARRenderer {
     view.layer.addSublayer(layer)
 
     // Set up the parameter buffer.
-    params = device.newBufferWithLength(sizeof(Float) * 32, options: MTLResourceOptions())
+    paramBuffer = device.newBufferWithLength(sizeof(Float) * 32, options: MTLResourceOptions())
   }
 
   /**
@@ -137,7 +137,7 @@ class ARRenderer {
         viewMat.inverse.transpose,
         projMat.inverse
     ];
-    params = device.newBufferWithBytes(
+    paramBuffer = device.newBufferWithBytes(
         paramsData,
         length: sizeofValue(paramsData[0]) * paramsData.count,
         options: MTLResourceOptions()

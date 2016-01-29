@@ -135,7 +135,7 @@ class AREnvironmentViewRenderer : ARRenderer {
     encoder.setDepthStencilState(depthState)
     encoder.setRenderPipelineState(renderState)
     encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 0)
-    encoder.setVertexBuffer(params, offset: 0, atIndex: 1)
+    encoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
     encoder.setFragmentTexture(texture, atIndex: 0)
     encoder.drawIndexedPrimitives(
         .Triangle,

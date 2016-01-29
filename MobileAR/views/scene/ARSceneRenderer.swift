@@ -45,6 +45,9 @@ class ARSceneRenderer : ARRenderer {
   private var fboMaterial: MTLTexture!
   private var fboAO: MTLTexture!
   
+  // Buffer for light sources.
+  private var lightBuffer: MTLBuffer!
+  
   /**
    Initializes the renderer.
    */
@@ -134,6 +137,7 @@ class ARSceneRenderer : ARRenderer {
     
     try setupGeometryBuffer()
     try setupFXPrograms()
+    try setupLightSources()
   }
 
   /**
@@ -175,7 +179,7 @@ class ARSceneRenderer : ARRenderer {
     geomEncoder.setDepthStencilState(objectDepthState)
     geomEncoder.setRenderPipelineState(objectRenderState)
     geomEncoder.setVertexBuffer(objectCache[0].vbo, offset: 0, atIndex: 0)
-    geomEncoder.setVertexBuffer(params, offset: 0, atIndex: 1)
+    geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
     geomEncoder.drawIndexedPrimitives(
         .Triangle,
         indexCount: objectCache[0].indices,
@@ -223,7 +227,8 @@ class ARSceneRenderer : ARRenderer {
     fxEncoder.setDepthStencilState(quadDepthStateInclude)
     fxEncoder.setRenderPipelineState(lightingRenderState)
     fxEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
-    fxEncoder.setVertexBuffer(params, offset: 0, atIndex: 1)
+    fxEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
+    fxEncoder.setFragmentBuffer(lightBuffer, offset: 0, atIndex: 1)
     fxEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
     fxEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     fxEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
@@ -315,5 +320,32 @@ class ARSceneRenderer : ARRenderer {
     lightingRenderStateDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     lightingRenderStateDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     lightingRenderState = try device.newRenderPipelineStateWithDescriptor(lightingRenderStateDesc)
+  }
+  
+  /**
+   Initializes all light sources.
+   */
+  private func setupLightSources() throws {
+    var lightData = [Float](count: 12 * 32, repeatedValue: 0.0)
+    
+    lightData[0] = -1.0;
+    lightData[1] = -1.0;
+    lightData[2] = -1.0;
+    lightData[3] = 1.0;
+    lightData[4] = 0.5;
+    lightData[5] = 0.5;
+    lightData[6] = 1.0;
+    lightData[7] = 0.5;
+    lightData[8] = 0.5;
+    lightData[9] = 1.0;
+    lightData[10] = 1.0;
+    lightData[11] = 1.0;
+    
+    lightBuffer = device.newBufferWithBytes(
+      lightData,
+      length: sizeofValue(lightData[0]) * lightData.count,
+      options: MTLResourceOptions()
+    )
+    lightBuffer.label = "VBOLightSources"
   }
 }

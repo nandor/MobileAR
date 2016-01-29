@@ -14,7 +14,7 @@ using namespace metal;
 /**
  Parameters passed to the shader.
  */
-struct ARObjectParams {
+struct ARParams {
   /// Perspective projection matrix.
   float4x4 proj;
   /// View matrix.
@@ -22,7 +22,6 @@ struct ARObjectParams {
   /// Normal matrix.
   float4x4 norm;
 };
-
 
 /**
  Input to the vertex shader.
@@ -60,7 +59,7 @@ struct ARObjectOut {
  */
 vertex ARObjectInOut objectVert(
     constant ARObjectIn*     in     [[ buffer(0) ]],
-    constant ARObjectParams& params [[ buffer(1) ]],
+    constant ARParams&       params [[ buffer(1) ]],
     uint                     id     [[ vertex_id ]])
 {
   float3 vert = float3(in[id].vert);
@@ -80,9 +79,9 @@ vertex ARObjectInOut objectVert(
 fragment ARObjectOut objectFrag(
     ARObjectInOut   in  [[ stage_in ]])
 {
-  float3 norm = (in.norm + 1.0) * 0.5;
+  float3 norm = normalize(in.norm);
   return {
     half2(norm.xy),
-    { 0.5, 0.5, 0.5, 0.0 }
+    { 0.5, 0.5, 0.5, 0.25 }
   };
 }
