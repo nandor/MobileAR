@@ -103,7 +103,7 @@ class AREnvironmentViewController : UIViewController {
     NSUserDefaults().setObject(environment.path.path!, forKey: "environment")
     navigationController?.popToRootViewControllerAnimated(true)
   }
-
+  
   /**
    Called when attitude is refreshed.
    */
@@ -120,7 +120,6 @@ class AREnvironmentViewController : UIViewController {
         ty: 0.0,
         tz: 0.0
     )
-
     renderer.renderFrame()
   }
 }

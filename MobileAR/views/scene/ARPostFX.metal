@@ -11,16 +11,6 @@ using namespace metal;
 
 
 /**
- Input to the vertex shader.
- */
-struct ARQuadIn {
-  packed_float3 vert;
-  packed_float3 norm;
-  packed_float2 uv;
-};
-
-
-/**
  Vertex shader to fragment shader.
  */
 struct ARQuadInOut {
@@ -56,3 +46,24 @@ fragment float4 background(
   constexpr sampler backgroundSampler(address::clamp_to_edge, filter::linear);
   return float4(background.sample(backgroundSampler, in.uv));
 }
+
+
+/**
+ Fragment shader to compute Screen Space Ambient Occlusion (SSAO).
+ */
+fragment float4 ssao(
+    ARQuadInOut     in         [[ stage_in ]])
+{
+  return { 1, 1, 1, 1 };
+}
+
+
+/**
+ Fragment shader to apply the effects of a batch of directional lights.
+ */
+fragment float4 lighting(
+    ARQuadInOut     in         [[ stage_in ]])
+{
+  return { 1, 1, 1, 1 };
+}
+

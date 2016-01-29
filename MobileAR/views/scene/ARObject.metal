@@ -19,6 +19,8 @@ struct ARObjectParams {
   float4x4 proj;
   /// View matrix.
   float4x4 view;
+  /// Normal matrix.
+  float4x4 norm;
 };
 
 
@@ -47,7 +49,7 @@ struct ARObjectInOut {
  Output from the fragment shader.
  */
 struct ARObjectOut {
-  float4 albedo   [[color(0)]];
+  float4 albedo   [[ color(0) ]];
 };
 
 
@@ -65,7 +67,7 @@ vertex ARObjectInOut objectVert(
   float2 uv = float2(in[id].uv);
   
   float4 wVert = params.view * float4(vert.x, vert.y, vert.z, 1.0);
-  float4 wNorm = params.view * float4(norm.x, norm.y, norm.z, 0.0);
+  float4 wNorm = params.norm * float4(norm.x, norm.y, norm.z, 0.0);
   
   return { wVert.xyz, wNorm.xyz, uv, params.proj * wVert };
 }
@@ -77,5 +79,6 @@ vertex ARObjectInOut objectVert(
 fragment ARObjectOut objectFrag(
     ARObjectInOut   in  [[ stage_in ]])
 {
-  return { { 1, 1, 1, 1 } };
+  float3 norm = (in.norm + 1.0) * 0.5;
+  return { { norm.x, norm.y, norm.z, 1} };
 }

@@ -37,9 +37,8 @@ class AREntity {
   internal var motionManager: CMMotionManager!
 
   // Timer used to redraw frames.
-  internal var timer: CADisplayLink!
-
-
+  private var timer: CADisplayLink!
+  
   /**
    Callend when the window is first created.
    */
@@ -108,6 +107,7 @@ class AREntity {
    */
   override func viewWillDisappear(animated: Bool) {
     super.viewWillDisappear(animated)
+    timer.invalidate()
     camera.stop()
   }
 
@@ -185,18 +185,18 @@ class AREntity {
     }
 
     let alert = UIAlertController(
-    title: "Camera Permission",
+        title: "Camera Permission",
         message: "Please enable the camera in Settings > MobileAR",
         preferredStyle: .Alert
     )
 
     alert.addAction(UIAlertAction(
-    title: "Okay",
+        title: "Okay",
         style: .Default)
     { (UIAlertAction) in self.obtainCamera() })
 
     alert.addAction(UIAlertAction(
-    title: "Back",
+        title: "Back",
         style: .Cancel)
     { (UIAlertAction) in self.navigationController?.popToRootViewControllerAnimated(true) })
 
@@ -219,8 +219,10 @@ class AREntity {
    */
   func onCameraFrame(frame: UIImage) {
     tracker.trackFrame(frame)
-    renderer.updateFrame(frame)
+    self.renderer.updateFrame(frame)
   }
+  
+  var angle: Float = 0.0
 
   /**
    Updates the tracker & renders a frame.
@@ -235,15 +237,18 @@ class AREntity {
     }
 
     tracker.trackSensor(attitude, acceleration: acceleration)
+    
+    angle += 0.01
 
     renderer.updatePose(
-        rx: 0.0,
-        ry: 0.0,
-        rz: 0.0,
+        rx: angle,
+        ry: 0.1,
+        rz: angle,
         tx: 0.0,
         ty: 0.0,
         tz: -5.0
     )
-    renderer.renderFrame()
+    
+    self.renderer.renderFrame()
   }
 }

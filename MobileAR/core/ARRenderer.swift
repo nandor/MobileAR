@@ -39,6 +39,10 @@ class ARRenderer {
 
   // Buffer for view + projection matrix.
   internal var params: MTLBuffer!
+  
+  // Size of the view.
+  internal let width: Int
+  internal let height: Int
 
   /**
    Initializes the core renderer.
@@ -56,7 +60,9 @@ class ARRenderer {
 
     // Save a reference to the view.
     self.view = view
-
+    self.width = Int(view.frame.size.width)
+    self.height = Int(view.frame.size.height)
+    
     // Set up the layer & the view.
     layer = CAMetalLayer()
     layer.device = device
@@ -108,7 +114,7 @@ class ARRenderer {
     ])
 
     // Compute the view matrix.
-    let viewMat = rotZ * rotX * rotY * trans
+    let viewMat = trans * rotZ * rotX * rotY
 
     // Compute the projection matrix.
     let aspect = Float(view.frame.width) / Float(view.frame.height)
@@ -125,9 +131,10 @@ class ARRenderer {
     ])
 
     // Upload stuff to the param buffer.
+    let paramsData = [projMat, viewMat, viewMat.inverse.transpose];
     params = device.newBufferWithBytes(
-        [projMat, viewMat],
-        length: sizeofValue(projMat) + sizeofValue(viewMat),
+        paramsData,
+        length: sizeofValue(paramsData[0]) * paramsData.count,
         options: MTLResourceOptions()
     )
   }

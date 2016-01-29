@@ -35,7 +35,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
   let delegate: ARCameraDelegate
 
   // Dispatch queue to execute camera code on.
-  let queue = dispatch_queue_create("uk.ac.ic.MobileAR", DISPATCH_QUEUE_SERIAL)
+  let queue = dispatch_queue_create("uk.ac.ic.MobileAR.ARCamera", DISPATCH_QUEUE_SERIAL)
 
   /**
    Iniitalizes the camera wrapper.
