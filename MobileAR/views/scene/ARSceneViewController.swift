@@ -236,12 +236,19 @@ class AREntity {
 
     // Update the tracker.
     tracker.trackSensor(attitude, acceleration: acceleration)
-    let pose = tracker.getPose()
     
     // Update the extrinsic parameters in the renderer.
-    renderer.updatePose(
-      pose
+    renderer.updatePose(tracker.getPose())
+    /*
+        rx: 0.0,
+        ry: 0.0,
+        rz: 0.0,
+        tx: 0.0,
+        ty: 0.0,
+        tz: -5.0
     )
+    */
+    
     
     self.renderer.renderFrame()
   }

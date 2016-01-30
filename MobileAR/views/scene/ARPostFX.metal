@@ -92,10 +92,10 @@ fragment float4 background(
 /**
  Fragment shader to compute Screen Space Ambient Occlusion (SSAO).
  */
-fragment float4 ssao(
+fragment float ssao(
     ARQuadInOut     in         [[ stage_in ]])
 {
-  return { 1, 1, 1, 1 };
+  return { 1 };
 }
 
 

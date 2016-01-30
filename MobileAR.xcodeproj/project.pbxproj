@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7A1E3BB91C5962AF00E63312 /* ARObject.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARObject.metal */; };
+		7A3F5D971C5D19CF0044F6FC /* bunny.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7A3F5D961C5D19CF0044F6FC /* bunny.obj */; };
+		7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */; };
 		7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */; };
 		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
@@ -40,6 +42,8 @@
 
 /* Begin PBXFileReference section */
 		7A1E3BB81C5962AF00E63312 /* ARObject.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARObject.metal; sourceTree = "<group>"; };
+		7A3F5D961C5D19CF0044F6FC /* bunny.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = bunny.obj; path = MobileAR/models/bunny.obj; sourceTree = "<group>"; };
+		7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARFileReader.swift; sourceTree = "<group>"; };
 		7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -95,6 +99,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7A3F5D981C5D1A240044F6FC /* models */ = {
+			isa = PBXGroup;
+			children = (
+				7A3F5D961C5D19CF0044F6FC /* bunny.obj */,
+			);
+			name = models;
+			path = ..;
+			sourceTree = "<group>";
+		};
 		7AFCF82F1BCE40CB00A108F9 = {
 			isa = PBXGroup;
 			children = (
@@ -119,6 +132,7 @@
 			isa = PBXGroup;
 			children = (
 				7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */,
+				7A3F5D981C5D1A240044F6FC /* models */,
 				C13F8CC9CCED42419FA63D42 /* views */,
 				C13F8A2642DCE930150DD8E9 /* ar */,
 				C13F80072DDE678D0B709A3A /* core */,
@@ -136,12 +150,13 @@
 		C13F80072DDE678D0B709A3A /* core */ = {
 			isa = PBXGroup;
 			children = (
+				C13F805F9FDFCD673FF1121C /* ARObject.swift */,
 				C13F850743FA3DD255216D0A /* ARParameters.swift */,
 				C13F81F38B539629D86DBBCB /* AREnvironment.swift */,
 				C13F8336ED5C5246986DFBC5 /* ARCamera.swift */,
 				C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */,
 				C13F8C3B49A39FD13AC34AE3 /* ARPose.swift */,
-				C13F805F9FDFCD673FF1121C /* ARObject.swift */,
+				7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -173,8 +188,8 @@
 		C13F8CC9CCED42419FA63D42 /* views */ = {
 			isa = PBXGroup;
 			children = (
-				C13F872AC7FF82A10722CE09 /* calibrator */,
 				C13F8F060C4A50CF7AD97186 /* scene */,
+				C13F872AC7FF82A10722CE09 /* calibrator */,
 				C13F8EF6D93936DA0F0C4453 /* environment */,
 			);
 			path = views;
@@ -264,6 +279,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A3F5D971C5D19CF0044F6FC /* bunny.obj in Resources */,
 				7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -276,6 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C13F845C0484D71FD4CEC8C8 /* MedianCutSampler.cpp in Sources */,
+				7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
 				C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */,

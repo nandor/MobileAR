@@ -48,6 +48,13 @@ class ARSceneRenderer : ARRenderer {
   // Buffer for light sources.
   private var lightBuffer: MTLBuffer!
   
+  // Background queue for loading data.
+  private let backgroundQueue = dispatch_queue_create(
+      "uk.ac.ic.MobileAR.ARSceneRenderer",
+      DISPATCH_QUEUE_CONCURRENT
+  )
+
+  
   /**
    Initializes the renderer.
    */
@@ -133,7 +140,18 @@ class ARSceneRenderer : ARRenderer {
     objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)
 
-    objectCache.append(ARObject(device: device))
+    dispatch_async(backgroundQueue) {
+      do {
+        if (true) {
+          self.objectCache = [ARObject.loadCube(self.device)]
+        } else {
+          let url = NSBundle.mainBundle().URLForResource("bunny", withExtension: "obj")
+          self.objectCache = [try ARObject.loadObject(self.device, url: url!)]
+        }
+      } catch {
+        print("\(error)")
+      }
+    }
     
     try setupGeometryBuffer()
     try setupFXPrograms()
@@ -178,15 +196,25 @@ class ARSceneRenderer : ARRenderer {
     geomEncoder.setStencilReferenceValue(0xFF)
     geomEncoder.setDepthStencilState(objectDepthState)
     geomEncoder.setRenderPipelineState(objectRenderState)
-    geomEncoder.setVertexBuffer(objectCache[0].vbo, offset: 0, atIndex: 0)
     geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
-    geomEncoder.drawIndexedPrimitives(
-        .Triangle,
-        indexCount: objectCache[0].indices,
-        indexType: .UInt32,
-        indexBuffer: objectCache[0].ibo,
-        indexBufferOffset: 0
-    )
+    for object in objectCache {
+      geomEncoder.setVertexBuffer(object.vbo, offset: 0, atIndex: 0)
+      if let ibo = object.ibo {
+        geomEncoder.drawIndexedPrimitives(
+            .Triangle,
+            indexCount: object.indices,
+            indexType: .UInt32,
+            indexBuffer: ibo,
+            indexBufferOffset: 0
+        )
+      } else {
+        geomEncoder.drawPrimitives(
+            .Triangle,
+            vertexStart: 0,
+            vertexCount: object.indices
+        )
+      }
+    }
     
     geomEncoder.endEncoding()
 
@@ -339,18 +367,18 @@ class ARSceneRenderer : ARRenderer {
     var lightData = [Float](count: 16 * 32, repeatedValue: 0.0)
     
     lightData[0] = -1.0;
-    lightData[1] = -1.0;
+    lightData[1] = -0.5;
     lightData[2] = -1.0;
     lightData[3] = 0.0;
     
-    lightData[4] = 1.0;
-    lightData[5] = 0.5;
-    lightData[6] = 0.5;
+    lightData[4] = 0.2;
+    lightData[5] = 0.2;
+    lightData[6] = 0.2;
     lightData[7] = 0.0;
     
-    lightData[8] = 1.0;
-    lightData[9] = 0.5;
-    lightData[10] = 0.5;
+    lightData[8] = 0.7;
+    lightData[9] = 0.7;
+    lightData[10] = 0.7;
     lightData[11] = 0.0;
     
     lightData[12] = 1.0;

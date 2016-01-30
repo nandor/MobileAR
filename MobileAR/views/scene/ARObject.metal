@@ -82,6 +82,6 @@ fragment ARObjectOut objectFrag(
   float3 norm = normalize(in.norm);
   return {
     half2(norm.xy),
-    { 0.5, 0.5, 0.5, 0.25 }
+    { 1.0, 1.0, 1.0, 0.25 }
   };
 }
