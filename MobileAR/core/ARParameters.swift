@@ -11,7 +11,6 @@ import Foundation
   let cy: Float
   let k1: Float
   let k2: Float
-  let k3: Float
   let r1: Float
   let r2: Float
 
@@ -22,7 +21,6 @@ import Foundation
     cy : Float,
     k1 : Float,
     k2 : Float,
-    k3 : Float,
     r1 : Float,
     r2 : Float)
   {
@@ -32,7 +30,6 @@ import Foundation
     self.cy = cy
     self.k1 = k1
     self.k2 = k2
-    self.k3 = k3
     self.r1 = r1
     self.r2 = r2
   }
@@ -40,7 +37,7 @@ import Foundation
   /**
    Loads the calibration parameters from a file.
    */
-  static func loadFromFile() throws -> ARParameters {
+  @objc static func loadFromFile() throws -> ARParameters {
 
     let data = try NSData(contentsOfURL: getParametersFileURL(), options: NSDataReadingOptions())
     let json = try NSJSONSerialization.JSONObjectWithData(
@@ -55,7 +52,6 @@ import Foundation
         cy: json["cy"] as! Float,
         k1: json["k1"] as! Float,
         k2: json["k2"] as! Float,
-        k3: json["k3"] as! Float,
         r1: json["r1"] as! Float,
         r2: json["r2"] as! Float
     )
@@ -72,7 +68,6 @@ import Foundation
           "cy": params.cy,
           "k1": params.k1,
           "k2": params.k2,
-          "k3": params.k3,
           "r1": params.r1,
           "r2": params.r2
         ],

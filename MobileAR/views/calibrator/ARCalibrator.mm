@@ -19,7 +19,8 @@ static const size_t kCalibrationPoints = 16;
 static const cv::Size kPatternSize(4, 11);
 
 
-@implementation ARCalibrator {
+@implementation ARCalibrator
+{
   // OpenCV images.
   cv::Mat gray;
   cv::Mat rgb;
@@ -47,7 +48,7 @@ static const cv::Size kPatternSize(4, 11);
 
   // Initialize the intrinsic parameters.
   cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
-  distCoeffs = cv::Mat::zeros(5, 1, CV_64F);
+  distCoeffs = cv::Mat::zeros(4, 1, CV_64F);
 
   // Reserve storage for the point sets.
   imagePoints.reserve(kCalibrationPoints);
@@ -117,7 +118,6 @@ static const cv::Size kPatternSize(4, 11);
                     cy: cameraMatrix.at<float>(1, 2)
                     k1: distCoeffs.at<float>(0, 0)
                     k2: distCoeffs.at<float>(1, 0)
-                    k3: distCoeffs.at<float>(4, 0)
                     r1: distCoeffs.at<float>(2, 0)
                     r2: distCoeffs.at<float>(3, 0)]];
 

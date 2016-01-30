@@ -7,7 +7,19 @@
 #import <CoreMotion/CoreMotion.h>
 #import <UIKit/UIKit.h>
 
+@class ARParameters;
+@class ARPose;
+
+
+/**
+ Class responsible for tracking using a patterna and sensors.
+ */
 @interface ARSceneTracker : NSObject
+
+/**
+ Initializes the tracker.
+ */
+- (instancetype)initWithParameters:(ARParameters *)params;
 
 /**
  Updates the pose by tracking the new frame.
@@ -18,5 +30,11 @@
  Updates the tracker using sensor measurements.
  */
 - (void)trackSensor:(CMAttitude *)attitude acceleration:(CMAcceleration)acceleration;
+
+/**
+ Returns the tracked pose.
+ */
+- (ARPose *)getPose;
+
 
 @end

@@ -115,6 +115,7 @@ class ARRenderer {
 
     // Compute the view matrix.
     let viewMat = trans * rotZ * rotX * rotY
+    let invViewMat = viewMat.inverse
 
     // Compute the projection matrix.
     let aspect = Float(view.frame.width) / Float(view.frame.height)
@@ -134,13 +135,36 @@ class ARRenderer {
     let paramsData = [
         projMat,
         viewMat,
-        viewMat.inverse.transpose,
-        projMat.inverse
+        invViewMat.transpose,
+        projMat.inverse,
+        invViewMat
     ];
     paramBuffer = device.newBufferWithBytes(
         paramsData,
         length: sizeofValue(paramsData[0]) * paramsData.count,
         options: MTLResourceOptions()
+    )
+  }
+  
+  /**
+   Updates the pose of the camera.
+   */
+  func updatePose(pose: ARPose) {
+  
+    let invViewMat = pose.viewMat.inverse
+    
+    // Upload stuff to the param buffer.
+    let paramsData = [
+      pose.projMat,
+      pose.viewMat,
+      invViewMat.transpose,
+      pose.projMat.inverse,
+      invViewMat
+    ];
+    paramBuffer = device.newBufferWithBytes(
+      paramsData,
+      length: sizeofValue(paramsData[0]) * paramsData.count,
+      options: MTLResourceOptions()
     )
   }
 

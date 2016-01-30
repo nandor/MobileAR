@@ -31,6 +31,8 @@ struct ARParams {
   float4x4 norm;
   /// Inverse projection matrix.
   float4x4 invProj;
+  /// Inverse view matrix.
+  float4x4 invView;
 };
 
 /**
@@ -123,7 +125,7 @@ fragment float4 lighting(
   // Decode normal vector, diffuse and specular and position.
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
   const float3 albedo = float3(material.xyz);
-  const float  spec = float(material.w) * 100.0;
+  const float  spec = float(material.w) * 100.0 * MU;
   const float4 vproj = params.invProj * float4(
       in.uv.x * 2 - 1.0,
       1.0 - in.uv.y * 2,
@@ -142,16 +144,16 @@ fragment float4 lighting(
     constant ARDirectionalLight &light = lights[i];
     
     // Unpack light data.
-    const float3 l = normalize((params.norm * float4(light.dir, 0.0)).xyz);
+    const float3 l = -normalize((params.norm * float4(light.dir, 0.0)).xyz);
     
     // Compute light contribution.
-    const float diffFact = max(0.0, -dot(n, l));
-    const float specFact = max(0.0, -dot(reflect(l, n), e));
+    const float diffFact = max(0.0, dot(n, l));
+    const float specFact = max(0.0, dot(reflect(l, n), e));
     
     colour += (
         light.ambient +
         light.diffuse * diffFact +
-        light.specular * pow(specFact, MU * spec)
+        light.specular * pow(specFact, spec)
     );
   }
   

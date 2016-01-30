@@ -66,11 +66,6 @@ class ARParametersViewController : UIViewController {
                   "<mtd><mn>\(params.k2)</mn></mtd>" +
                 "</mtr>" +
                 "<mtr>" +
-                  "<mtd><msub><mi>k</mi><mn>3</mn></msub></mrow></mtd>" +
-                  "<mtd><mo>=</mo></mtd>" +
-                  "<mtd><mn>\(params.k3)</mn></mtd>" +
-                "</mtr>" +
-                "<mtr>" +
                   "<mtd><msub><mi>r</mi><mn>1</mn></msub></mrow></mtd>" +
                   "<mtd><mo>=</mo></mtd>" +
                   "<mtd><mn>\(params.r1)</mn></mtd>" +

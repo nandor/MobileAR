@@ -86,7 +86,7 @@ class AREntity {
     }
 
     // Initialize components.
-    tracker = ARSceneTracker()
+    tracker = ARSceneTracker(parameters: params)
     renderer = try! ARSceneRenderer(view: view)
     motionManager = CMMotionManager()
     motionManager.deviceMotionUpdateInterval = 1 / 30.0
@@ -222,8 +222,6 @@ class AREntity {
     self.renderer.updateFrame(frame)
   }
   
-  var angle: Float = 0.0
-
   /**
    Updates the tracker & renders a frame.
    */
@@ -236,17 +234,13 @@ class AREntity {
       return
     }
 
+    // Update the tracker.
     tracker.trackSensor(attitude, acceleration: acceleration)
+    let pose = tracker.getPose()
     
-    angle += 0.01
-
+    // Update the extrinsic parameters in the renderer.
     renderer.updatePose(
-        rx: angle,
-        ry: 0.1,
-        rz: angle,
-        tx: 0.0,
-        ty: 0.0,
-        tz: -5.0
+      pose
     )
     
     self.renderer.renderFrame()
