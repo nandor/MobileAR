@@ -102,15 +102,6 @@ class ARObject {
     for line in try ARFileReader(url: url) {
       let t = line.componentsSeparatedByString(" ")
       switch (t[0]) {
-        case "v":
-          vv.append(float3(Float(t[1])!, Float(t[2])!, Float(t[3])!))
-          break
-        case "vn":
-          vn.append(float3(Float(t[1])!, Float(t[2])!, Float(t[3])!))
-          break
-        case "vt":
-          vt.append(float2(Float(t[1])!, Float(t[2])!))
-          break
         case "f":
           for i in 1...3 {
             let verts = t[i].componentsSeparatedByString("/")
@@ -118,7 +109,12 @@ class ARObject {
             idx.append(Int(verts[1])! - 1)
             idx.append(Int(verts[2])! - 1)
           }
-          break
+        case "v":
+          vv.append(float3(Float(t[1])!, Float(t[2])!, Float(t[3])!))
+        case "vn":
+          vn.append(float3(Float(t[1])!, Float(t[2])!, Float(t[3])!))
+        case "vt":
+          vt.append(float2(Float(t[1])!, Float(t[2])!))
         case "#", "s":
           continue
         default:

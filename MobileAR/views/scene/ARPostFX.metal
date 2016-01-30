@@ -20,6 +20,22 @@ constant uint LIGHTS_PER_BATCH = 32;
 constant float MU = 0.3;
 
 /**
+ Number of samples for ssao.
+ */
+constant uint SSAO_SAMPLES = 8;
+
+/**
+ Influence of the ambient occlusion factor.
+ */
+constant float SSAO_POWER = 8.0;
+
+/**
+ Radius of the SSAO sampling.
+ */
+constant float SSAO_FOCUS = 0.15f;
+
+
+/**
  Parameters passed to the shader.
  */
 struct ARParams {
@@ -93,7 +109,12 @@ fragment float4 background(
  Fragment shader to compute Screen Space Ambient Occlusion (SSAO).
  */
 fragment float ssao(
-    ARQuadInOut     in         [[ stage_in ]])
+    ARQuadInOut         in         [[ stage_in ]],
+    constant ARParams&  params     [[ buffer(0) ]],
+    constant float3*    samples    [[ buffer(1) ]],
+    constant float3*    random     [[ buffer(2) ]],
+    texture2d<float>    texDepth   [[ texture(0) ]],
+    texture2d<float>    texNormal  [[ texture(1) ]])
 {
   return { 1 };
 }
@@ -103,13 +124,13 @@ fragment float ssao(
  Fragment shader to apply the effects of a batch of directional lights.
  */
 fragment float4 lighting(
-    ARQuadInOut                    in          [[ stage_in ]],
-    constant ARParams&             params      [[ buffer(0) ]],
-    constant ARDirectionalLight*   lights      [[ buffer(1) ]],
-    texture2d<float, access::read> texDepth    [[ texture(0) ]],
-    texture2d<float, access::read> texNormal   [[ texture(1) ]],
-    texture2d<half, access::read>  texMaterial [[ texture(2) ]],
-    texture2d<half, access::read>  texAO       [[ texture(3) ]])
+    ARQuadInOut                   in          [[ stage_in ]],
+    constant ARParams&            params      [[ buffer(0) ]],
+    constant ARDirectionalLight*  lights      [[ buffer(1) ]],
+    texture2d<float>              texDepth    [[ texture(0) ]],
+    texture2d<float>              texNormal   [[ texture(1) ]],
+    texture2d<half>               texMaterial [[ texture(2) ]],
+    texture2d<float>              texAO       [[ texture(3) ]])
 {
   // Find the pixel coordinate based on UV.
   uint2 uv = uint2(
@@ -121,6 +142,7 @@ fragment float4 lighting(
   const float2 normal = texNormal.read(uv).xy;
   const half4 material = texMaterial.read(uv);
   const float depth = texDepth.read(uv).x;
+  const float ao = texAO.read(uv).x;
   
   // Decode normal vector, diffuse and specular and position.
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
@@ -138,7 +160,9 @@ fragment float4 lighting(
   const float3 e = normalize(v);
   
   // Apply lighting equation for each light.
-  float3 colour = float3(0.0, 0.0, 0.0);
+  float3 ambient = float3(0.0, 0.0, 0.0);
+  float3 diffuse = float3(0.0, 0.0, 0.0);
+  float3 specular = float3(0.0, 0.0, 0.0);
   for (uint i = 0; i < LIGHTS_PER_BATCH; ++i) {
     // Fetch the light source data.
     constant ARDirectionalLight &light = lights[i];
@@ -150,13 +174,11 @@ fragment float4 lighting(
     const float diffFact = max(0.0, dot(n, l));
     const float specFact = max(0.0, dot(reflect(l, n), e));
     
-    colour += (
-        light.ambient +
-        light.diffuse * diffFact +
-        light.specular * pow(specFact, spec)
-    );
+    ambient += light.ambient;
+    diffuse += light.diffuse * diffFact;
+    specular += light.specular * pow(specFact, spec);
   }
   
-  return float4(colour * albedo, 1);
+  return float4(albedo * (ao * ambient + diffuse + specular), 1);
 }
 
