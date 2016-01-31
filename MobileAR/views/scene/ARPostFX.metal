@@ -22,7 +22,7 @@ constant float MU = 0.3;
 /**
  Number of samples for ssao.
  */
-constant uint SSAO_SAMPLES = 8;
+constant uint SSAO_SAMPLES = 16;
 
 /**
  Influence of the ambient occlusion factor.
@@ -32,7 +32,7 @@ constant float SSAO_POWER = 8.0;
 /**
  Radius of the SSAO sampling.
  */
-constant float SSAO_FOCUS = 0.15f;
+constant float SSAO_FOCUS = 0.10f;
 
 
 /**
@@ -74,6 +74,16 @@ struct ARQuadInOut {
   float2 uv       [[ user(uv) ]];
   float4 position [[ position ]];
 };
+
+
+/**
+ Converts a depth value to a linear depth value.
+ */
+static float linearize(float d) {
+  float f = 100.0;
+  float n = 0.1;
+  return (2 * n * f) / (f + n - d * (f - n));
+}
 
 
 
@@ -130,7 +140,7 @@ fragment float ssao(
   // Decode the normal vector and world space position.
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
   const float4 vproj = params.invProj * float4(
-      in.uv.x * 2 - 1.0,
+      2.0 * in.uv.x - 1.0,
       1.0 - in.uv.y * 2,
       depth,
       1
@@ -139,7 +149,7 @@ fragment float ssao(
   
   // Compute the change-of-basis matrix.
   const float3 t = normalize(r - n * dot(r, n));
-  const float3 b = normalize(cross(n, t));
+  const float3 b = cross(n, t);
   const float3x3 tbn = float3x3(t, b, n);
   
   // Sample points in a hemisphere around the origin.
@@ -157,9 +167,8 @@ fragment float ssao(
     );
     const float smplDepth = texDepth.read(smplUV).x;
     
-    // Check for distant edges.
-    if (smplDepth > smpl.z) {
-      ao += 1.0;//smoothstep(0, 1, min(1.0, SSAO_FOCUS / abs(smplDepth - depth)));
+    if (smplDepth <= smpl.z) {
+      ao += 1.0;
     }
   }
   
@@ -188,7 +197,7 @@ fragment float4 ssaoBlur(
   return ao / 16.0f;
 }
 
-
+                         
 /**
  Fragment shader to apply the effects of a batch of directional lights.
  */
@@ -248,6 +257,6 @@ fragment float4 lighting(
     specular += light.specular * pow(specFact, spec);
   }
   
-  return float4(ao);//float4(albedo * (ao * ambient + diffuse + specular), 1);
+  return ao;//float4(albedo * (ao * ambient + diffuse + specular), 1);
 }
 

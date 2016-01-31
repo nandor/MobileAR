@@ -222,6 +222,7 @@ class AREntity {
     self.renderer.updateFrame(frame)
   }
   
+  var angle:Float = 0.0
   /**
    Updates the tracker & renders a frame.
    */
@@ -238,14 +239,15 @@ class AREntity {
     tracker.trackSensor(attitude, acceleration: acceleration)
     
     // Update the extrinsic parameters in the renderer.
-    renderer.updatePose(/*tracker.getPose())*/
-        rx: 0.3,
-        ry: 0.3,
-        rz: 0.3,
+    renderer.updatePose(//tracker.getPose())
+        rx: angle,
+        ry: 0.0,
+        rz: 0.0,
         tx: 0.0,
-        ty: 0.0,
+        ty: -1.0,
         tz: -5.0
     )
+    angle += 0.01;
     
     self.renderer.renderFrame()
   }

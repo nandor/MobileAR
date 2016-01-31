@@ -79,9 +79,8 @@ vertex ARObjectInOut objectVert(
 fragment ARObjectOut objectFrag(
     ARObjectInOut   in  [[ stage_in ]])
 {
-  float3 norm = normalize(in.norm);
   return {
-    half2(norm.xy),
+    half2(normalize(in.norm).xy),
     { 1.0, 1.0, 1.0, 0.25 }
   };
 }
