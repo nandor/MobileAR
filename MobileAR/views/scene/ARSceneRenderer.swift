@@ -26,6 +26,7 @@ class ARSceneRenderer : ARRenderer {
   private var fboNormal: MTLTexture!
   private var fboMaterial: MTLTexture!
   private var fboSSAO: MTLTexture!
+  private var fboSSAOBlur: MTLTexture!
 
   // Data to render the quad spanning the entire screen.
   private var quadForeground: MTLDepthStencilState!
@@ -42,9 +43,10 @@ class ARSceneRenderer : ARRenderer {
 
   // Shader to compute ambient occlusion.
   private var ssaoRenderState: MTLRenderPipelineState!
+  private var ssaoBlurState: MTLRenderPipelineState!
   private var ssaoRandomBuffer: MTLBuffer!
   private var ssaoSampleBuffer: MTLBuffer!
-
+  
   // Object render state.
   private var objectDepthState: MTLDepthStencilState!
   private var objectRenderState: MTLRenderPipelineState!
@@ -240,7 +242,6 @@ class ARSceneRenderer : ARRenderer {
 
     let ssaoEncoder = buffer.renderCommandEncoderWithDescriptor(ssaoPass)
 
-    ssaoEncoder.setCullMode(.Back)
     ssaoEncoder.setStencilReferenceValue(0xFF)
     ssaoEncoder.setDepthStencilState(quadForeground)
     ssaoEncoder.setRenderPipelineState(ssaoRenderState)
@@ -249,10 +250,26 @@ class ARSceneRenderer : ARRenderer {
     ssaoEncoder.setFragmentBuffer(ssaoSampleBuffer, offset: 0, atIndex: 1)
     ssaoEncoder.setFragmentBuffer(ssaoRandomBuffer, offset: 0, atIndex: 2)
     ssaoEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
-    ssaoEncoder.setFragmentTexture(fboNormal, atIndex: 0)
+    ssaoEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     ssaoEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
 
     ssaoEncoder.endEncoding()
+    
+    // Blur the SSAO texture using a 4x4 box blur.
+    let blurPass = MTLRenderPassDescriptor()
+    blurPass.colorAttachments[0].texture = fboSSAOBlur
+    blurPass.colorAttachments[0].loadAction = .DontCare
+    blurPass.colorAttachments[0].storeAction = .Store
+    
+    let blurEncoder = buffer.renderCommandEncoderWithDescriptor(blurPass)
+    
+    blurEncoder.setDepthStencilState(quadForeground)
+    blurEncoder.setRenderPipelineState(ssaoBlurState)
+    blurEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
+    blurEncoder.setFragmentTexture(fboSSAO, atIndex: 0)
+    blurEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    
+    blurEncoder.endEncoding()
 
     // Set up post-processing.
     let fxPass = MTLRenderPassDescriptor()
@@ -275,7 +292,6 @@ class ARSceneRenderer : ARRenderer {
     // In order to reduce the amount of pixels highlighted by the background
     // texture, stencil testing is used to discard those regions which are
     // occluded by objects rendered on top of the scene.
-    fxEncoder.setCullMode(.Back)
     fxEncoder.setStencilReferenceValue(0xFF)
     fxEncoder.setDepthStencilState(quadBackground)
     fxEncoder.setRenderPipelineState(backgroundRenderState)
@@ -286,7 +302,6 @@ class ARSceneRenderer : ARRenderer {
     // Apply all the light sources.
     // Ligh sources are batched in groups of 32 and only those pixels are shaded
     // which belong to an object that was rendered previously.
-    fxEncoder.setCullMode(.Back)
     fxEncoder.setStencilReferenceValue(0xFF)
     fxEncoder.setDepthStencilState(quadForeground)
     fxEncoder.setRenderPipelineState(lightingRenderState)
@@ -296,7 +311,7 @@ class ARSceneRenderer : ARRenderer {
     fxEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
     fxEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     fxEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
-    fxEncoder.setFragmentTexture(fboSSAO, atIndex: 3)
+    fxEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
     fxEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
 
     fxEncoder.endEncoding()
@@ -347,6 +362,8 @@ class ARSceneRenderer : ARRenderer {
     )
     fboSSAO = device.newTextureWithDescriptor(fboSSAODesc)
     fboSSAO.label = "FBOAO"
+    fboSSAOBlur = device.newTextureWithDescriptor(fboSSAODesc)
+    fboSSAO.label = "FBOSSAOBlur"
   }
 
   /**
@@ -407,7 +424,17 @@ class ARSceneRenderer : ARRenderer {
     ssaoRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoRenderState = try device.newRenderPipelineStateWithDescriptor(ssaoRenderDesc)
-
+    
+    // Fragment shader to perform SSAO.
+    guard let ssaoBlur = library.newFunctionWithName("ssaoBlur") else {
+      throw ARRendererError.MissingFunction
+    }
+    let ssaoBlurDesc = MTLRenderPipelineDescriptor()
+    ssaoBlurDesc.sampleCount = 1
+    ssaoBlurDesc.vertexFunction = fullscreen
+    ssaoBlurDesc.fragmentFunction = ssaoBlur
+    ssaoBlurDesc.colorAttachments[0].pixelFormat = .R32Float
+    ssaoBlurState = try device.newRenderPipelineStateWithDescriptor(ssaoBlurDesc)
   }
 
   /**
@@ -449,7 +476,42 @@ class ARSceneRenderer : ARRenderer {
    */
   private func setupSSAOBuffers() throws {
 
-    var ssaoSampleData: [float4] = [float4(0.0, 0.0, 0.0, 0.0)]
+    // Set up a buffer with 32 sample vectors. The shader might choose to
+    // use only a subset of these in order to increase performance.
+    var ssaoSampleData: [float4] = [
+        float4(-0.0222812286, -0.0097610634, 0.0190471473, 0.0),
+        float4(-0.0550172494, -0.0309991154, 0.0676510781, 0.0),
+        float4( 0.0326691691,  0.0334404281, 0.0380219642, 0.0),
+        float4( 0.0437514486, -0.0102820787, 0.0337031351, 0.0),
+        float4( 0.0019365485, -0.0044538348, 0.0312760117, 0.0),
+        float4( 0.0566276267,  0.0503924542, 0.0531489421, 0.0),
+        float4(-0.0014951475,  0.0024281197, 0.0173591884, 0.0),
+        float4(-0.0164670202, -0.0578062973, 0.1123648725, 0.0),
+        float4(-0.1000401022,  0.0311720643, 0.0920496615, 0.0),
+        float4(-0.0438685685,  0.0715038973, 0.1083699433, 0.0),
+        float4( 0.0149985533, -0.0170551220, 0.0185657416, 0.0),
+        float4( 0.0354595464, -0.0363755173, 0.0323577105, 0.0),
+        float4(-0.0203935451, -0.0745134646, 0.1541178105, 0.0),
+        float4( 0.0028391215,  0.0116091792, 0.0576031406, 0.0),
+        float4(-0.0196249165, -0.0478437599, 0.0425324788, 0.0),
+        float4( 0.0729668184, -0.0522721479, 0.0875701738, 0.0),
+        float4(-0.1532114786, -0.1522172360, 0.2735333576, 0.0),
+        float4(-0.0298943708,  0.1737209567, 0.3183226437, 0.0),
+        float4(-0.1656550946, -0.0719748123, 0.1968226893, 0.0),
+        float4(-0.0095653149, -0.2941228294, 0.2039285730, 0.0),
+        float4(-0.1331204501,  0.1220435809, 0.0964000304, 0.0),
+        float4(-0.0403178220, -0.3809901890, 0.3414482621, 0.0),
+        float4( 0.0882988347,  0.0455553367, 0.2918320574, 0.0),
+        float4(-0.1175072503,  0.0388894681, 0.1550289903, 0.0),
+        float4(-0.0533728880, -0.0381621740, 0.0610825723, 0.0),
+        float4( 0.2468512030,  0.3388266965, 0.2949817385, 0.0),
+        float4( 0.2449600832,  0.2042880967, 0.6010089206, 0.0),
+        float4( 0.6424967231,  0.0443461169, 0.4040266177, 0.0),
+        float4( 0.3099913096,  0.1985537725, 0.3454406527, 0.0),
+        float4( 0.0754919457, -0.0634370161, 0.0774910082, 0.0),
+        float4( 0.0531734967,  0.0233182866, 0.0956308795, 0.0),
+        float4( 0.5550298510, -0.0702125778, 0.3265220542, 0.0),
+    ]
     ssaoSampleBuffer = device.newBufferWithBytes(
       ssaoSampleData,
       length: sizeofValue(ssaoSampleData[0]) * ssaoSampleData.count,
@@ -457,7 +519,25 @@ class ARSceneRenderer : ARRenderer {
     )
     ssaoSampleBuffer.label = "VBOSSAOSampleBuffer"
 
-    var ssaoRandomData: [float4] = [float4(0.0, 0.0, 0.0, 0.0)]
+    // Set up a 4x4 texture with randomly selected vectors with x, y \in [0, 1].
+    var ssaoRandomData: [float4] = [
+        float4(-0.96221172, -0.45953250, 0.0, 0.0),
+        float4(-0.98142792,  0.98101004, 0.0, 0.0),
+        float4(-0.89220066, -0.90478628, 0.0, 0.0),
+        float4(-0.90202734,  0.38257064, 0.0, 0.0),
+        float4( 0.35363535,  0.83663947, 0.0, 0.0),
+        float4(-0.33855347,  0.42605284, 0.0, 0.0),
+        float4( 0.83354429, -0.56517113, 0.0, 0.0),
+        float4(-0.21168628, -0.45437911, 0.0, 0.0),
+        float4(-0.10236544, -0.03077041, 0.0, 0.0),
+        float4( 0.73731434,  0.31805468, 0.0, 0.0),
+        float4( 0.70555062,  0.52201508, 0.0, 0.0),
+        float4( 0.43981923, -0.60864014, 0.0, 0.0),
+        float4( 0.34789642, -0.25538335, 0.0, 0.0),
+        float4( 0.51870607, -0.75744402, 0.0, 0.0),
+        float4( 0.58416728, -0.93629214, 0.0, 0.0),
+        float4( 0.73388004, -0.95878722, 0.0, 0.0)
+    ]
     ssaoRandomBuffer = device.newBufferWithBytes(
       ssaoRandomData,
       length: sizeofValue(ssaoRandomData[0]) * ssaoRandomData.count,

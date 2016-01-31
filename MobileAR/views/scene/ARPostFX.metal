@@ -116,7 +116,76 @@ fragment float ssao(
     texture2d<float>    texDepth   [[ texture(0) ]],
     texture2d<float>    texNormal  [[ texture(1) ]])
 {
-  return { 1 };
+  // Find the pixel coordinate based on UV.
+  const uint2 uv = uint2(
+      texDepth.get_width() * in.uv.x,
+      texDepth.get_height() * in.uv.y
+  );
+  
+  // Read data from textures.
+  const float2 normal = texNormal.read(uv).xy;
+  const float depth = texDepth.read(uv).x;
+  const float3 r = random[(uv.x & 3) << 2 | (uv.y & 3)];
+  
+  // Decode the normal vector and world space position.
+  const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
+  const float4 vproj = params.invProj * float4(
+      in.uv.x * 2 - 1.0,
+      1.0 - in.uv.y * 2,
+      depth,
+      1
+  );
+  const float3 v = vproj.xyz / vproj.w;
+  
+  // Compute the change-of-basis matrix.
+  const float3 t = normalize(r - n * dot(r, n));
+  const float3 b = normalize(cross(n, t));
+  const float3x3 tbn = float3x3(t, b, n);
+  
+  // Sample points in a hemisphere around the origin.
+  float ao = 0.0;
+  for (uint i = 0; i < SSAO_SAMPLES; ++i) {
+    // Project the sample in screen space.
+    const float3 smplView = tbn * samples[i] * SSAO_FOCUS + v;
+    const float4 smplProj = params.proj * float4(smplView, 1);
+    const float3 smpl = smplProj.xyz / smplProj.w;
+    
+    // Sample the depth.
+    const uint2 smplUV = uint2(
+        texDepth.get_width() * (smpl.x + 1.0) * 0.5,
+        texDepth.get_height() * (1.0 - smpl.y) * 0.5
+    );
+    const float smplDepth = texDepth.read(smplUV).x;
+    
+    // Check for distant edges.
+    if (smplDepth > smpl.z) {
+      ao += 1.0;//smoothstep(0, 1, min(1.0, SSAO_FOCUS / abs(smplDepth - depth)));
+    }
+  }
+  
+  return pow(1 - ao / SSAO_SAMPLES, SSAO_POWER);
+}
+
+
+/**
+ 4x4 blur for the ssao shader.
+ */
+fragment float4 ssaoBlur(
+    ARQuadInOut      in    [[ stage_in ]],
+    texture2d<float> texAO [[ texture(0) ]])
+{
+  // Find the pixel coordinate based on UV.
+  const int2 size = int2(texAO.get_width(), texAO.get_height());
+  const int2 uv = int2(float2(size) * in.uv);
+  
+  // Blur in a 4x4 neighbourhood.
+  float ao = 0.0f;
+  for (int i = -2; i <= 1; ++i) {
+    for (int j = -2; j <= 1; ++j) {
+      ao += texAO.read(uint2(clamp(uv + int2(i, j), int2(0), size))).x;
+    }
+  }
+  return ao / 16.0f;
 }
 
 
@@ -133,7 +202,7 @@ fragment float4 lighting(
     texture2d<float>              texAO       [[ texture(3) ]])
 {
   // Find the pixel coordinate based on UV.
-  uint2 uv = uint2(
+  const uint2 uv = uint2(
       texMaterial.get_width() * in.uv.x,
       texMaterial.get_height() * in.uv.y
   );
@@ -179,6 +248,6 @@ fragment float4 lighting(
     specular += light.specular * pow(specFact, spec);
   }
   
-  return float4(albedo * (ao * ambient + diffuse + specular), 1);
+  return float4(ao);//float4(albedo * (ao * ambient + diffuse + specular), 1);
 }
 
