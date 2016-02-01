@@ -34,6 +34,11 @@ constant float SSAO_POWER = 5.0;
  */
 constant float SSAO_FOCUS = 0.25f;
 
+/**
+ Size of the screen for the iPhone 6S.
+ */
+constant float2 SCREEN_SIZE = float2(667, 375);
+
 
 /**
  Parameters passed to the shader.
@@ -127,10 +132,7 @@ fragment float ssao(
     texture2d<float>    texNormal  [[ texture(1) ]])
 {
   // Find the pixel coordinate based on UV.
-  const uint2 uv = uint2(
-      texDepth.get_width() * in.uv.x,
-      texDepth.get_height() * in.uv.y
-  );
+  const uint2 uv = uint2(SCREEN_SIZE * in.uv);
   
   // Read data from textures.
   const float2 normal = texNormal.read(uv).xy;
@@ -185,14 +187,13 @@ fragment float4 ssaoBlur(
     texture2d<float> texAO [[ texture(0) ]])
 {
   // Find the pixel coordinate based on UV.
-  const int2 size = int2(texAO.get_width(), texAO.get_height());
-  const int2 uv = int2(float2(size) * in.uv);
+  const int2 uv = int2(SCREEN_SIZE * in.uv);
   
   // Blur in a 4x4 neighbourhood.
   float ao = 0.0f;
-  for (int i = -2; i <= 1; ++i) {
-    for (int j = -2; j <= 1; ++j) {
-      ao += texAO.read(uint2(clamp(uv + int2(i, j), int2(0), size))).x;
+  for (int j = -2; j <= 1; ++j) {
+    for (int i = -2; i <= 1; ++i) {
+      ao += texAO.read(uint2(uv + int2(j, i))).x;
     }
   }
   return ao / 16.0f;
@@ -212,10 +213,7 @@ fragment float4 lighting(
     texture2d<float>              texAO       [[ texture(3) ]])
 {
   // Find the pixel coordinate based on UV.
-  const uint2 uv = uint2(
-      texMaterial.get_width() * in.uv.x,
-      texMaterial.get_height() * in.uv.y
-  );
+  const uint2 uv = uint2(SCREEN_SIZE * in.uv);
   
   // Read data from textures.
   const float2 normal = texNormal.read(uv).xy;

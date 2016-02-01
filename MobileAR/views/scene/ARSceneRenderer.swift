@@ -206,6 +206,7 @@ class ARSceneRenderer : ARRenderer {
     geomPass.stencilAttachment.texture = fboDepthStencil
 
     let geomEncoder = buffer.renderCommandEncoderWithDescriptor(geomPass)
+    geomEncoder.label = "Geometry"
 
     // Render the object.
     geomEncoder.setCullMode(.Front)
@@ -253,6 +254,7 @@ class ARSceneRenderer : ARRenderer {
     ssaoPass.stencilAttachment.texture = fboDepthStencil
 
     let ssaoEncoder = buffer.renderCommandEncoderWithDescriptor(ssaoPass)
+    ssaoEncoder.label = "SSAO"
 
     ssaoEncoder.setStencilReferenceValue(0xFF)
     ssaoEncoder.setDepthStencilState(quadForeground)
@@ -272,9 +274,19 @@ class ARSceneRenderer : ARRenderer {
     blurPass.colorAttachments[0].texture = fboSSAOBlur
     blurPass.colorAttachments[0].loadAction = .DontCare
     blurPass.colorAttachments[0].storeAction = .Store
+    
+    blurPass.depthAttachment.loadAction = .DontCare
+    blurPass.depthAttachment.storeAction = .DontCare
+    blurPass.depthAttachment.texture = fboDepthStencil
+    
+    blurPass.stencilAttachment.loadAction = .Load
+    blurPass.stencilAttachment.storeAction = .DontCare
+    blurPass.stencilAttachment.texture = fboDepthStencil
 
     let blurEncoder = buffer.renderCommandEncoderWithDescriptor(blurPass)
-
+    blurEncoder.label = "SSAOBlur"
+    
+    blurEncoder.setStencilReferenceValue(0xFF)
     blurEncoder.setDepthStencilState(quadForeground)
     blurEncoder.setRenderPipelineState(ssaoBlurState)
     blurEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
@@ -299,6 +311,7 @@ class ARSceneRenderer : ARRenderer {
     fxPass.stencilAttachment.texture = fboDepthStencil
 
     let fxEncoder = buffer.renderCommandEncoderWithDescriptor(fxPass)
+    fxEncoder.label = "Lighting"
 
     // Draw the background texture.
     // In order to reduce the amount of pixels highlighted by the background
@@ -446,6 +459,8 @@ class ARSceneRenderer : ARRenderer {
     ssaoBlurDesc.vertexFunction = fullscreen
     ssaoBlurDesc.fragmentFunction = ssaoBlur
     ssaoBlurDesc.colorAttachments[0].pixelFormat = .R32Float
+    ssaoBlurDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
+    ssaoBlurDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurState = try device.newRenderPipelineStateWithDescriptor(ssaoBlurDesc)
   }
 

@@ -249,8 +249,8 @@ class AREntity {
     )
     
     angle += 0.01
-      
-    //tracker.getPose())
+    
+    //renderer.updatePose(tracker.getPose())
     
     self.renderer.renderFrame()
   }
