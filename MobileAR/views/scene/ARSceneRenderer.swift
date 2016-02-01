@@ -66,7 +66,6 @@ class ARSceneRenderer : ARRenderer {
     try super.init(view: view)
 
     // Set up the depth state.
-
     let quadBackgroundStencil = MTLStencilDescriptor()
     quadBackgroundStencil.stencilCompareFunction = .NotEqual
     quadBackgroundStencil.stencilFailureOperation = .Keep
@@ -74,7 +73,7 @@ class ARSceneRenderer : ARRenderer {
     quadBackgroundStencil.depthStencilPassOperation = .Keep
     quadBackgroundStencil.readMask = 0xFF
     quadBackgroundStencil.writeMask = 0x00
-
+    
     let quadBackgroundDesc = MTLDepthStencilDescriptor()
     quadBackgroundDesc.depthCompareFunction = .Always
     quadBackgroundDesc.depthWriteEnabled = false
@@ -457,18 +456,18 @@ class ARSceneRenderer : ARRenderer {
     var lightData = [Float](count: 16 * 32, repeatedValue: 0.0)
 
     lightData[0] = -1.0;
-    lightData[1] = 1.0;
+    lightData[1] = -1.0;
     lightData[2] = -1.0;
     lightData[3] = 0.0;
 
-    lightData[4] = 0.2;
-    lightData[5] = 0.2;
-    lightData[6] = 0.2;
+    lightData[4] = 0.4;
+    lightData[5] = 0.4;
+    lightData[6] = 0.4;
     lightData[7] = 0.0;
 
-    lightData[8] = 1.0;
-    lightData[9] = 1.0;
-    lightData[10] = 1.0;
+    lightData[8] = 0.7;
+    lightData[9] = 0.7;
+    lightData[10] = 0.7;
     lightData[11] = 0.0;
 
     lightData[12] = 1.0;

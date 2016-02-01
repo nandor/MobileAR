@@ -13,6 +13,7 @@
 		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
+		7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
 		C13F80202E2E4BB0701AA1BB /* ARParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F850743FA3DD255216D0A /* ARParameters.swift */; };
 		C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */; };
@@ -48,6 +49,7 @@
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		7A5B46AF1BCFBB83003F87BE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7AC9F6111C5E7BF100AF86BC /* cup.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cup.obj; path = MobileAR/models/cup.obj; sourceTree = "<group>"; };
+		7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARLight.swift; sourceTree = "<group>"; };
 		7AFCF8381BCE40CB00A108F9 /* MobileAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7AFCF84C1BCE40CB00A108F9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 				C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */,
 				C13F8C3B49A39FD13AC34AE3 /* ARPose.swift */,
 				7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */,
+				7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -309,6 +312,7 @@
 				C13F86C929B9293243D5D9C1 /* AREnvironmentViewController.swift in Sources */,
 				C13F8F65B70AFD4AACB467B9 /* AREnvironmentListController.swift in Sources */,
 				C13F8D0C83BDCBAC09944968 /* AREnvironmentViewRenderer.swift in Sources */,
+				7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */,
 				C13F82006DA8B43D435FEE39 /* AREnvironment.metal in Sources */,
 				C13F85F7CDF965ACFD469767 /* ARSceneTracker.mm in Sources */,
 				C13F8E2F102AE440F08587BA /* ARPose.swift in Sources */,

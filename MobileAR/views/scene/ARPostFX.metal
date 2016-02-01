@@ -22,17 +22,17 @@ constant float MU = 0.3;
 /**
  Number of samples for ssao.
  */
-constant uint SSAO_SAMPLES = 16;
+constant uint SSAO_SAMPLES = 32;
 
 /**
  Influence of the ambient occlusion factor.
  */
-constant float SSAO_POWER = 8.0;
+constant float SSAO_POWER = 5.0;
 
 /**
  Radius of the SSAO sampling.
  */
-constant float SSAO_FOCUS = 0.10f;
+constant float SSAO_FOCUS = 0.25f;
 
 
 /**
@@ -167,8 +167,9 @@ fragment float ssao(
     );
     const float smplDepth = texDepth.read(smplUV).x;
     
-    if (smplDepth <= smpl.z) {
-      ao += 1.0;
+    // Accumulate occlusion.
+    if (abs(linearize(depth) - linearize(smplDepth)) < SSAO_FOCUS) {
+      ao += step(smplDepth, smpl.z);
     }
   }
   
@@ -257,6 +258,6 @@ fragment float4 lighting(
     specular += light.specular * pow(specFact, spec);
   }
   
-  return ao;//float4(albedo * (ao * ambient + diffuse + specular), 1);
+  return float4(albedo * (ao * ambient + diffuse + specular), 1);
 }
 
