@@ -56,6 +56,14 @@ struct ARObjectInOut {
 
 
 /**
+ Pedestal vertex shader to fragment shader.
+ */
+struct ARPedestalInOut {
+  float4 position [[ position ]];
+};
+
+
+/**
  Output from the fragment shader.
  */
 struct ARObjectOut {
@@ -64,9 +72,8 @@ struct ARObjectOut {
 };
 
 
-
 /**
- Vertex shader for the sphere
+ Vertex shader for the object.
  */
 vertex ARObjectInOut objectVert(
     constant ARObjectIn*     in     [[ buffer(0) ]],
@@ -77,15 +84,15 @@ vertex ARObjectInOut objectVert(
   float3 norm = float3(in[id].norm);
   float2 uv = float2(in[id].uv);
   
-  float4 wVert = params.view * float4(vert.x, vert.y, vert.z, 1.0);
-  float4 wNorm = params.normView * float4(norm.x, norm.y, norm.z, 0.0);
+  float4 wVert = params.view * float4(vert, 1.0);
+  float4 wNorm = params.normView * float4(norm, 0.0);
   
   return { wVert.xyz, wNorm.xyz, uv, params.proj * wVert };
 }
 
 
 /**
- Fragment shader for the video background.
+ Fragment shader for the virtual object.
  */
 fragment ARObjectOut objectFrag(
     ARObjectInOut   in  [[ stage_in ]])
@@ -94,4 +101,25 @@ fragment ARObjectOut objectFrag(
     half2(normalize(in.norm).xy),
     { 1.0, 1.0, 1.0, 0.25 }
   };
+}
+
+/**
+ Vertex shader for the pedestal.
+ */
+vertex ARPedestalInOut pedestalVert(
+    constant float4*         in     [[ buffer(0) ]],
+    constant ARParams&       params [[ buffer(1) ]],
+    uint                     id     [[ vertex_id ]])
+{
+  return { params.proj * params.view * in[id] };
+}
+
+
+/**
+ Fragment shader for the pedestal.
+ */
+fragment float2 pedestalFrag(
+    constant ARParams& params [[ buffer(0) ]])
+{
+  return (normalize((params.normView * float4(0, 1, 0, 0)).xyz)).xy;
 }

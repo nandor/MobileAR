@@ -29,8 +29,8 @@ class ARSceneRenderer : ARRenderer {
   private var fboSSAOBlur: MTLTexture!
 
   // Data to render the quad spanning the entire screen.
-  private var quadForeground: MTLDepthStencilState!
-  private var quadBackground: MTLDepthStencilState!
+  private var quadLE: MTLDepthStencilState!
+  private var quadGE: MTLDepthStencilState!
   private var quadVBO: MTLBuffer!
 
   // Shader to render the background.
@@ -51,7 +51,11 @@ class ARSceneRenderer : ARRenderer {
   private var objectDepthState: MTLDepthStencilState!
   private var objectRenderState: MTLRenderPipelineState!
   private var objectCache: [ARObject] = []
-
+  
+  // Pedestal rendered under objects for AO.
+  private var pedestalDepthState: MTLDepthStencilState!
+  private var pedestalRenderState: MTLRenderPipelineState!
+  private var pedestalBuffer: MTLBuffer!
 
   // Background queue for loading data.
   private let backgroundQueue = dispatch_queue_create(
@@ -66,35 +70,35 @@ class ARSceneRenderer : ARRenderer {
     try super.init(view: view)
 
     // Set up the depth state.
-    let quadBackgroundStencil = MTLStencilDescriptor()
-    quadBackgroundStencil.stencilCompareFunction = .NotEqual
-    quadBackgroundStencil.stencilFailureOperation = .Keep
-    quadBackgroundStencil.depthFailureOperation = .Keep
-    quadBackgroundStencil.depthStencilPassOperation = .Keep
-    quadBackgroundStencil.readMask = 0xFF
-    quadBackgroundStencil.writeMask = 0x00
+    let quadStencilGE = MTLStencilDescriptor()
+    quadStencilGE.stencilCompareFunction = .GreaterEqual
+    quadStencilGE.stencilFailureOperation = .Keep
+    quadStencilGE.depthFailureOperation = .Keep
+    quadStencilGE.depthStencilPassOperation = .Keep
+    quadStencilGE.readMask = 0xFF
+    quadStencilGE.writeMask = 0x00
     
-    let quadBackgroundDesc = MTLDepthStencilDescriptor()
-    quadBackgroundDesc.depthCompareFunction = .Always
-    quadBackgroundDesc.depthWriteEnabled = false
-    quadBackgroundDesc.frontFaceStencil = quadBackgroundStencil
-    quadBackgroundDesc.backFaceStencil = quadBackgroundStencil
-    quadBackground = device.newDepthStencilStateWithDescriptor(quadBackgroundDesc)
+    let quadGEDesc = MTLDepthStencilDescriptor()
+    quadGEDesc.depthCompareFunction = .Always
+    quadGEDesc.depthWriteEnabled = false
+    quadGEDesc.frontFaceStencil = quadStencilGE
+    quadGEDesc.backFaceStencil = quadStencilGE
+    quadGE = device.newDepthStencilStateWithDescriptor(quadGEDesc)
 
-    let quadForegroundStencil = MTLStencilDescriptor()
-    quadForegroundStencil.stencilCompareFunction = .Equal
-    quadForegroundStencil.stencilFailureOperation = .Keep
-    quadForegroundStencil.depthFailureOperation = .Keep
-    quadForegroundStencil.depthStencilPassOperation = .Keep
-    quadForegroundStencil.readMask = 0xFF
-    quadForegroundStencil.writeMask = 0x00
+    let quadStencilLE = MTLStencilDescriptor()
+    quadStencilLE.stencilCompareFunction = .LessEqual
+    quadStencilLE.stencilFailureOperation = .Keep
+    quadStencilLE.depthFailureOperation = .Keep
+    quadStencilLE.depthStencilPassOperation = .Keep
+    quadStencilLE.readMask = 0xFF
+    quadStencilLE.writeMask = 0x00
 
-    let quadForegroundDesc = MTLDepthStencilDescriptor()
-    quadForegroundDesc.depthCompareFunction = .Always
-    quadForegroundDesc.depthWriteEnabled = false
-    quadForegroundDesc.frontFaceStencil = quadForegroundStencil
-    quadForegroundDesc.backFaceStencil = quadForegroundStencil
-    quadForeground = device.newDepthStencilStateWithDescriptor(quadForegroundDesc)
+    let quadLEDesc = MTLDepthStencilDescriptor()
+    quadLEDesc.depthCompareFunction = .Always
+    quadLEDesc.depthWriteEnabled = false
+    quadLEDesc.frontFaceStencil = quadStencilLE
+    quadLEDesc.backFaceStencil = quadStencilLE
+    quadLE = device.newDepthStencilStateWithDescriptor(quadLEDesc)
 
     // Initialize the VBO of the full-screen quad.
     var vbo : [Float] = [
@@ -150,7 +154,7 @@ class ARSceneRenderer : ARRenderer {
     objectRenderDesc.sampleCount = 1
     objectRenderDesc.vertexFunction = objectVert
     objectRenderDesc.fragmentFunction = objectFrag
-    objectRenderDesc.colorAttachments[0].pixelFormat = .RG16Float
+    objectRenderDesc.colorAttachments[0].pixelFormat = .RG16Snorm
     objectRenderDesc.colorAttachments[1].pixelFormat = .RGBA8Unorm
     objectRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
@@ -171,6 +175,7 @@ class ARSceneRenderer : ARRenderer {
     try setupFXPrograms()
     try setupLightSources()
     try setupSSAOBuffers()
+    try setupPedestal()
   }
 
   /**
@@ -185,7 +190,7 @@ class ARSceneRenderer : ARRenderer {
    */
   override func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
 
-    // Start the pass to render to the geometry buffer.
+    // Pass to render to the geometry buffer.
     let geomPass = MTLRenderPassDescriptor()
 
     geomPass.colorAttachments[0].texture = fboNormal
@@ -208,7 +213,6 @@ class ARSceneRenderer : ARRenderer {
     let geomEncoder = buffer.renderCommandEncoderWithDescriptor(geomPass)
     geomEncoder.label = "Geometry"
 
-    // Render the object.
     geomEncoder.setCullMode(.Front)
     geomEncoder.setStencilReferenceValue(0xFF)
     geomEncoder.setDepthStencilState(objectDepthState)
@@ -232,9 +236,36 @@ class ARSceneRenderer : ARRenderer {
         )
       }
     }
-
     geomEncoder.endEncoding()
-
+    
+    // Pass to render a rectangle under each object into the depth buffer
+    // and to decrement values in the stencil buffer. This "pedestal" is used
+    // to add some slight shade under each object during the SSAO pass.
+    let pedestalPass = MTLRenderPassDescriptor()
+    pedestalPass.colorAttachments[0].loadAction = .Load
+    pedestalPass.colorAttachments[0].storeAction = .Store
+    pedestalPass.colorAttachments[0].texture = fboNormal
+    pedestalPass.depthAttachment.loadAction = .Load
+    pedestalPass.depthAttachment.storeAction = .Store
+    pedestalPass.depthAttachment.texture = fboDepthStencil
+    pedestalPass.stencilAttachment.loadAction = .Load
+    pedestalPass.stencilAttachment.storeAction = .Store
+    pedestalPass.stencilAttachment.texture = fboDepthStencil
+    
+    let pedestalEncoder = buffer.renderCommandEncoderWithDescriptor(pedestalPass)
+    pedestalEncoder.label = "Pedestal"
+    pedestalEncoder.setCullMode(.Front)
+    pedestalEncoder.setStencilReferenceValue(0xF0)
+    pedestalEncoder.setDepthStencilState(pedestalDepthState)
+    pedestalEncoder.setRenderPipelineState(pedestalRenderState)
+    pedestalEncoder.setVertexBuffer(pedestalBuffer, offset: 0, atIndex: 0)
+    pedestalEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
+    pedestalEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
+    for _ in objectCache {
+      pedestalEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    }
+    pedestalEncoder.endEncoding()
+  
     // Compute Screen Space Ambient Occlusion.
     // This pass is very expensive due to the fact that it reads a large amount
     // of data from textures and buffers from random locations. It requires a
@@ -243,7 +274,7 @@ class ARSceneRenderer : ARRenderer {
     ssaoPass.colorAttachments[0].texture = fboSSAO
     ssaoPass.colorAttachments[0].loadAction = .Clear
     ssaoPass.colorAttachments[0].storeAction = .Store
-    ssaoPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 0)
+    ssaoPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 1, 1, 1)
 
     ssaoPass.depthAttachment.loadAction = .Load
     ssaoPass.depthAttachment.storeAction = .DontCare
@@ -255,9 +286,8 @@ class ARSceneRenderer : ARRenderer {
 
     let ssaoEncoder = buffer.renderCommandEncoderWithDescriptor(ssaoPass)
     ssaoEncoder.label = "SSAO"
-
-    ssaoEncoder.setStencilReferenceValue(0xFF)
-    ssaoEncoder.setDepthStencilState(quadForeground)
+    ssaoEncoder.setStencilReferenceValue(0xF0)
+    ssaoEncoder.setDepthStencilState(quadLE)
     ssaoEncoder.setRenderPipelineState(ssaoRenderState)
     ssaoEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
     ssaoEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
@@ -266,14 +296,14 @@ class ARSceneRenderer : ARRenderer {
     ssaoEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
     ssaoEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     ssaoEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
-
     ssaoEncoder.endEncoding()
 
     // Blur the SSAO texture using a 4x4 box blur.
     let blurPass = MTLRenderPassDescriptor()
     blurPass.colorAttachments[0].texture = fboSSAOBlur
-    blurPass.colorAttachments[0].loadAction = .DontCare
+    blurPass.colorAttachments[0].loadAction = .Clear
     blurPass.colorAttachments[0].storeAction = .Store
+    blurPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 1, 1, 1)
     
     blurPass.depthAttachment.loadAction = .DontCare
     blurPass.depthAttachment.storeAction = .DontCare
@@ -285,61 +315,74 @@ class ARSceneRenderer : ARRenderer {
 
     let blurEncoder = buffer.renderCommandEncoderWithDescriptor(blurPass)
     blurEncoder.label = "SSAOBlur"
-    
-    blurEncoder.setStencilReferenceValue(0xFF)
-    blurEncoder.setDepthStencilState(quadForeground)
+    blurEncoder.setStencilReferenceValue(0xF0)
+    blurEncoder.setDepthStencilState(quadLE)
     blurEncoder.setRenderPipelineState(ssaoBlurState)
     blurEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
     blurEncoder.setFragmentTexture(fboSSAO, atIndex: 0)
     blurEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
-
     blurEncoder.endEncoding()
-
-    // Set up post-processing.
-    let fxPass = MTLRenderPassDescriptor()
-
-    fxPass.colorAttachments[0].texture = target
-    fxPass.colorAttachments[0].loadAction = .DontCare
-    fxPass.colorAttachments[0].storeAction = .Store
-
-    fxPass.depthAttachment.loadAction = .Load
-    fxPass.depthAttachment.storeAction = .DontCare
-    fxPass.depthAttachment.texture = fboDepthStencil
-
-    fxPass.stencilAttachment.loadAction = .Load
-    fxPass.stencilAttachment.storeAction = .DontCare
-    fxPass.stencilAttachment.texture = fboDepthStencil
-
-    let fxEncoder = buffer.renderCommandEncoderWithDescriptor(fxPass)
-    fxEncoder.label = "Lighting"
-
+    
     // Draw the background texture.
     // In order to reduce the amount of pixels highlighted by the background
     // texture, stencil testing is used to discard those regions which are
-    // occluded by objects rendered on top of the scene.
-    fxEncoder.setStencilReferenceValue(0xFF)
-    fxEncoder.setDepthStencilState(quadBackground)
-    fxEncoder.setRenderPipelineState(backgroundRenderState)
-    fxEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
-    fxEncoder.setFragmentTexture(backgroundTexture, atIndex: 0)
-    fxEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
-
+    // occluded by objects rendered on top of the scene. The background texture
+    // is combined with the AO map to occlude a planar region around objects.
+    let backgroundPass = MTLRenderPassDescriptor()
+    
+    backgroundPass.colorAttachments[0].texture = target
+    backgroundPass.colorAttachments[0].loadAction = .Clear
+    backgroundPass.colorAttachments[0].storeAction = .Store
+    backgroundPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
+    backgroundPass.depthAttachment.loadAction = .Load
+    backgroundPass.depthAttachment.storeAction = .DontCare
+    backgroundPass.depthAttachment.texture = fboDepthStencil
+    backgroundPass.stencilAttachment.loadAction = .Load
+    backgroundPass.stencilAttachment.storeAction = .DontCare
+    backgroundPass.stencilAttachment.texture = fboDepthStencil
+    
+    let backgroundEncoder = buffer.renderCommandEncoderWithDescriptor(backgroundPass)
+    backgroundEncoder.label = "Background"
+    backgroundEncoder.setStencilReferenceValue(0xF0)
+    backgroundEncoder.setDepthStencilState(quadGE)
+    backgroundEncoder.setRenderPipelineState(backgroundRenderState)
+    backgroundEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
+    backgroundEncoder.setFragmentTexture(backgroundTexture, atIndex: 0)
+    backgroundEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 1)
+    backgroundEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    backgroundEncoder.endEncoding()
+    
     // Apply all the light sources.
     // Ligh sources are batched in groups of 32 and only those pixels are shaded
     // which belong to an object that was rendered previously.
-    fxEncoder.setStencilReferenceValue(0xFF)
-    fxEncoder.setDepthStencilState(quadForeground)
-    fxEncoder.setRenderPipelineState(lightingRenderState)
-    fxEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
-    fxEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
-    fxEncoder.setFragmentBuffer(lightBuffer, offset: 0, atIndex: 1)
-    fxEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
-    fxEncoder.setFragmentTexture(fboNormal, atIndex: 1)
-    fxEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
-    fxEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
-    fxEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
-
-    fxEncoder.endEncoding()
+    let lightPass = MTLRenderPassDescriptor()
+    
+    lightPass.colorAttachments[0].texture = target
+    lightPass.colorAttachments[0].loadAction = .Load
+    lightPass.colorAttachments[0].storeAction = .Store
+    
+    lightPass.depthAttachment.loadAction = .Load
+    lightPass.depthAttachment.storeAction = .DontCare
+    lightPass.depthAttachment.texture = fboDepthStencil
+    
+    lightPass.stencilAttachment.loadAction = .Load
+    lightPass.stencilAttachment.storeAction = .DontCare
+    lightPass.stencilAttachment.texture = fboDepthStencil
+    
+    let lightEncoder = buffer.renderCommandEncoderWithDescriptor(lightPass)
+    lightEncoder.label = "Lighting"
+    lightEncoder.setStencilReferenceValue(0xFF)
+    lightEncoder.setDepthStencilState(quadLE)
+    lightEncoder.setRenderPipelineState(lightingRenderState)
+    lightEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
+    lightEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
+    lightEncoder.setFragmentBuffer(lightBuffer, offset: 0, atIndex: 1)
+    lightEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
+    lightEncoder.setFragmentTexture(fboNormal, atIndex: 1)
+    lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
+    lightEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
+    lightEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    lightEncoder.endEncoding()
   }
 
 
@@ -360,7 +403,7 @@ class ARSceneRenderer : ARRenderer {
 
     // Two channels store the x and y components of a normal vector.
     let fboNormalDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-      .RG16Float,
+      .RG16Snorm,
       width: width,
       height: height,
       mipmapped: false
@@ -571,5 +614,61 @@ class ARSceneRenderer : ARRenderer {
       options: MTLResourceOptions()
     )
     ssaoRandomBuffer.label = "VBOSSSAORandomBuffer"
+  }
+  
+  /**
+   Sets up the renderer for the pedestal.
+   */
+  private func setupPedestal() throws {
+
+    // Set up the depth state for objects.
+    let pedestalStencil = MTLStencilDescriptor()
+    pedestalStencil.depthStencilPassOperation = .Replace
+    pedestalStencil.stencilCompareFunction = .Always
+    pedestalStencil.stencilFailureOperation = .Keep
+    pedestalStencil.depthFailureOperation = .Keep
+    pedestalStencil.readMask = 0xFF
+    pedestalStencil.writeMask = 0xFF
+    
+    let pedestalDepthDesc = MTLDepthStencilDescriptor()
+    pedestalDepthDesc.depthCompareFunction = .Less
+    pedestalDepthDesc.depthWriteEnabled = true
+    pedestalDepthDesc.frontFaceStencil = pedestalStencil
+    pedestalDepthDesc.backFaceStencil = pedestalStencil
+    pedestalDepthState = device.newDepthStencilStateWithDescriptor(pedestalDepthDesc)
+    
+    // Set up the shaders for the pedestal.
+    guard let pedestalVert = library.newFunctionWithName("pedestalVert") else {
+      throw ARRendererError.MissingFunction
+    }
+    guard let pedestalFrag = library.newFunctionWithName("pedestalFrag") else {
+      throw ARRendererError.MissingFunction
+    }
+    
+    // Create the pipeline descriptor.
+    let pedestalRenderDesc = MTLRenderPipelineDescriptor()
+    pedestalRenderDesc.sampleCount = 1
+    pedestalRenderDesc.vertexFunction = pedestalVert
+    pedestalRenderDesc.fragmentFunction = pedestalFrag
+    pedestalRenderDesc.colorAttachments[0].pixelFormat = .RG16Snorm
+    pedestalRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
+    pedestalRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
+    pedestalRenderState = try device.newRenderPipelineStateWithDescriptor(pedestalRenderDesc)
+    
+    // Pedestal buffer data.
+    let vbo: [float4] = [
+        float4( 1.2, 0,  1.2, 1),
+        float4(-1.2, 0, -1.2, 1),
+        float4(-1.2, 0,  1.2, 1),
+        float4(-1.2, 0, -1.2, 1),
+        float4( 1.2, 0,  1.2, 1),
+        float4( 1.2, 0, -1.2, 1),
+    ]
+    pedestalBuffer = device.newBufferWithBytes(
+        vbo,
+        length: sizeofValue(vbo[0]) * vbo.count,
+        options: MTLResourceOptions()
+    )
+    pedestalBuffer.label = "VBOPedestal"
   }
 }

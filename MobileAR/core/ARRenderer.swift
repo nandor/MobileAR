@@ -190,15 +190,15 @@ class ARRenderer {
       float4( 0,  0,  0,  1)
     ])
     
-    var params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents()).memory
-    params.proj      = pose.projMat
-    params.invProj   = pose.projMat.inverse
-    params.view      = pose.viewMat
-    params.normView  = pose.viewMat.inverse.transpose
-    params.invView   = pose.viewMat.inverse
-    params.model     = modelMat
-    params.normModel = modelMat.inverse.transpose
-    params.invModel  = modelMat.inverse
+    let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
+    params.memory.proj      = pose.projMat
+    params.memory.invProj   = pose.projMat.inverse
+    params.memory.view      = pose.viewMat
+    params.memory.normView  = pose.viewMat.inverse.transpose
+    params.memory.invView   = pose.viewMat.inverse
+    params.memory.model     = modelMat
+    params.memory.normModel = modelMat.inverse.transpose
+    params.memory.invModel  = modelMat.inverse
   }
 
   /**

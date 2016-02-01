@@ -32,7 +32,7 @@ constant float SSAO_POWER = 8.0;
 /**
  Radius of the SSAO sampling.
  */
-constant float SSAO_FOCUS = 0.25f;
+constant float SSAO_FOCUS = 0.30;
 
 /**
  Size of the screen for the iPhone 6S.
@@ -119,11 +119,16 @@ vertex ARQuadInOut fullscreen(
  Fragment shader for the video background.
  */
 fragment float4 background(
-    ARQuadInOut     in         [[ stage_in ]],
-    texture2d<half> background [[ texture(0) ]])
+    ARQuadInOut     in            [[ stage_in ]],
+    texture2d<half> texBackground [[ texture(0) ]],
+    texture2d<float> texAO         [[ texture(1) ]])
 {
-  constexpr sampler backgroundSampler(address::clamp_to_edge, filter::linear);
-  return float4(background.sample(backgroundSampler, in.uv));
+  constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
+  
+  half4 background = texBackground.sample(texSampler, in.uv);
+  float ao = texAO.sample(texSampler, in.uv).x;
+  
+  return float4(background) * ao;
 }
 
 
@@ -154,7 +159,10 @@ fragment float ssao(
       depth,
       1
   );
-  const float3 v = vproj.xyz / vproj.w;
+  
+  // The vertex position is moved a tiny bit into the direction of the normal
+  // in order to avoid self-occlusion on larger planar surfaces.
+  const float3 v = vproj.xyz / vproj.w + + n * 0.005;
   
   // Compute the change-of-basis matrix.
   const float3 t = normalize(r - n * dot(r, n));
@@ -182,7 +190,7 @@ fragment float ssao(
     }
   }
   
-  return pow(1 - ao / SSAO_SAMPLES, SSAO_POWER);
+  return min(1.0, pow(1 - ao / SSAO_SAMPLES, SSAO_POWER));
 }
 
 

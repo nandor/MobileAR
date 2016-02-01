@@ -242,14 +242,13 @@ class AREntity {
     renderer.updatePose(
         rx: angle,
         ry: 0.0,
-        rz: 0.0,
+        rz: 0.3,
         tx: 0.0,
-        ty: -2.0,
+        ty: -1.0,
         tz: -7.0
     )
     
     angle += 0.01
-    
     //renderer.updatePose(tracker.getPose())
     
     self.renderer.renderFrame()
