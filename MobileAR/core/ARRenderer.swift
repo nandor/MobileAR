@@ -22,6 +22,30 @@ enum ARRendererError : ErrorType {
  Class that handles rendering using Metal.
  */
 class ARRenderer {
+  
+  /**
+   Parameters passed to shaders.
+   */
+  struct ARCameraParameters {
+    /// Perspective projection matrix.
+    var proj: float4x4
+    /// Inverse projection matrix.
+    var invProj: float4x4
+    
+    /// View matrix.
+    var view: float4x4
+    /// Normal matrix.
+    var normView: float4x4
+    /// Inverse view matrix.
+    var invView: float4x4
+    
+    /// Model matrix.
+    var model: float4x4
+    /// Normal matrix for model.
+    var normModel: float4x4
+    /// Inverse model matrix.
+    var invModel: float4x4
+  }
 
   // View used by the renderer.
   private let view: UIView
@@ -73,7 +97,11 @@ class ARRenderer {
     view.layer.addSublayer(layer)
 
     // Set up the parameter buffer.
-    paramBuffer = device.newBufferWithLength(sizeof(Float) * 32, options: MTLResourceOptions())
+    paramBuffer = device.newBufferWithLength(
+        sizeof(ARCameraParameters),
+        options: MTLResourceOptions()
+    )
+    paramBuffer.label = "Parameters"
   }
 
   /**
@@ -115,7 +143,6 @@ class ARRenderer {
 
     // Compute the view matrix.
     let viewMat = trans * rotZ * rotX * rotY
-    let invViewMat = viewMat.inverse
 
     // Compute the projection matrix.
     let aspect = Float(view.frame.width) / Float(view.frame.height)
@@ -130,42 +157,48 @@ class ARRenderer {
         float4(     0,      0,   (f + n) / (n - f), -1),
         float4(     0,      0, 2 * n * f / (n - f),  0)
     ])
+    
+    // Model (identity).
+    let modelMat = float4x4([
+        float4( 1,  0,  0,  0),
+        float4( 0,  1,  0,  0),
+        float4( 0,  0,  1,  0),
+        float4( 0,  0,  0,  1)
+    ])
 
-    // Upload stuff to the param buffer.
-    let paramsData = [
-        projMat,
-        viewMat,
-        invViewMat.transpose,
-        projMat.inverse,
-        invViewMat
-    ];
-    paramBuffer = device.newBufferWithBytes(
-        paramsData,
-        length: sizeofValue(paramsData[0]) * paramsData.count,
-        options: MTLResourceOptions()
-    )
+    let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
+    params.memory.proj      = projMat
+    params.memory.invProj   = projMat.inverse
+    params.memory.view      = viewMat
+    params.memory.normView  = viewMat.inverse.transpose
+    params.memory.invView   = viewMat.inverse
+    params.memory.model     = modelMat
+    params.memory.normModel = modelMat.inverse.transpose
+    params.memory.invModel  = modelMat.inverse
   }
   
   /**
    Updates the pose of the camera.
    */
   func updatePose(pose: ARPose) {
-  
-    let invViewMat = pose.viewMat.inverse
     
-    // Upload stuff to the param buffer.
-    let paramsData = [
-      pose.projMat,
-      pose.viewMat,
-      invViewMat.transpose,
-      pose.projMat.inverse,
-      invViewMat
-    ];
-    paramBuffer = device.newBufferWithBytes(
-      paramsData,
-      length: sizeofValue(paramsData[0]) * paramsData.count,
-      options: MTLResourceOptions()
-    )
+    // Model (identity).
+    let modelMat = float4x4([
+      float4( 1,  0,  0,  0),
+      float4( 0,  1,  0,  0),
+      float4( 0,  0,  1,  0),
+      float4( 0,  0,  0,  1)
+    ])
+    
+    var params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents()).memory
+    params.proj      = pose.projMat
+    params.invProj   = pose.projMat.inverse
+    params.view      = pose.viewMat
+    params.normView  = pose.viewMat.inverse.transpose
+    params.invView   = pose.viewMat.inverse
+    params.model     = modelMat
+    params.normModel = modelMat.inverse.transpose
+    params.invModel  = modelMat.inverse
   }
 
   /**

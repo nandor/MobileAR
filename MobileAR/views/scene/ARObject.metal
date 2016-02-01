@@ -15,13 +15,24 @@ using namespace metal;
  Parameters passed to the shader.
  */
 struct ARParams {
-  /// Perspective projection matrix.
+  /// Projection matrix.
   float4x4 proj;
+  /// Inverse projection matrix.
+  float4x4 invProj;
   /// View matrix.
   float4x4 view;
-  /// Normal matrix.
-  float4x4 norm;
+  /// Normal matrix for the view.
+  float4x4 normView;
+  /// Inverse view matrix.
+  float4x4 invView;
+  /// Model matrix.
+  float4x4 model;
+  /// Normal matrix for the model.
+  float4x4 normModel;
+  /// Inverse model matrix.
+  float4x4 invModel;
 };
+
 
 /**
  Input to the vertex shader.
@@ -67,7 +78,7 @@ vertex ARObjectInOut objectVert(
   float2 uv = float2(in[id].uv);
   
   float4 wVert = params.view * float4(vert.x, vert.y, vert.z, 1.0);
-  float4 wNorm = params.norm * float4(norm.x, norm.y, norm.z, 0.0);
+  float4 wNorm = params.normView * float4(norm.x, norm.y, norm.z, 0.0);
   
   return { wVert.xyz, wNorm.xyz, uv, params.proj * wVert };
 }

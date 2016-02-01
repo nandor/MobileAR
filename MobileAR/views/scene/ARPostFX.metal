@@ -27,7 +27,7 @@ constant uint SSAO_SAMPLES = 32;
 /**
  Influence of the ambient occlusion factor.
  */
-constant float SSAO_POWER = 5.0;
+constant float SSAO_POWER = 8.0;
 
 /**
  Radius of the SSAO sampling.
@@ -44,17 +44,24 @@ constant float2 SCREEN_SIZE = float2(667, 375);
  Parameters passed to the shader.
  */
 struct ARParams {
-  /// Perspective projection matrix.
+  /// Projection matrix.
   float4x4 proj;
-  /// View matrix.
-  float4x4 view;
-  /// Normal matrix.
-  float4x4 norm;
   /// Inverse projection matrix.
   float4x4 invProj;
+  /// View matrix.
+  float4x4 view;
+  /// Normal matrix for the view.
+  float4x4 normView;
   /// Inverse view matrix.
   float4x4 invView;
+  /// Model matrix.
+  float4x4 model;
+  /// Normal matrix for the model.
+  float4x4 normModel;
+  /// Inverse model matrix.
+  float4x4 invModel;
 };
+
 
 /**
  Structure defining a single directional light.
@@ -245,7 +252,7 @@ fragment float4 lighting(
     constant ARDirectionalLight &light = lights[i];
     
     // Unpack light data.
-    const float3 l = -normalize((params.norm * float4(light.dir, 0.0)).xyz);
+    const float3 l = -normalize((params.normView * float4(light.dir, 0.0)).xyz);
     
     // Compute light contribution.
     const float diffFact = max(0.0, dot(n, l));
