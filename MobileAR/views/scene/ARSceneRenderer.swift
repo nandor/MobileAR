@@ -355,7 +355,7 @@ class ARSceneRenderer : ARRenderer {
     fboSSAO = device.newTextureWithDescriptor(fboSSAODesc)
     fboSSAO.label = "FBOAO"
     fboSSAOBlur = device.newTextureWithDescriptor(fboSSAODesc)
-    fboSSAO.label = "FBOSSAOBlur"
+    fboSSAOBlur.label = "FBOSSAOBlur"
   }
 
   /**
