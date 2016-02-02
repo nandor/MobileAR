@@ -628,7 +628,7 @@ class ARSceneRenderer : ARRenderer {
         self.objects = [try ARObject.loadObject(
           self.device,
           url: NSBundle.mainBundle().URLForResource("cup", withExtension: "obj")!
-          )]
+        )]
       } catch {
         print("\(error)")
       }
