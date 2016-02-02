@@ -95,11 +95,27 @@ vertex ARObjectInOut objectVert(
  Fragment shader for the virtual object.
  */
 fragment ARObjectOut objectFrag(
-    ARObjectInOut   in  [[ stage_in ]])
+    ARObjectInOut   in  [[ stage_in ]],
+    texture2d<half> texDiff [[ texture(0) ]],
+    texture2d<half> texSpec [[ texture(1) ]],
+    texture2d<half> texNorm [[ texture(2) ]])
 {
+  constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
+  
+  float3 dpx = dfdx(in.vert), dpy = dfdy(in.vert);
+  float2 dtx = dfdx(in.uv), dty = dfdy(in.uv);
+  float3 t = normalize(dpx * dty.y - dpy * dtx.x);
+  float3 b = normalize(dpy * dty.y - dpx * dtx.y);
+  float3 n = normalize(in.norm);
+  
+  float3 normal = float3(texNorm.sample(texSampler, in.uv).xyz) * 2.0 - 1.0;
+  
   return {
-    half2(normalize(in.norm).xy),
-    { 1.0, 1.0, 1.0, 0.25 }
+    half2(normalize(float3x3(t, b, n) * normal).xy),
+    float4(
+        float3(texDiff.sample(texSampler, in.uv).xyz),
+        float(texSpec.sample(texSampler, in.uv).x)
+    )
   };
 }
 

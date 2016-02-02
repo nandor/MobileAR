@@ -20,18 +20,31 @@
   }
 
   auto bytesPerRow = CGImageGetBytesPerRow(self.CGImage);
-
   auto rawData = std::make_unique<uint8_t[]>(height * bytesPerRow);
-
-  auto colorSpace = CGColorSpaceCreateDeviceRGB();
+  
+  CGColorSpaceRef colorspace;
+  uint32_t flags;
+  
+  switch (CGImageGetBitsPerPixel(self.CGImage)) {
+    case 8:
+      colorspace = CGColorSpaceCreateDeviceGray();
+      flags = 0;
+      break;
+    case 32:
+      colorspace = CGColorSpaceCreateDeviceRGB();
+      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
+      break;
+    default: colorspace = nil; break;
+  }
+  
   auto context = CGBitmapContextCreate(
       rawData.get(),
       width,
       height,
       8,
       bytesPerRow,
-      colorSpace,
-      kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little
+      colorspace,
+      flags
   );
 
   CGContextDrawImage(
@@ -47,7 +60,7 @@
              bytesPerRow:bytesPerRow
            bytesPerImage:height * bytesPerRow];
 
-  CGColorSpaceRelease(colorSpace);
+  CGColorSpaceRelease(colorspace);
   CGContextRelease(context);
 }
 

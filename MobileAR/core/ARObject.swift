@@ -7,6 +7,8 @@ import simd
 
 enum ARObjectError : ErrorType {
   case InvalidToken
+  case InvalidPath
+  case MissingTexture
 }
 
 
@@ -17,76 +19,19 @@ class ARObject {
 
   // Vertex Buffer Object.
   var vbo: MTLBuffer!
-
   // Number of indices.
   var indices: Int!
-  
   // Index Buffer Object.
   var ibo: MTLBuffer?
-
-  /**
-   Initializes the mesh.
-   */
-  static func loadCube(device: MTLDevice) -> ARObject {
   
-    // Set up the vertex buffer.
-    let vboData: [Float] = [
-      -1, -1, -1, -1,  0,  0,  0, 0,
-      -1, -1,  1, -1,  0,  0,  0, 1,
-      -1,  1,  1, -1,  0,  0,  1, 1,
-      -1,  1, -1, -1,  0,  0,  1, 0,
-
-       1, -1, -1,  1,  0,  0,  0, 0,
-       1, -1,  1,  1,  0,  0,  0, 1,
-       1,  1,  1,  1,  0,  0,  1, 1,
-       1,  1, -1,  1,  0,  0,  1, 0,
-
-      -1, -1, -1,  0, -1,  0,  0, 0,
-      -1, -1,  1,  0, -1,  0,  0, 1,
-       1, -1,  1,  0, -1,  0,  1, 1,
-       1, -1, -1,  0, -1,  0,  1, 0,
-
-      -1,  1, -1,  0,  1,  0,  0, 0,
-      -1,  1,  1,  0,  1,  0,  0, 1,
-       1,  1,  1,  0,  1,  0,  1, 1,
-       1,  1, -1,  0,  1,  0,  1, 0,
-
-      -1, -1, -1,  0,  0, -1,  0, 0,
-      -1,  1, -1,  0,  0, -1,  0, 1,
-       1,  1, -1,  0,  0, -1,  1, 1,
-       1, -1, -1,  0,  0, -1,  1, 0,
-
-      -1, -1,  1,  0,  0,  1,  0, 0,
-      -1,  1,  1,  0,  0,  1,  0, 1,
-       1,  1,  1,  0,  0,  1,  1, 1,
-       1, -1,  1,  0,  0,  1,  1, 0,
-    ];
+  // Diffuse texture.
+  var texDiffuse: MTLTexture!
+  // Specular texture.
+  var texSpecular: MTLTexture!
+  // Bump map.
+  var texNormal: MTLTexture!
   
-
-    // Set up the index buffer.
-    let iboData: [UInt32] = [
-       0 + 0,  0 + 2,  0 + 1,  0 + 0,  0 + 3,  0 + 2,
-       4 + 0,  4 + 1,  4 + 2,  4 + 0,  4 + 2,  4 + 3,
-       8 + 0,  8 + 1,  8 + 2,  8 + 0,  8 + 2,  8 + 3,
-      12 + 0, 12 + 2, 12 + 1, 12 + 0, 12 + 3, 12 + 2,
-      16 + 0, 16 + 2, 16 + 1, 16 + 0, 16 + 3, 16 + 2,
-      20 + 0, 20 + 1, 20 + 2, 20 + 0, 20 + 2, 20 + 3,
-    ]
-    
-    let object = ARObject()
-    object.vbo = device.newBufferWithBytes(
-        vboData,
-        length: sizeofValue(vboData[0]) * vboData.count,
-        options: MTLResourceOptions()
-    )
-    object.ibo = device.newBufferWithBytes(
-        iboData,
-        length: sizeofValue(iboData[0]) * iboData.count,
-        options: MTLResourceOptions()
-    )
-    object.indices = iboData.count
-    return object
-  }
+  
   
   /**
    Loads an object from a Wavefront OBJ file.
@@ -137,9 +82,8 @@ class ARObject {
       vbo[i * 8 + 4] = norm.y
       vbo[i * 8 + 5] = norm.z
       vbo[i * 8 + 6] = uv.x
-      vbo[i * 8 + 7] = uv.x
+      vbo[i * 8 + 7] = uv.y
     }
-    
     
     // Create the object.
     let object = ARObject()
@@ -149,7 +93,44 @@ class ARObject {
       options: MTLResourceOptions()
     )
     object.indices = indices
+    object.texDiffuse = try ARObject.loadTexture(device, url: url, type: "_diff", format: .BGRA8Unorm)
+    object.texNormal = try ARObject.loadTexture(device, url: url, type: "_norm", format: .BGRA8Unorm)
+    object.texSpecular = try ARObject.loadTexture(device, url: url, type: "_spec", format: .R8Unorm)
     return object
+  }
+  
+  /**
+   Loads a texture map.
+   */
+  static private func loadTexture(
+      device: MTLDevice,
+      url: NSURL,
+      type: String,
+      format: MTLPixelFormat) throws
+      -> MTLTexture
+  {
+    guard let name = (url.lastPathComponent as NSString?)?.stringByDeletingPathExtension else {
+      throw ARObjectError.InvalidPath
+    }
+    guard let dir = url.URLByDeletingLastPathComponent else {
+      throw ARObjectError.InvalidPath
+    }
+    
+    let path = dir.URLByAppendingPathComponent(name + type + ".png")
+    guard let image = UIImage(contentsOfFile: path.path!) else {
+      throw ARObjectError.MissingTexture
+    }
+    
+    let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+      format,
+      width: Int(image.size.width),
+      height: Int(image.size.height),
+      mipmapped: false
+    )
+    
+    let texture = device.newTextureWithDescriptor(texDesc)
+    image.toMTLTexture(texture);
+    return texture
   }
 }
 

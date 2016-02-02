@@ -9,9 +9,13 @@
 /* Begin PBXBuildFile section */
 		7A1E3BB91C5962AF00E63312 /* ARObject.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARObject.metal */; };
 		7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */; };
-		7A49DFDC1C604F9E00C47B8A /* wood_albe.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFD91C604F9E00C47B8A /* wood_albe.png */; };
-		7A49DFDD1C604F9E00C47B8A /* wood_norm.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDA1C604F9E00C47B8A /* wood_norm.png */; };
-		7A49DFDE1C604F9E00C47B8A /* wood_spec.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDB1C604F9E00C47B8A /* wood_spec.png */; };
+		7A49DFDC1C604F9E00C47B8A /* cup_diff.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFD91C604F9E00C47B8A /* cup_diff.png */; };
+		7A49DFDD1C604F9E00C47B8A /* cup_norm.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDA1C604F9E00C47B8A /* cup_norm.png */; };
+		7A49DFDE1C604F9E00C47B8A /* cup_spec.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDB1C604F9E00C47B8A /* cup_spec.png */; };
+		7A49DFE31C60FBB600C47B8A /* cube_diff.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDF1C60FBB600C47B8A /* cube_diff.png */; };
+		7A49DFE41C60FBB600C47B8A /* cube_norm.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFE01C60FBB600C47B8A /* cube_norm.png */; };
+		7A49DFE51C60FBB600C47B8A /* cube_spec.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFE11C60FBB600C47B8A /* cube_spec.png */; };
+		7A49DFE61C60FBB600C47B8A /* cube.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFE21C60FBB600C47B8A /* cube.obj */; };
 		7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */; };
 		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
@@ -47,9 +51,13 @@
 /* Begin PBXFileReference section */
 		7A1E3BB81C5962AF00E63312 /* ARObject.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARObject.metal; sourceTree = "<group>"; };
 		7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARFileReader.swift; sourceTree = "<group>"; };
-		7A49DFD91C604F9E00C47B8A /* wood_albe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = wood_albe.png; path = MobileAR/models/wood_albe.png; sourceTree = "<group>"; };
-		7A49DFDA1C604F9E00C47B8A /* wood_norm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = wood_norm.png; path = MobileAR/models/wood_norm.png; sourceTree = "<group>"; };
-		7A49DFDB1C604F9E00C47B8A /* wood_spec.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = wood_spec.png; path = MobileAR/models/wood_spec.png; sourceTree = "<group>"; };
+		7A49DFD91C604F9E00C47B8A /* cup_diff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cup_diff.png; path = MobileAR/models/cup_diff.png; sourceTree = "<group>"; };
+		7A49DFDA1C604F9E00C47B8A /* cup_norm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cup_norm.png; path = MobileAR/models/cup_norm.png; sourceTree = "<group>"; };
+		7A49DFDB1C604F9E00C47B8A /* cup_spec.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cup_spec.png; path = MobileAR/models/cup_spec.png; sourceTree = "<group>"; };
+		7A49DFDF1C60FBB600C47B8A /* cube_diff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cube_diff.png; path = MobileAR/models/cube_diff.png; sourceTree = "<group>"; };
+		7A49DFE01C60FBB600C47B8A /* cube_norm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cube_norm.png; path = MobileAR/models/cube_norm.png; sourceTree = "<group>"; };
+		7A49DFE11C60FBB600C47B8A /* cube_spec.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cube_spec.png; path = MobileAR/models/cube_spec.png; sourceTree = "<group>"; };
+		7A49DFE21C60FBB600C47B8A /* cube.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cube.obj; path = MobileAR/models/cube.obj; sourceTree = "<group>"; };
 		7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -110,9 +118,13 @@
 		7A3F5D981C5D1A240044F6FC /* models */ = {
 			isa = PBXGroup;
 			children = (
-				7A49DFD91C604F9E00C47B8A /* wood_albe.png */,
-				7A49DFDA1C604F9E00C47B8A /* wood_norm.png */,
-				7A49DFDB1C604F9E00C47B8A /* wood_spec.png */,
+				7A49DFDF1C60FBB600C47B8A /* cube_diff.png */,
+				7A49DFE01C60FBB600C47B8A /* cube_norm.png */,
+				7A49DFE11C60FBB600C47B8A /* cube_spec.png */,
+				7A49DFE21C60FBB600C47B8A /* cube.obj */,
+				7A49DFD91C604F9E00C47B8A /* cup_diff.png */,
+				7A49DFDA1C604F9E00C47B8A /* cup_norm.png */,
+				7A49DFDB1C604F9E00C47B8A /* cup_spec.png */,
 				7AC9F6111C5E7BF100AF86BC /* cup.obj */,
 			);
 			name = models;
@@ -291,11 +303,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A49DFDE1C604F9E00C47B8A /* wood_spec.png in Resources */,
-				7A49DFDD1C604F9E00C47B8A /* wood_norm.png in Resources */,
+				7A49DFDE1C604F9E00C47B8A /* cup_spec.png in Resources */,
+				7A49DFE51C60FBB600C47B8A /* cube_spec.png in Resources */,
+				7A49DFE31C60FBB600C47B8A /* cube_diff.png in Resources */,
+				7A49DFDD1C604F9E00C47B8A /* cup_norm.png in Resources */,
 				7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */,
 				7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */,
-				7A49DFDC1C604F9E00C47B8A /* wood_albe.png in Resources */,
+				7A49DFE61C60FBB600C47B8A /* cube.obj in Resources */,
+				7A49DFE41C60FBB600C47B8A /* cube_norm.png in Resources */,
+				7A49DFDC1C604F9E00C47B8A /* cup_diff.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -106,7 +106,10 @@ class AREnvironment {
     (try! NSJSONSerialization.dataWithJSONObject(
         data,
         options: NSJSONWritingOptions()
-    )).writeToURL(path.URLByAppendingPathComponent("data.json"), atomically: true)
+    )).writeToURL(
+        path.URLByAppendingPathComponent("data.json"),
+        atomically: true
+    )
   }
 
   /**

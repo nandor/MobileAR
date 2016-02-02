@@ -125,6 +125,9 @@ class ARSceneRenderer : ARRenderer {
     
     for object in objects {
       geomEncoder.setVertexBuffer(object.vbo, offset: 0, atIndex: 0)
+      geomEncoder.setFragmentTexture(object.texDiffuse, atIndex: 0)
+      geomEncoder.setFragmentTexture(object.texSpecular, atIndex: 1)
+      geomEncoder.setFragmentTexture(object.texNormal, atIndex: 2)
       if let ibo = object.ibo {
         geomEncoder.drawIndexedPrimitives(
             .Triangle,
@@ -627,7 +630,7 @@ class ARSceneRenderer : ARRenderer {
       do {
         self.objects = [try ARObject.loadObject(
           self.device,
-          url: NSBundle.mainBundle().URLForResource("cup", withExtension: "obj")!
+          url: NSBundle.mainBundle().URLForResource("cube", withExtension: "obj")!
         )]
       } catch {
         print("\(error)")
