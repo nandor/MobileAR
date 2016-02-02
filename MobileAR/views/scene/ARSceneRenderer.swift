@@ -50,7 +50,6 @@ class ARSceneRenderer : ARRenderer {
   // Object render state.
   private var objectDepthState: MTLDepthStencilState!
   private var objectRenderState: MTLRenderPipelineState!
-  private var objectCache: [ARObject] = []
   
   // Pedestal rendered under objects for AO.
   private var pedestalDepthState: MTLDepthStencilState!
@@ -62,115 +61,21 @@ class ARSceneRenderer : ARRenderer {
       "uk.ac.ic.MobileAR.ARSceneRenderer",
       DISPATCH_QUEUE_CONCURRENT
   )
+  
+  // Objects to be rendered.
+  private var objects: [ARObject] = []
 
+  // Light sources to be used.
+  private var lights: [ARLight] = []
+  
+  
   /**
    Initializes the renderer.
    */
   override init(view: UIView) throws {
     try super.init(view: view)
-
-    // Set up the depth state.
-    let quadStencilGE = MTLStencilDescriptor()
-    quadStencilGE.stencilCompareFunction = .GreaterEqual
-    quadStencilGE.stencilFailureOperation = .Keep
-    quadStencilGE.depthFailureOperation = .Keep
-    quadStencilGE.depthStencilPassOperation = .Keep
-    quadStencilGE.readMask = 0xFF
-    quadStencilGE.writeMask = 0x00
     
-    let quadGEDesc = MTLDepthStencilDescriptor()
-    quadGEDesc.depthCompareFunction = .Always
-    quadGEDesc.depthWriteEnabled = false
-    quadGEDesc.frontFaceStencil = quadStencilGE
-    quadGEDesc.backFaceStencil = quadStencilGE
-    quadGE = device.newDepthStencilStateWithDescriptor(quadGEDesc)
-
-    let quadStencilLE = MTLStencilDescriptor()
-    quadStencilLE.stencilCompareFunction = .LessEqual
-    quadStencilLE.stencilFailureOperation = .Keep
-    quadStencilLE.depthFailureOperation = .Keep
-    quadStencilLE.depthStencilPassOperation = .Keep
-    quadStencilLE.readMask = 0xFF
-    quadStencilLE.writeMask = 0x00
-
-    let quadLEDesc = MTLDepthStencilDescriptor()
-    quadLEDesc.depthCompareFunction = .Always
-    quadLEDesc.depthWriteEnabled = false
-    quadLEDesc.frontFaceStencil = quadStencilLE
-    quadLEDesc.backFaceStencil = quadStencilLE
-    quadLE = device.newDepthStencilStateWithDescriptor(quadLEDesc)
-
-    // Initialize the VBO of the full-screen quad.
-    var vbo : [Float] = [
-      -1, -1,
-      -1,  1,
-       1,  1,
-      -1, -1,
-       1,  1,
-       1, -1,
-    ]
-    quadVBO = device.newBufferWithBytes(
-        vbo,
-        length: sizeofValue(vbo[0]) * vbo.count,
-        options: MTLResourceOptions()
-    )
-    quadVBO.label = "VBOQuad"
-
-    // Create the background texture.
-    let backgroundTextureDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-        .BGRA8Unorm,
-        width: Int(640),
-        height: Int(360),
-        mipmapped: false
-    )
-    backgroundTexture = device.newTextureWithDescriptor(backgroundTextureDesc)
-
-    // Set up the depth state for objects.
-    let objectStencil = MTLStencilDescriptor()
-    objectStencil.depthStencilPassOperation = .Replace
-    objectStencil.stencilCompareFunction = .Always
-    objectStencil.stencilFailureOperation = .Keep
-    objectStencil.depthFailureOperation = .Keep
-    objectStencil.readMask = 0xFF
-    objectStencil.writeMask = 0xFF
-
-    let objectDepthDesc = MTLDepthStencilDescriptor()
-    objectDepthDesc.depthCompareFunction = .LessEqual
-    objectDepthDesc.depthWriteEnabled = true
-    objectDepthDesc.frontFaceStencil = objectStencil
-    objectDepthDesc.backFaceStencil = objectStencil
-    objectDepthState = device.newDepthStencilStateWithDescriptor(objectDepthDesc)
-
-    // Set up the shaders.
-    guard let objectVert = library.newFunctionWithName("objectVert") else {
-      throw ARRendererError.MissingFunction
-    }
-    guard let objectFrag = library.newFunctionWithName("objectFrag") else {
-      throw ARRendererError.MissingFunction
-    }
-
-    // Create the pipeline descriptor.
-    let objectRenderDesc = MTLRenderPipelineDescriptor()
-    objectRenderDesc.sampleCount = 1
-    objectRenderDesc.vertexFunction = objectVert
-    objectRenderDesc.fragmentFunction = objectFrag
-    objectRenderDesc.colorAttachments[0].pixelFormat = .RG16Snorm
-    objectRenderDesc.colorAttachments[1].pixelFormat = .RGBA8Unorm
-    objectRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
-    objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
-    objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)
-
-    dispatch_async(backgroundQueue) {
-      do {
-        self.objectCache = [try ARObject.loadObject(
-            self.device,
-            url: NSBundle.mainBundle().URLForResource("cup", withExtension: "obj")!
-        )]
-      } catch {
-        print("\(error)")
-      }
-    }
-
+    try setupObject()
     try setupGeometryBuffer()
     try setupFXPrograms()
     try setupLightSources()
@@ -191,34 +96,34 @@ class ARSceneRenderer : ARRenderer {
   override func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
 
     // Pass to render to the geometry buffer.
+    // This pass renders all objects and writes to the depth buffer, sets
+    // all pixels to 0xFF in the stencil buffer, writes the albedo + specular
+    // exponent to the material buffer and saves the X and Y components of the
+    // normalized normal vectors into the normal buffer.
     let geomPass = MTLRenderPassDescriptor()
-
     geomPass.colorAttachments[0].texture = fboNormal
     geomPass.colorAttachments[0].loadAction = .DontCare
     geomPass.colorAttachments[0].storeAction = .Store
-
     geomPass.colorAttachments[1].texture = fboMaterial
     geomPass.colorAttachments[1].loadAction = .DontCare
     geomPass.colorAttachments[1].storeAction = .Store
-
     geomPass.depthAttachment.loadAction = .Clear
     geomPass.depthAttachment.storeAction = .Store
     geomPass.depthAttachment.texture = fboDepthStencil
     geomPass.depthAttachment.clearDepth = 1.0
-
     geomPass.stencilAttachment.loadAction = .Clear
     geomPass.stencilAttachment.storeAction = .Store
     geomPass.stencilAttachment.texture = fboDepthStencil
 
     let geomEncoder = buffer.renderCommandEncoderWithDescriptor(geomPass)
     geomEncoder.label = "Geometry"
-
     geomEncoder.setCullMode(.Front)
     geomEncoder.setStencilReferenceValue(0xFF)
     geomEncoder.setDepthStencilState(objectDepthState)
     geomEncoder.setRenderPipelineState(objectRenderState)
     geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
-    for object in objectCache {
+    
+    for object in objects {
       geomEncoder.setVertexBuffer(object.vbo, offset: 0, atIndex: 0)
       if let ibo = object.ibo {
         geomEncoder.drawIndexedPrimitives(
@@ -235,12 +140,16 @@ class ARSceneRenderer : ARRenderer {
             vertexCount: object.indices
         )
       }
+      
     }
     geomEncoder.endEncoding()
     
     // Pass to render a rectangle under each object into the depth buffer
     // and to decrement values in the stencil buffer. This "pedestal" is used
-    // to add some slight shade under each object during the SSAO pass.
+    // to add some slight shade under each object during the SSAO pass. Data is
+    // not written to the material buffer and the stencil buffer is set to 0xF0
+    // in order to distinguish this plane from actual objects. The background
+    // image will be modulated using AO, however lighting should not be applied.
     let pedestalPass = MTLRenderPassDescriptor()
     pedestalPass.colorAttachments[0].loadAction = .Load
     pedestalPass.colorAttachments[0].storeAction = .Store
@@ -261,7 +170,7 @@ class ARSceneRenderer : ARRenderer {
     pedestalEncoder.setVertexBuffer(pedestalBuffer, offset: 0, atIndex: 0)
     pedestalEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
     pedestalEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
-    for _ in objectCache {
+    for _ in objects {
       pedestalEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     }
     pedestalEncoder.endEncoding()
@@ -275,11 +184,9 @@ class ARSceneRenderer : ARRenderer {
     ssaoPass.colorAttachments[0].loadAction = .Clear
     ssaoPass.colorAttachments[0].storeAction = .Store
     ssaoPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 1, 1, 1)
-
     ssaoPass.depthAttachment.loadAction = .Load
     ssaoPass.depthAttachment.storeAction = .DontCare
     ssaoPass.depthAttachment.texture = fboDepthStencil
-
     ssaoPass.stencilAttachment.loadAction = .Load
     ssaoPass.stencilAttachment.storeAction = .DontCare
     ssaoPass.stencilAttachment.texture = fboDepthStencil
@@ -304,11 +211,9 @@ class ARSceneRenderer : ARRenderer {
     blurPass.colorAttachments[0].loadAction = .Clear
     blurPass.colorAttachments[0].storeAction = .Store
     blurPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 1, 1, 1)
-    
     blurPass.depthAttachment.loadAction = .DontCare
     blurPass.depthAttachment.storeAction = .DontCare
     blurPass.depthAttachment.texture = fboDepthStencil
-    
     blurPass.stencilAttachment.loadAction = .Load
     blurPass.stencilAttachment.storeAction = .DontCare
     blurPass.stencilAttachment.texture = fboDepthStencil
@@ -329,7 +234,6 @@ class ARSceneRenderer : ARRenderer {
     // occluded by objects rendered on top of the scene. The background texture
     // is combined with the AO map to occlude a planar region around objects.
     let backgroundPass = MTLRenderPassDescriptor()
-    
     backgroundPass.colorAttachments[0].texture = target
     backgroundPass.colorAttachments[0].loadAction = .Clear
     backgroundPass.colorAttachments[0].storeAction = .Store
@@ -354,17 +258,16 @@ class ARSceneRenderer : ARRenderer {
     
     // Apply all the light sources.
     // Ligh sources are batched in groups of 32 and only those pixels are shaded
-    // which belong to an object that was rendered previously.
+    // which belong to an object that was rendered previously. Also, the normal
+    // matrix is applied to the light direction in order to avoid a matrix
+    // multiplication and normalization in the fragment shader.
     let lightPass = MTLRenderPassDescriptor()
-    
     lightPass.colorAttachments[0].texture = target
     lightPass.colorAttachments[0].loadAction = .Load
     lightPass.colorAttachments[0].storeAction = .Store
-    
-    lightPass.depthAttachment.loadAction = .Load
+    lightPass.depthAttachment.loadAction = .DontCare
     lightPass.depthAttachment.storeAction = .DontCare
     lightPass.depthAttachment.texture = fboDepthStencil
-    
     lightPass.stencilAttachment.loadAction = .Load
     lightPass.stencilAttachment.storeAction = .DontCare
     lightPass.stencilAttachment.texture = fboDepthStencil
@@ -376,12 +279,30 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setRenderPipelineState(lightingRenderState)
     lightEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
     lightEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
-    lightEncoder.setFragmentBuffer(lightBuffer, offset: 0, atIndex: 1)
     lightEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
     lightEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
     lightEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
-    lightEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    
+    for var batch = 0; batch < lights.count; batch += 32 {
+      let data = UnsafeMutablePointer<ARLight>(lightBuffer.contents())
+      for var i = 0; i < min(32, lights.count - batch * 32); ++i {
+        let light = lights[batch * 32 + i]
+        let n: float4 = viewMat.inverse.transpose * light.direction
+        let l = -Float(sqrt(n.x * n.x + n.y * n.y + n.z * n.z))
+        
+        data.memory.direction = float4(n.x / l, n.y / l, n.z / l, 1.0)
+        data.memory.ambient = light.ambient
+        data.memory.diffuse = light.diffuse
+        data.memory.specular = light.specular
+        
+        data.advancedBy(sizeof(ARLight))
+      }
+      
+      lightEncoder.setFragmentBuffer(lightBuffer, offset: 0, atIndex: 1)
+      lightEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    }
+    
     lightEncoder.endEncoding()
   }
 
@@ -438,7 +359,49 @@ class ARSceneRenderer : ARRenderer {
    Initializes all FX programs.
    */
   private func setupFXPrograms() throws {
-
+    
+    // Depth state to compare stencil reference with GE.
+    let quadStencilGE = MTLStencilDescriptor()
+    quadStencilGE.stencilCompareFunction = .GreaterEqual
+    quadStencilGE.stencilFailureOperation = .Keep
+    quadStencilGE.depthFailureOperation = .Keep
+    quadStencilGE.depthStencilPassOperation = .Keep
+    quadStencilGE.readMask = 0xFF
+    quadStencilGE.writeMask = 0x00
+    let quadGEDesc = MTLDepthStencilDescriptor()
+    quadGEDesc.depthCompareFunction = .Always
+    quadGEDesc.depthWriteEnabled = false
+    quadGEDesc.frontFaceStencil = quadStencilGE
+    quadGEDesc.backFaceStencil = quadStencilGE
+    quadGE = device.newDepthStencilStateWithDescriptor(quadGEDesc)
+    
+    // Depth state to compare stencil reference with LE.
+    let quadStencilLE = MTLStencilDescriptor()
+    quadStencilLE.stencilCompareFunction = .LessEqual
+    quadStencilLE.stencilFailureOperation = .Keep
+    quadStencilLE.depthFailureOperation = .Keep
+    quadStencilLE.depthStencilPassOperation = .Keep
+    quadStencilLE.readMask = 0xFF
+    quadStencilLE.writeMask = 0x00
+    let quadLEDesc = MTLDepthStencilDescriptor()
+    quadLEDesc.depthCompareFunction = .Always
+    quadLEDesc.depthWriteEnabled = false
+    quadLEDesc.frontFaceStencil = quadStencilLE
+    quadLEDesc.backFaceStencil = quadStencilLE
+    quadLE = device.newDepthStencilStateWithDescriptor(quadLEDesc)
+    
+    // Initialize the VBO of the full-screen quad.
+    var vbo : [Float] = [
+      -1, -1, -1,  1,  1,  1,
+      -1, -1,  1,  1,  1, -1,
+    ]
+    quadVBO = device.newBufferWithBytes(
+      vbo,
+      length: sizeofValue(vbo[0]) * vbo.count,
+      options: MTLResourceOptions()
+    )
+    quadVBO.label = "VBOQuad"
+    
     // The vertex shader will simply render a full-screen quad.
     guard let fullscreen = library.newFunctionWithName("fullscreen") else {
       throw ARRendererError.MissingFunction
@@ -456,7 +419,16 @@ class ARSceneRenderer : ARRenderer {
     backgroundRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     backgroundRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     backgroundRenderState = try device.newRenderPipelineStateWithDescriptor(backgroundRenderDesc)
-
+    
+    // Create the background texture. Data is uploaded from the camera.
+    let backgroundTextureDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+      .BGRA8Unorm,
+      width: Int(640),
+      height: Int(360),
+      mipmapped: false
+    )
+    backgroundTexture = device.newTextureWithDescriptor(backgroundTextureDesc)
+    
     // Fragment shader to apply lighting.
     // Blending is enabled to accumulate contributions from multiple light sources.
     guard let lighting = library.newFunctionWithName("lighting") else {
@@ -511,31 +483,18 @@ class ARSceneRenderer : ARRenderer {
    Initializes all light sources.
    */
   private func setupLightSources() throws {
-    var lightData = [Float](count: 16 * 32, repeatedValue: 0.0)
-
-    lightData[0] = -1.0;
-    lightData[1] = -1.0;
-    lightData[2] = -1.0;
-    lightData[3] = 0.0;
-
-    lightData[4] = 0.4;
-    lightData[5] = 0.4;
-    lightData[6] = 0.4;
-    lightData[7] = 0.0;
-
-    lightData[8] = 0.7;
-    lightData[9] = 0.7;
-    lightData[10] = 0.7;
-    lightData[11] = 0.0;
-
-    lightData[12] = 1.0;
-    lightData[13] = 1.0;
-    lightData[14] = 1.0;
-    lightData[15] = 1.0;
-
-    lightBuffer = device.newBufferWithBytes(
-      lightData,
-      length: sizeofValue(lightData[0]) * lightData.count,
+    
+    // Create a sample light source.
+    lights.append(ARLight(
+        direction: float4(-1, -1, -1, 0.0),
+        ambient:   float4(0.4, 0.4, 0.4, 0.0),
+        diffuse:   float4(0.7, 0.7, 0.7, 0.0),
+        specular:  float4(1.0, 1.0, 1.0, 1.0)
+    ))
+    
+    // Create a buffer for 32 light sources.
+    lightBuffer = device.newBufferWithLength(
+      sizeof(ARLight) * 32,
       options: MTLResourceOptions()
     )
     lightBuffer.label = "VBOLightSources"
@@ -548,69 +507,21 @@ class ARSceneRenderer : ARRenderer {
 
     // Set up a buffer with 32 sample vectors. The shader might choose to
     // use only a subset of these in order to increase performance.
-    var ssaoSampleData: [float4] = [
-        float4(-0.0222812286, -0.0097610634, 0.0190471473, 0.0),
-        float4(-0.0550172494, -0.0309991154, 0.0676510781, 0.0),
-        float4( 0.0326691691,  0.0334404281, 0.0380219642, 0.0),
-        float4( 0.0437514486, -0.0102820787, 0.0337031351, 0.0),
-        float4( 0.0019365485, -0.0044538348, 0.0312760117, 0.0),
-        float4( 0.0566276267,  0.0503924542, 0.0531489421, 0.0),
-        float4(-0.0014951475,  0.0024281197, 0.0173591884, 0.0),
-        float4(-0.0164670202, -0.0578062973, 0.1123648725, 0.0),
-        float4(-0.1000401022,  0.0311720643, 0.0920496615, 0.0),
-        float4(-0.0438685685,  0.0715038973, 0.1083699433, 0.0),
-        float4( 0.0149985533, -0.0170551220, 0.0185657416, 0.0),
-        float4( 0.0354595464, -0.0363755173, 0.0323577105, 0.0),
-        float4(-0.0203935451, -0.0745134646, 0.1541178105, 0.0),
-        float4( 0.0028391215,  0.0116091792, 0.0576031406, 0.0),
-        float4(-0.0196249165, -0.0478437599, 0.0425324788, 0.0),
-        float4( 0.0729668184, -0.0522721479, 0.0875701738, 0.0),
-        float4(-0.1532114786, -0.1522172360, 0.2735333576, 0.0),
-        float4(-0.0298943708,  0.1737209567, 0.3183226437, 0.0),
-        float4(-0.1656550946, -0.0719748123, 0.1968226893, 0.0),
-        float4(-0.0095653149, -0.2941228294, 0.2039285730, 0.0),
-        float4(-0.1331204501,  0.1220435809, 0.0964000304, 0.0),
-        float4(-0.0403178220, -0.3809901890, 0.3414482621, 0.0),
-        float4( 0.0882988347,  0.0455553367, 0.2918320574, 0.0),
-        float4(-0.1175072503,  0.0388894681, 0.1550289903, 0.0),
-        float4(-0.0533728880, -0.0381621740, 0.0610825723, 0.0),
-        float4( 0.2468512030,  0.3388266965, 0.2949817385, 0.0),
-        float4( 0.2449600832,  0.2042880967, 0.6010089206, 0.0),
-        float4( 0.6424967231,  0.0443461169, 0.4040266177, 0.0),
-        float4( 0.3099913096,  0.1985537725, 0.3454406527, 0.0),
-        float4( 0.0754919457, -0.0634370161, 0.0774910082, 0.0),
-        float4( 0.0531734967,  0.0233182866, 0.0956308795, 0.0),
-        float4( 0.5550298510, -0.0702125778, 0.3265220542, 0.0),
-    ]
     ssaoSampleBuffer = device.newBufferWithBytes(
-      ssaoSampleData,
-      length: sizeofValue(ssaoSampleData[0]) * ssaoSampleData.count,
+      ARSceneRenderer.kSSAOSampleData,
+      length:
+          sizeofValue(ARSceneRenderer.kSSAOSampleData[0]) *
+          ARSceneRenderer.kSSAOSampleData.count,
       options: MTLResourceOptions()
     )
     ssaoSampleBuffer.label = "VBOSSAOSampleBuffer"
 
     // Set up a 4x4 texture with randomly selected vectors with x, y \in [0, 1].
-    var ssaoRandomData: [float4] = [
-      float4( 0.63618570,  0.51077760,  0.0, 0.0),
-      float4( 0.50891661, -0.34688258,  0.0, 0.0),
-      float4( 0.62890755, -0.45142945,  0.0, 0.0),
-      float4(-0.34869557, -0.41754699,  0.0, 0.0),
-      float4(-0.12747335, -0.67727395,  0.0, 0.0),
-      float4( 0.84289647,  0.32273283,  0.0, 0.0),
-      float4( 0.14654619,  0.67703445,  0.0, 0.0),
-      float4(-0.88995941, -0.89987678,  0.0, 0.0),
-      float4( 0.16366023,  0.43668146,  0.0, 0.0),
-      float4( 0.37088478, -0.86388887,  0.0, 0.0),
-      float4(-0.76671633,  0.12611534,  0.0, 0.0),
-      float4(-0.51218073, -0.95123229,  0.0, 0.0),
-      float4(-0.57194316, -0.16738459,  0.0, 0.0),
-      float4(-0.89127350,  0.22852176,  0.0, 0.0),
-      float4( 0.73067920,  0.43298104,  0.0, 0.0),
-      float4(-0.41123954,  0.69549418,  0.0, 0.0),
-    ]
     ssaoRandomBuffer = device.newBufferWithBytes(
-      ssaoRandomData,
-      length: sizeofValue(ssaoRandomData[0]) * ssaoRandomData.count,
+      ARSceneRenderer.kSSAORandomData,
+      length:
+          sizeofValue(ARSceneRenderer.kSSAORandomData[0]) *
+          ARSceneRenderer.kSSAORandomData.count,
       options: MTLResourceOptions()
     )
     ssaoRandomBuffer.label = "VBOSSSAORandomBuffer"
@@ -657,12 +568,12 @@ class ARSceneRenderer : ARRenderer {
     
     // Pedestal buffer data.
     let vbo: [float4] = [
-        float4( 1.2, 0,  1.2, 1),
-        float4(-1.2, 0, -1.2, 1),
-        float4(-1.2, 0,  1.2, 1),
-        float4(-1.2, 0, -1.2, 1),
-        float4( 1.2, 0,  1.2, 1),
-        float4( 1.2, 0, -1.2, 1),
+        float4( 1.3, 0,  1.3, 1),
+        float4(-1.3, 0, -1.3, 1),
+        float4(-1.3, 0,  1.3, 1),
+        float4(-1.3, 0, -1.3, 1),
+        float4( 1.3, 0,  1.3, 1),
+        float4( 1.3, 0, -1.3, 1),
     ]
     pedestalBuffer = device.newBufferWithBytes(
         vbo,
@@ -671,4 +582,114 @@ class ARSceneRenderer : ARRenderer {
     )
     pedestalBuffer.label = "VBOPedestal"
   }
+  
+  /**
+   Sets up the object rendering state.
+   */
+  private func setupObject() throws {
+    
+    // Set up the depth state for objects.
+    let objectStencil = MTLStencilDescriptor()
+    objectStencil.depthStencilPassOperation = .Replace
+    objectStencil.stencilCompareFunction = .Always
+    objectStencil.stencilFailureOperation = .Keep
+    objectStencil.depthFailureOperation = .Keep
+    objectStencil.readMask = 0xFF
+    objectStencil.writeMask = 0xFF
+    
+    let objectDepthDesc = MTLDepthStencilDescriptor()
+    objectDepthDesc.depthCompareFunction = .LessEqual
+    objectDepthDesc.depthWriteEnabled = true
+    objectDepthDesc.frontFaceStencil = objectStencil
+    objectDepthDesc.backFaceStencil = objectStencil
+    objectDepthState = device.newDepthStencilStateWithDescriptor(objectDepthDesc)
+    
+    // Set up the shaders.
+    guard let objectVert = library.newFunctionWithName("objectVert") else {
+      throw ARRendererError.MissingFunction
+    }
+    guard let objectFrag = library.newFunctionWithName("objectFrag") else {
+      throw ARRendererError.MissingFunction
+    }
+    
+    // Create the pipeline descriptor.
+    let objectRenderDesc = MTLRenderPipelineDescriptor()
+    objectRenderDesc.sampleCount = 1
+    objectRenderDesc.vertexFunction = objectVert
+    objectRenderDesc.fragmentFunction = objectFrag
+    objectRenderDesc.colorAttachments[0].pixelFormat = .RG16Snorm
+    objectRenderDesc.colorAttachments[1].pixelFormat = .RGBA8Unorm
+    objectRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
+    objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
+    objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)
+    
+    dispatch_async(backgroundQueue) {
+      do {
+        self.objects = [try ARObject.loadObject(
+          self.device,
+          url: NSBundle.mainBundle().URLForResource("cup", withExtension: "obj")!
+          )]
+      } catch {
+        print("\(error)")
+      }
+    }
+  }
+  
+  
+  
+  // 32 random vectors in a hemisphere.
+  private static let kSSAOSampleData: [float4] = [
+    float4(-0.0222812286, -0.0097610634, 0.0190471473, 0.0),
+    float4(-0.0550172494, -0.0309991154, 0.0676510781, 0.0),
+    float4( 0.0326691691,  0.0334404281, 0.0380219642, 0.0),
+    float4( 0.0437514486, -0.0102820787, 0.0337031351, 0.0),
+    float4( 0.0019365485, -0.0044538348, 0.0312760117, 0.0),
+    float4( 0.0566276267,  0.0503924542, 0.0531489421, 0.0),
+    float4(-0.0014951475,  0.0024281197, 0.0173591884, 0.0),
+    float4(-0.0164670202, -0.0578062973, 0.1123648725, 0.0),
+    float4(-0.1000401022,  0.0311720643, 0.0920496615, 0.0),
+    float4(-0.0438685685,  0.0715038973, 0.1083699433, 0.0),
+    float4( 0.0149985533, -0.0170551220, 0.0185657416, 0.0),
+    float4( 0.0354595464, -0.0363755173, 0.0323577105, 0.0),
+    float4(-0.0203935451, -0.0745134646, 0.1541178105, 0.0),
+    float4( 0.0028391215,  0.0116091792, 0.0576031406, 0.0),
+    float4(-0.0196249165, -0.0478437599, 0.0425324788, 0.0),
+    float4( 0.0729668184, -0.0522721479, 0.0875701738, 0.0),
+    float4(-0.1532114786, -0.1522172360, 0.2735333576, 0.0),
+    float4(-0.0298943708,  0.1737209567, 0.3183226437, 0.0),
+    float4(-0.1656550946, -0.0719748123, 0.1968226893, 0.0),
+    float4(-0.0095653149, -0.2941228294, 0.2039285730, 0.0),
+    float4(-0.1331204501,  0.1220435809, 0.0964000304, 0.0),
+    float4(-0.0403178220, -0.3809901890, 0.3414482621, 0.0),
+    float4( 0.0882988347,  0.0455553367, 0.2918320574, 0.0),
+    float4(-0.1175072503,  0.0388894681, 0.1550289903, 0.0),
+    float4(-0.0533728880, -0.0381621740, 0.0610825723, 0.0),
+    float4( 0.2468512030,  0.3388266965, 0.2949817385, 0.0),
+    float4( 0.2449600832,  0.2042880967, 0.6010089206, 0.0),
+    float4( 0.6424967231,  0.0443461169, 0.4040266177, 0.0),
+    float4( 0.3099913096,  0.1985537725, 0.3454406527, 0.0),
+    float4( 0.0754919457, -0.0634370161, 0.0774910082, 0.0),
+    float4( 0.0531734967,  0.0233182866, 0.0956308795, 0.0),
+    float4( 0.5550298510, -0.0702125778, 0.3265220542, 0.0),
+  ]
+  
+  // 4x4 random texture.
+  private static let kSSAORandomData: [float4] = [
+    float4( 0.63618570,  0.51077760,  0.0, 0.0),
+    float4( 0.50891661, -0.34688258,  0.0, 0.0),
+    float4( 0.62890755, -0.45142945,  0.0, 0.0),
+    float4(-0.34869557, -0.41754699,  0.0, 0.0),
+    float4(-0.12747335, -0.67727395,  0.0, 0.0),
+    float4( 0.84289647,  0.32273283,  0.0, 0.0),
+    float4( 0.14654619,  0.67703445,  0.0, 0.0),
+    float4(-0.88995941, -0.89987678,  0.0, 0.0),
+    float4( 0.16366023,  0.43668146,  0.0, 0.0),
+    float4( 0.37088478, -0.86388887,  0.0, 0.0),
+    float4(-0.76671633,  0.12611534,  0.0, 0.0),
+    float4(-0.51218073, -0.95123229,  0.0, 0.0),
+    float4(-0.57194316, -0.16738459,  0.0, 0.0),
+    float4(-0.89127350,  0.22852176,  0.0, 0.0),
+    float4( 0.73067920,  0.43298104,  0.0, 0.0),
+    float4(-0.41123954,  0.69549418,  0.0, 0.0),
+  ]
 }

@@ -68,6 +68,11 @@ class ARRenderer {
   internal let width: Int
   internal let height: Int
 
+  // Projection & view matrix from pose.
+  internal var projMat = float4x4()
+  internal var viewMat = float4x4()
+  
+  
   /**
    Initializes the core renderer.
    */
@@ -165,6 +170,9 @@ class ARRenderer {
         float4( 0,  0,  1,  0),
         float4( 0,  0,  0,  1)
     ])
+    
+    self.projMat = projMat
+    self.viewMat = viewMat
 
     let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
     params.memory.proj      = projMat
@@ -189,6 +197,9 @@ class ARRenderer {
       float4( 0,  0,  1,  0),
       float4( 0,  0,  0,  1)
     ])
+    
+    self.projMat = pose.projMat
+    self.viewMat = pose.viewMat
     
     let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
     params.memory.proj      = pose.projMat

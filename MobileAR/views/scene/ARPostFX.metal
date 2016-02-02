@@ -259,12 +259,9 @@ fragment float4 lighting(
     // Fetch the light source data.
     constant ARDirectionalLight &light = lights[i];
     
-    // Unpack light data.
-    const float3 l = -normalize((params.normView * float4(light.dir, 0.0)).xyz);
-    
     // Compute light contribution.
-    const float diffFact = max(0.0, dot(n, l));
-    const float specFact = max(0.0, dot(reflect(l, n), e));
+    const float diffFact = max(0.0, dot(n, light.dir));
+    const float specFact = max(0.0, dot(reflect(light.dir, n), e));
     
     ambient += light.ambient;
     diffuse += light.diffuse * diffFact;
