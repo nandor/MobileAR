@@ -38,9 +38,18 @@ struct ARParams {
  Input to the vertex shader.
  */
 struct ARObjectIn {
-  packed_float3 vert;
-  packed_float3 norm;
+  /// Vertex position.
+  packed_float3 v;
+  /// Normal vector.
+  packed_float3 n;
+  /// UV coordinate.
   packed_float2 uv;
+  /// Tangent.
+  packed_float3 t;
+  /// Bitangent.
+  packed_float3 b;
+  /// 8 bytes padding.
+  packed_float2 _;
 };
 
 
@@ -48,18 +57,14 @@ struct ARObjectIn {
  Vertex shader to fragment shader.
  */
 struct ARObjectInOut {
-  float3 vert     [[ user(ver) ]];
-  float3 norm     [[ user(norm) ]];
+  float3 v     [[ user(ver) ]];
+  
   float2 uv       [[ user(uv) ]];
   float4 position [[ position ]];
-};
-
-
-/**
- Pedestal vertex shader to fragment shader.
- */
-struct ARPedestalInOut {
-  float4 position [[ position ]];
+  
+  float3 t        [[ user(t) ]];
+  float3 b        [[ user(b) ]];
+  float3 n        [[ user(n) ]];
 };
 
 
@@ -80,14 +85,22 @@ vertex ARObjectInOut objectVert(
     constant ARParams&       params [[ buffer(1) ]],
     uint                     id     [[ vertex_id ]])
 {
-  float3 vert = float3(in[id].vert);
-  float3 norm = float3(in[id].norm);
-  float2 uv = float2(in[id].uv);
+  // Concatenate matrices.
+  const float4x4 mv = params.view * params.model;
+  const float4x4 nv = params.normView * params.normModel;
   
-  float4 wVert = params.view * float4(vert, 1.0);
-  float4 wNorm = params.normView * float4(norm, 0.0);
+  // Compute view space vertex.
+  float4 v = mv * float4(float3(in[id].v), 1);
   
-  return { wVert.xyz, wNorm.xyz, uv, params.proj * wVert };
+  // Transfer stuff to fragment shader.
+  return {
+      v.xyz,
+      float2(in[id].uv),
+      params.proj * v,
+      (nv * float4(float3(in[id].t))).xyz,
+      (nv * float4(float3(in[id].b))).xyz,
+      (nv * float4(float3(in[id].n))).xyz
+  };
 }
 
 
@@ -100,18 +113,20 @@ fragment ARObjectOut objectFrag(
     texture2d<half> texSpec [[ texture(1) ]],
     texture2d<half> texNorm [[ texture(2) ]])
 {
+  // Decode the normal vector.
   constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
+  const float3 normal = float3(texNorm.sample(texSampler, in.uv).xyz) * 2 - 1;
   
-  float3 dpx = dfdx(in.vert), dpy = dfdy(in.vert);
-  float2 dtx = dfdx(in.uv), dty = dfdy(in.uv);
-  float3 t = normalize(dpx * dty.y - dpy * dtx.x);
-  float3 b = normalize(dpy * dty.y - dpx * dtx.y);
-  float3 n = normalize(in.norm);
+  // Rebuild the change-of-basis matrix.
+  const float3x3 tbn = float3x3(
+      normalize(in.t),
+      normalize(in.b),
+      normalize(in.n)
+  );
   
-  float3 normal = float3(texNorm.sample(texSampler, in.uv).xyz) * 2.0 - 1.0;
-  
+  // Encode the normal vector in 2 channels & sample diffuse & specular.
   return {
-    half2(normalize(float3x3(t, b, n) * normal).xy),
+    half2(normalize(tbn * normal).xy),
     float4(
         float3(texDiff.sample(texSampler, in.uv).xyz),
         float(texSpec.sample(texSampler, in.uv).x)
@@ -122,12 +137,12 @@ fragment ARObjectOut objectFrag(
 /**
  Vertex shader for the pedestal.
  */
-vertex ARPedestalInOut pedestalVert(
+vertex float4 pedestalVert(
     constant float4*         in     [[ buffer(0) ]],
     constant ARParams&       params [[ buffer(1) ]],
     uint                     id     [[ vertex_id ]])
 {
-  return { params.proj * params.view * in[id] };
+  return params.proj * params.view * params.model * in[id];
 }
 
 
@@ -137,5 +152,6 @@ vertex ARPedestalInOut pedestalVert(
 fragment float2 pedestalFrag(
     constant ARParams& params [[ buffer(0) ]])
 {
-  return (normalize((params.normView * float4(0, 1, 0, 0)).xyz)).xy;
+  const float4x4 norm = params.normView * params.normModel;
+  return (normalize((norm * float4(0, 1, 0, 0)).xyz)).xy;
 }

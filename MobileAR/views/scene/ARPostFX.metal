@@ -39,6 +39,11 @@ constant float SSAO_FOCUS = 0.30;
  */
 constant float2 SCREEN_SIZE = float2(667, 375);
 
+/**
+ Very small number.
+ */
+constant float EPS = 1e-2;
+
 
 /**
  Parameters passed to the shader.
@@ -92,8 +97,8 @@ struct ARQuadInOut {
  Converts a depth value to a linear depth value.
  */
 static float linearize(float d) {
-  float f = 100.0;
-  float n = 0.1;
+  const float f = 100.0;
+  const float n = 0.1;
   return (2 * n * f) / (f + n - d * (f - n));
 }
 
@@ -106,7 +111,7 @@ vertex ARQuadInOut fullscreen(
     constant packed_float2*  in     [[ buffer(0) ]],
     uint                     id     [[ vertex_id ]])
 {
-  float2 vert = float2(in[id]);
+  const float2 vert = float2(in[id]);
   
   return {
     { (vert.x + 1.0) * 0.5, (1.0 - vert.y) * 0.5 },
@@ -149,7 +154,7 @@ fragment float ssao(
   // Read data from textures.
   const float2 normal = texNormal.read(uv).xy;
   const float depth = texDepth.read(uv).x;
-  const float3 r = random[(uv.x & 3) << 2 | (uv.y & 3)];
+  const float3 r = random[((uv.x & 3) << 2) | (uv.y & 3)];
   
   // Decode the normal vector and world space position.
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
@@ -162,7 +167,7 @@ fragment float ssao(
   
   // The vertex position is moved a tiny bit into the direction of the normal
   // in order to avoid self-occlusion on larger planar surfaces.
-  const float3 v = vproj.xyz / vproj.w + + n * 0.005;
+  const float3 v = vproj.xyz / vproj.w + n * EPS;
   
   // Compute the change-of-basis matrix.
   const float3 t = normalize(r - n * dot(r, n));
@@ -185,9 +190,12 @@ fragment float ssao(
     const float smplDepth = texDepth.read(smplUV).x;
     
     // Accumulate occlusion.
-    if (abs(linearize(depth) - linearize(smplDepth)) < SSAO_FOCUS) {
-      ao += step(smplDepth, smpl.z);
-    }
+    const float range = smoothstep(
+        0.0,
+        1.0,
+        SSAO_FOCUS / abs(linearize(depth) - linearize(smplDepth))
+    );
+    ao += step(smplDepth, smpl.z) * range;
   }
   
   return min(1.0, pow(1 - ao / SSAO_SAMPLES, SSAO_POWER));
@@ -206,8 +214,8 @@ fragment float4 ssaoBlur(
   
   // Blur in a 4x4 neighbourhood.
   float ao = 0.0f;
-  for (int j = -2; j <= 1; ++j) {
-    for (int i = -2; i <= 1; ++i) {
+  for (int j = -2; j < 2; ++j) {
+    for (int i = -2; i < 2; ++i) {
       ao += texAO.read(uint2(uv + int2(j, i))).x;
     }
   }

@@ -69,20 +69,53 @@ class ARObject {
     
     // Build the vertex buffer.
     let indices = idx.count / 3
-    var vbo = [Float](count: indices * 8, repeatedValue: 0.0)
-    for var i = 0; i < indices; i += 1 {
-      let vert = vv[idx[i * 3 + 0]]
-      let norm = vn[idx[i * 3 + 2]]
-      let uv = vt[idx[i * 3 + 1]]
+    var vbo = [Float](count: indices * 16, repeatedValue: 0.0)
+    for var i = 0; i < indices; i += 3 {
+      let v0 = vv[idx[(i + 0) * 3 + 0]]
+      let v1 = vv[idx[(i + 1) * 3 + 0]]
+      let v2 = vv[idx[(i + 2) * 3 + 0]]
+      let t0 = vt[idx[(i + 0) * 3 + 1]]
+      let t1 = vt[idx[(i + 1) * 3 + 1]]
+      let t2 = vt[idx[(i + 2) * 3 + 1]]
       
-      vbo[i * 8 + 0] = vert.x
-      vbo[i * 8 + 1] = vert.y
-      vbo[i * 8 + 2] = vert.z
-      vbo[i * 8 + 3] = norm.x
-      vbo[i * 8 + 4] = norm.y
-      vbo[i * 8 + 5] = norm.z
-      vbo[i * 8 + 6] = uv.x
-      vbo[i * 8 + 7] = uv.y
+      let ve0 = v1 - v0, ve1 = v2 - v0
+      let te0 = t1 - t0, te1 = t2 - t0
+      
+      let f = 1.0 / (te0.x * te1.y - te0.y * te1.x)
+      let t = f * (te1.y * ve0 - te0.y * ve1)
+      let b = f * (te0.x * ve1 - te1.x * ve0)
+      
+      vbo[(i + 0) * 16 +  0] = v0.x
+      vbo[(i + 0) * 16 +  1] = v0.y
+      vbo[(i + 0) * 16 +  2] = v0.z
+      vbo[(i + 0) * 16 +  6] = t0.x
+      vbo[(i + 0) * 16 +  7] = t0.y
+      
+      vbo[(i + 1) * 16 +  0] = v1.x
+      vbo[(i + 1) * 16 +  1] = v1.y
+      vbo[(i + 1) * 16 +  2] = v1.z
+      vbo[(i + 1) * 16 +  6] = t1.x
+      vbo[(i + 1) * 16 +  7] = t1.y
+      
+      vbo[(i + 2) * 16 +  0] = v2.x
+      vbo[(i + 2) * 16 +  1] = v2.y
+      vbo[(i + 2) * 16 +  2] = v2.z
+      vbo[(i + 2) * 16 +  6] = t2.x
+      vbo[(i + 2) * 16 +  7] = t2.y
+      
+      for var j = 0, k = i; j < 3; j += 1, k += 1 {
+        let norm = vn[idx[k * 3 + 2]]
+        
+        vbo[k * 16 +  3] = norm.x
+        vbo[k * 16 +  4] = norm.y
+        vbo[k * 16 +  5] = norm.z
+        vbo[k * 16 +  8] = t.x
+        vbo[k * 16 +  9] = t.y
+        vbo[k * 16 + 10] = t.z
+        vbo[k * 16 + 11] = b.x
+        vbo[k * 16 + 12] = b.y
+        vbo[k * 16 + 13] = b.z
+      }
     }
     
     // Create the object.
