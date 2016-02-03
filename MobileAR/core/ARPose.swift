@@ -16,8 +16,15 @@ import simd
     self.projMat = projMat
   }
 
-  convenience init(rx: Float, ry: Float, rz: Float, tx: Float, ty: Float, tz: Float) {
-
+  convenience init(
+      params: ARParameters,
+      rx: Float,
+      ry: Float,
+      rz: Float,
+      tx: Float,
+      ty: Float,
+      tz: Float)
+  {
     // Pitch.
     let rotX = float4x4([
         float4(+cos(rx), 0, -sin(rx), 0),
@@ -51,18 +58,14 @@ import simd
     ])
 
     // Compute the projection matrix.
-    let aspect = Float(667) / Float(375)
-    let tanFOV = Float(tan((45.0 / 180.0 * M_PI) / 2.0))
-    let yScale = 1.0 / tanFOV
-    let xScale = 1.0 / (aspect * tanFOV)
     let f: Float = 100.0
     let n: Float = 0.1
 
     self.init(
         viewMat: trans * rotZ * rotX * rotY,
         projMat: float4x4([
-            float4(xScale, 0, 0, 0),
-            float4(0, yScale, 0, 0),
+            float4(params.fx / params.cx, 0, 0, 0),
+            float4(0, params.fy / params.cy, 0, 0),
             float4(0, 0, (f + n) / (n - f), -1),
             float4(0, 0, 2 * n * f / (n - f), 0)
         ])

@@ -261,6 +261,7 @@ class AREntity {
     
     // Update the extrinsic parameters in the renderer.
     renderer.updatePose(ARPose(
+        params: params!,
         rx: angle,
         ry: 0.0,
         rz: 0.3,

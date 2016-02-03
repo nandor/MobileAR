@@ -25,6 +25,9 @@ class AREnvironmentViewController : UIViewController {
   // Renderer used to display the sphere.
   private var renderer: AREnvironmentViewRenderer!
 
+  // Camera parameters.
+  private var params: ARParameters!
+
   /**
    Initializes the controller with an environment.
    */
@@ -62,6 +65,9 @@ class AREnvironmentViewController : UIViewController {
    */
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
+
+    // Load the camera parameters.
+    params = try! ARParameters.loadFromFile()
 
     // Sets the tile of the view.
     title = environment.name ?? "Environment"
@@ -113,6 +119,7 @@ class AREnvironmentViewController : UIViewController {
     }
 
     renderer.updatePose(ARPose(
+        params: params,
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),

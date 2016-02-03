@@ -55,8 +55,8 @@
       const auto pix = ptr[c];
 
       // Cast a ray through the pixel.
-      const auto x = static_cast<float>(c) / w - 0.5f;
-      const auto y = 0.5f - static_cast<float>(r) / h;
+      const auto x = static_cast<float>(c) / w * 2.0f - 1.0f;
+      const auto y = 1.0f - static_cast<float>(r) / h * 2.0f;
       const auto r = simd::normalize(simd::float3([pose unproject: {x, y, 0}]));
 
       // Project it onto the unit sphere & compute UV.

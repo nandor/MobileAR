@@ -33,10 +33,13 @@ class AREnvironmentCaptureController
   private var builder: AREnvironmentBuilder!
 
   // Width of the environment map.
-  private let kWidth = 1024
+  private let kWidth = 2048
 
   // Height of the environment map.
-  private let kHeight = 512
+  private let kHeight = 1024
+
+  // Camera parameters.
+  private var params: ARParameters!
 
   /**
    Called when the view is first created.
@@ -62,6 +65,9 @@ class AREnvironmentCaptureController
    */
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
+
+    // Load the camera parameters.
+    params = try! ARParameters.loadFromFile()
 
     // Request a location update.
     locationManager.startUpdatingLocation()
@@ -180,6 +186,7 @@ class AREnvironmentCaptureController
       return
     }
     builder.update(frame, pose: ARPose(
+        params: params,
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),
@@ -202,6 +209,7 @@ class AREnvironmentCaptureController
     }
 
     renderer.updatePose(ARPose(
+        params: params,
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),
