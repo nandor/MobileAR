@@ -4,8 +4,31 @@
 
 import simd
 
+
 /**
- Represents a SE3 pose.
+ Helper method to create a projection matrix.
+ */
+extension float4x4 {
+  /**
+   Initializer to create a projection matrix.
+   */
+  init(aspect: Float, fov: Float, n: Float, f: Float) {
+    let tanFOV = Float(tan((Double(fov) / 180.0 * M_PI) / 2.0))
+    let yScale = 1.0 / tanFOV
+    let xScale = 1.0 / (aspect * tanFOV)
+  
+    self.init([
+        float4(xScale, 0, 0, 0),
+        float4(0, yScale, 0, 0),
+        float4(0, 0, (f + n) / (n - f), -1),
+        float4(0, 0, 2 * n * f / (n - f), 0)
+    ])
+  }
+}
+
+
+/**
+ Represents a pose.
  */
 @objc class ARPose : NSObject {
   let viewMat: float4x4
@@ -125,6 +148,9 @@ import simd
     )
   }
 
+  /**
+   Performs a reverse projection, from screen space to world space.
+   */
   @objc func unproject(v: float3) -> float3 {
     let w = viewMat.inverse * projMat.inverse * float4(v.x, v.y, v.z, 1.0)
     return float3(w.x / w.w, w.y / w.w, w.z / w.w)
