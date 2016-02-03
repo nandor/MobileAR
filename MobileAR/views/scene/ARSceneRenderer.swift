@@ -61,12 +61,14 @@ class ARSceneRenderer : ARRenderer {
       "uk.ac.ic.MobileAR.ARSceneRenderer",
       DISPATCH_QUEUE_CONCURRENT
   )
+
+  // Object cache.
+  private var meshes: [String: ARMesh?] = [String: ARMesh?]()
   
   // Objects to be rendered.
-  private var objects: [ARObject] = []
-
+  internal var objects: [ARObject] = []
   // Light sources to be used.
-  private var lights: [ARLight] = []
+  internal var lights: [ARLight] = []
   
   
   /**
@@ -121,29 +123,38 @@ class ARSceneRenderer : ARRenderer {
     geomEncoder.setStencilReferenceValue(0xFF)
     geomEncoder.setDepthStencilState(objectDepthState)
     geomEncoder.setRenderPipelineState(objectRenderState)
-    geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
     
     for object in objects {
-      geomEncoder.setVertexBuffer(object.vbo, offset: 0, atIndex: 0)
-      geomEncoder.setFragmentTexture(object.texDiffuse, atIndex: 0)
-      geomEncoder.setFragmentTexture(object.texSpecular, atIndex: 1)
-      geomEncoder.setFragmentTexture(object.texNormal, atIndex: 2)
-      if let ibo = object.ibo {
-        geomEncoder.drawIndexedPrimitives(
-            .Triangle,
-            indexCount: object.indices,
-            indexType: .UInt32,
-            indexBuffer: ibo,
-            indexBufferOffset: 0
-        )
-      } else {
-        geomEncoder.drawPrimitives(
-            .Triangle,
-            vertexStart: 0,
-            vertexCount: object.indices
-        )
+      switch meshes[object.mesh] {
+        case .None:
+          // If the object was not encountered already, queue loading it.
+          self.meshes[object.mesh] = nil
+          dispatch_async(backgroundQueue) {
+            self.meshes[object.mesh] = try? ARMesh.loadObject(
+                self.device,
+                url: NSBundle.mainBundle().URLForResource(object.mesh, withExtension: "obj")!
+            )
+          }
+
+        case .Some(.None):
+          // If the object is being loaded, skip.
+          continue
+
+        case .Some(.Some(let mesh)):
+          // Set up the model matrix.
+          let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
+          params.memory.model     = object.model
+          params.memory.invModel  = object.model.inverse
+          params.memory.normModel = object.model.inverse.transpose
+
+          // If the mesh was loaded, render it.
+          geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
+          geomEncoder.setVertexBuffer(mesh.vbo, offset: 0, atIndex: 0)
+          geomEncoder.setFragmentTexture(mesh.texDiffuse, atIndex: 0)
+          geomEncoder.setFragmentTexture(mesh.texSpecular, atIndex: 1)
+          geomEncoder.setFragmentTexture(mesh.texNormal, atIndex: 2)
+          geomEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: mesh.indices)
       }
-      
     }
     geomEncoder.endEncoding()
     
@@ -489,10 +500,10 @@ class ARSceneRenderer : ARRenderer {
     
     // Create a sample light source.
     lights.append(ARLight(
-        direction: float4(-1, -1, -1, 0.0),
-        ambient:   float4(0.4, 0.4, 0.4, 0.0),
-        diffuse:   float4(0.7, 0.7, 0.7, 0.0),
-        specular:  float4(1.0, 1.0, 1.0, 1.0)
+        direction: float4(-1.0, -1.0, -1.0, 0.0),
+        ambient:   float4( 0.4,  0.4,  0.4, 0.0),
+        diffuse:   float4( 0.7,  0.7,  0.7, 0.0),
+        specular:  float4( 1.0,  1.0,  1.0, 1.0)
     ))
     
     // Create a buffer for 32 light sources.
@@ -625,17 +636,6 @@ class ARSceneRenderer : ARRenderer {
     objectRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)
-    
-    dispatch_async(backgroundQueue) {
-      do {
-        self.objects = [try ARObject.loadObject(
-          self.device,
-          url: NSBundle.mainBundle().URLForResource("cube", withExtension: "obj")!
-        )]
-      } catch {
-        print("\(error)")
-      }
-    }
   }
   
   

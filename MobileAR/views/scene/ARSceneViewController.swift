@@ -85,14 +85,35 @@ class AREntity {
       return
     }
 
-    // Initialize components.
-    tracker = ARSceneTracker(parameters: params)
-    renderer = try! ARSceneRenderer(view: view)
+    // Start tracking orientation.
     motionManager = CMMotionManager()
     motionManager.deviceMotionUpdateInterval = 1 / 30.0
     motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
         CMAttitudeReferenceFrame.XTrueNorthZVertical
     )
+
+    // Initialize the scene tracker.
+    tracker = ARSceneTracker(parameters: params)
+
+
+    // Initialize the renderer.
+    renderer = try! ARSceneRenderer(view: view)
+    renderer.lights.append(ARLight(
+        direction: float4(-1, -1, -1, 0.0),
+        ambient: float4(0.4, 0.4, 0.4, 0.0),
+        diffuse: float4(1.0, 1.0, 1.0, 0.0),
+        specular: float4(1.0, 1.0, 1.0, 0.0)
+    ))
+    renderer.objects.append(ARObject(
+        mesh: "cube",
+        model: float4x4([
+          float4(1, 0, 0, 0),
+          float4(0, 1, 0, 0),
+          float4(0, 0, 1, 0),
+          float4(0, 0, 0, 1)
+        ])
+    ))
+
 
     // Timer to run the rendering/update loop.
     timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
