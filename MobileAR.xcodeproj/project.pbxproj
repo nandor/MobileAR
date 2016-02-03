@@ -34,6 +34,7 @@
 		C13F85F7CDF965ACFD469767 /* ARSceneTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8476C472F0C2A4F86A4B /* ARSceneTracker.mm */; };
 		C13F86C929B9293243D5D9C1 /* AREnvironmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8ACBD08B6BB368F59ED9 /* AREnvironmentViewController.swift */; };
 		C13F875D61FE475D5A12851E /* ARCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8336ED5C5246986DFBC5 /* ARCamera.swift */; };
+		C13F87C7A162442BE302226F /* AREnvironmentBuilder.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F80C8A2ABC20DE423A74C /* AREnvironmentBuilder.mm */; };
 		C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8DAF8EBDD0C4C7F91DCF /* ARAppDelegate.swift */; };
 		C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */ = {isa = PBXBuildFile; fileRef = C13F8B19027A11598919DBE2 /* ARPostFX.metal */; };
 		C13F8922F94928E19AF4B060 /* ARMesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F805F9FDFCD673FF1121C /* ARMesh.swift */; };
@@ -69,7 +70,9 @@
 		7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7AFCF84C1BCE40CB00A108F9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C13F805F9FDFCD673FF1121C /* ARMesh.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARMesh.swift; sourceTree = "<group>"; };
+		C13F80C8A2ABC20DE423A74C /* AREnvironmentBuilder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AREnvironmentBuilder.mm; sourceTree = "<group>"; };
 		C13F80FE6B3B6F2AE0E31570 /* MedianCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MedianCutSampler.h; path = ar/MedianCutSampler.h; sourceTree = "<group>"; };
+		C13F8122CE1435E12E5EA7C5 /* ARParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARParams.h; sourceTree = "<group>"; };
 		C13F813B6165E227B70C96C7 /* AREnvironmentViewRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironmentViewRenderer.swift; sourceTree = "<group>"; };
 		C13F81F38B539629D86DBBCB /* AREnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AREnvironment.swift; sourceTree = "<group>"; };
 		C13F83205E36D9313B0C5705 /* PhotoSphereBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PhotoSphereBuilder.cpp; path = ar/PhotoSphereBuilder.cpp; sourceTree = "<group>"; };
@@ -81,6 +84,7 @@
 		C13F85C9D9D52C8EBB2DDBCC /* UIImage+MTLTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+MTLTexture.h"; sourceTree = "<group>"; };
 		C13F86B2B5B85BE1365D2D33 /* ARSceneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARSceneViewController.swift; sourceTree = "<group>"; };
 		C13F86DB5D164F37984285F8 /* UIImage+cvMat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+cvMat.h"; sourceTree = "<group>"; };
+		C13F8719222268FFF85FDECB /* AREnvironmentBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AREnvironmentBuilder.h; sourceTree = "<group>"; };
 		C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARRenderer.swift; sourceTree = "<group>"; };
 		C13F879F0B032ECFC39BCFDE /* ARObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARObject.swift; sourceTree = "<group>"; };
 		C13F87AF09D79753A79B4B45 /* MedianCutSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MedianCutSampler.cpp; path = ar/MedianCutSampler.cpp; sourceTree = "<group>"; };
@@ -184,6 +188,7 @@
 				7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */,
 				7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */,
 				C13F879F0B032ECFC39BCFDE /* ARObject.swift */,
+				C13F8122CE1435E12E5EA7C5 /* ARParams.h */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -230,6 +235,8 @@
 				C13F8C65C26D8B7CB74A066B /* AREnvironmentListController.swift */,
 				C13F813B6165E227B70C96C7 /* AREnvironmentViewRenderer.swift */,
 				C13F847015773B636A11DF21 /* AREnvironment.metal */,
+				C13F80C8A2ABC20DE423A74C /* AREnvironmentBuilder.mm */,
+				C13F8719222268FFF85FDECB /* AREnvironmentBuilder.h */,
 			);
 			path = environment;
 			sourceTree = "<group>";
@@ -353,6 +360,7 @@
 				C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */,
 				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 				C13F8C886918E43EBB1E4A6F /* ARObject.swift in Sources */,
+				C13F87C7A162442BE302226F /* AREnvironmentBuilder.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -458,6 +466,9 @@
 				HEADER_SEARCH_PATHS = ./MobileAR/;
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_FAST_MATH = YES;
+				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
+				MTL_LANGUAGE_REVISION = Metal11;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
@@ -482,6 +493,9 @@
 				HEADER_SEARCH_PATHS = ./MobileAR/;
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_FAST_MATH = YES;
+				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
+				MTL_LANGUAGE_REVISION = Metal11;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;

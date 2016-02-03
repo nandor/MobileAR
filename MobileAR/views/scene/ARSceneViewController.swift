@@ -16,25 +16,25 @@ class AREntity {
  */
 @objc class ARSceneViewController : UIViewController, ARCameraDelegate {
   // Camera parameters.
-  internal var params: ARParameters?
+  private var params: ARParameters?
 
   // Environment being used.
-  internal var environment: AREnvironment?
+  private var environment: AREnvironment?
 
   // Entities being rendered.
-  internal var entities: [AREntity] = []
+  private var entities: [AREntity] = []
 
   // Camera wrapper.
-  internal var camera: ARCamera!
+  private var camera: ARCamera!
 
   // Pose tracker.
-  internal var tracker: ARSceneTracker!
+  private var tracker: ARSceneTracker!
 
   // Renderer used to draw the scene.
-  internal var renderer: ARSceneRenderer!
+  private var renderer: ARSceneRenderer!
 
   // Motion manager used to capture attitude data.
-  internal var motionManager: CMMotionManager!
+  private var motionManager: CMMotionManager!
 
   // Timer used to redraw frames.
   private var timer: CADisplayLink!

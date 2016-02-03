@@ -5,13 +5,20 @@
 import CoreLocation
 import UIKit
 
-class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelegate {
+class AREnvironmentCaptureController
+    : UIViewController
+    , CLLocationManagerDelegate
+    , ARCameraDelegate
+{
 
   // Location manager used to sort environments by distance.
   private var locationManager : CLLocationManager!
 
   // Motion manager used to capture attitude data.
   private var motionManager: CMMotionManager!
+
+  // Camera wrapper.
+  private var camera: ARCamera!
 
   // Location provided by the location manager.
   private var location : CLLocation?
@@ -21,6 +28,15 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
 
   // Renderer used to display the sphere.
   private var renderer: AREnvironmentViewRenderer!
+
+  // Class used to build the environment.
+  private var builder: AREnvironmentBuilder!
+
+  // Width of the environment map.
+  private let kWidth = 1024
+
+  // Height of the environment map.
+  private let kHeight = 512
 
   /**
    Called when the view is first created.
@@ -32,7 +48,6 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
     locationManager.delegate = self
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.requestWhenInUseAuthorization()
-    locationManager.startUpdatingLocation()
 
     // Set up motionManager updates at a rate of 30Hz.
     motionManager = CMMotionManager()
@@ -48,6 +63,9 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
 
+    // Request a location update.
+    locationManager.startUpdatingLocation()
+
     // Hide the toolbar and show the navigation bar.
     navigationController?.hidesBarsOnSwipe = false;
     navigationController?.setNavigationBarHidden(false, animated: animated)
@@ -62,9 +80,23 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
         action: Selector("onSave")
     )
 
+    // Create the environment builder.
+    builder = AREnvironmentBuilder(width: kWidth, height: kHeight)
+    renderer = try! AREnvironmentViewRenderer(view: view, width: kWidth, height: kHeight)
+
     // Timer to run the rendering/update loop.
     timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+  }
+
+  /**
+   Called after the view has appeared.
+   */
+  override func viewDidAppear(animated: Bool) {
+    super.viewDidAppear(animated)
+
+    camera = try! ARCamera(delegate: self)
+    camera?.start()
   }
 
   /**
@@ -73,6 +105,7 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
   override func viewWillDisappear(animated: Bool) {
     super.viewWillDisappear(animated)
 
+    camera?.stop()
     timer.invalidate()
   }
 
@@ -139,6 +172,15 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
     presentViewController(alert, animated: true, completion: nil)
   }
 
+  /**
+   Processes a frame from the device's camera.
+   */
+  func onCameraFrame(frame: UIImage) {
+    guard let attitude = motionManager.deviceMotion?.attitude else {
+      return
+    }
+    builder.update(frame, attitude: attitude)
+  }
 
   /**
    Called when attitude is refreshed. Renders feedback to the user.
@@ -147,7 +189,11 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
     guard let attitude = motionManager.deviceMotion?.attitude else {
       return
     }
-    /*
+
+    if let preview = builder.getPreview() {
+      renderer.update(preview)
+    }
+
     renderer.updatePose(
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
@@ -157,6 +203,5 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
         tz: 0.0
     )
     renderer.renderFrame()
-    */
   }
 }

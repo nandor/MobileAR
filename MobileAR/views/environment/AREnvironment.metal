@@ -7,6 +7,8 @@
 #include <metal_stdlib>
 #include <metal_texture>
 
+#include "ARParams.h"
+
 using namespace metal;
 
 /**
@@ -18,18 +20,6 @@ constant float PI = 3.1415926535897932384626433833795;
  Number of regions to split the sphere into.
  */
 constant int SPLIT = 9;
-
-
-
-/**
- Parameters passed to the shader.
- */
-struct ARSphereParams {
-  /// Perspective projection matrix.
-  float4x4 proj;
-  /// View matrix.
-  float4x4 view;
-};
 
 
 /**
@@ -59,7 +49,7 @@ static inline T alpha(T d, T w) {
  */
 vertex ARSphereInOut sphereVert(
     constant packed_float3*  in     [[ buffer(0) ]],
-    constant ARSphereParams& params [[ buffer(1) ]],
+    constant ARParams&       params [[ buffer(1) ]],
     uint                     id     [[ vertex_id ]])
 {
   float3 vert = float3(in[id]);

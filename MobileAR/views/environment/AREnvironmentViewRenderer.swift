@@ -34,9 +34,9 @@ class AREnvironmentViewRenderer : ARRenderer {
 
 
   /**
-   Initializes the environment renderer.
+   Initializes the environment renderer using an existing environment.
    */
-  init(view: UIView, environment: AREnvironment) throws {
+  override required init(view: UIView) throws {
     try super.init(view: view)
 
     // Set up the depth state.
@@ -85,6 +85,7 @@ class AREnvironmentViewRenderer : ARRenderer {
         length: sizeofValue(vbo[0]) * vbo.count,
         options: MTLResourceOptions()
     )
+    sphereVBO.label = "VBOSphere"
 
     // Initialize the IBO of the sphere.
     var ibo = [UInt32](count: kSphereSlices * kSphereStacks * 6, repeatedValue: 0)
@@ -105,6 +106,51 @@ class AREnvironmentViewRenderer : ARRenderer {
         length: sizeofValue(ibo[0]) * ibo.count,
         options: MTLResourceOptions()
     )
+    sphereIBO.label = "IBOSphere"
+  }
+
+  /**
+   Initializes the renderer from an environment.
+   */
+  convenience init(view: UIView, environment: AREnvironment) throws {
+
+    // Initialize the rest of the stuff.
+    try self.init(view: view)
+
+    // Initialize the environment map texture.
+    let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+        .BGRA8Unorm,
+        width: Int(environment.map.size.width),
+        height: Int(environment.map.size.height),
+        mipmapped: false
+    )
+    texture = device.newTextureWithDescriptor(texDesc)
+    environment.map.toMTLTexture(texture)
+  }
+
+  /**
+   Initializes the renderer from a given texture size.
+   */
+  convenience init(view: UIView, width: Int, height: Int) throws {
+
+    // Initialize the rest.
+    try self.init(view: view)
+
+    // Initialize the environment map texture.
+    let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+        .BGRA8Unorm,
+        width: width,
+        height: height,
+        mipmapped: false
+    )
+    texture = device.newTextureWithDescriptor(texDesc)
+  }
+
+  /**
+   Updates the underlying texture.
+   */
+  func update(image: UIImage) {
+    image.toMTLTexture(texture)
   }
 
   /**
@@ -114,14 +160,12 @@ class AREnvironmentViewRenderer : ARRenderer {
 
     // Create the render command descriptor.
     let renderDesc = MTLRenderPassDescriptor()
-    let color = renderDesc.colorAttachments[0]
-    color.texture = target
-    color.loadAction = .DontCare
-    color.storeAction = .Store
-
-    let encoder = buffer.renderCommandEncoderWithDescriptor(renderDesc)
+    renderDesc.colorAttachments[0].texture = target
+    renderDesc.colorAttachments[0].loadAction = .DontCare
+    renderDesc.colorAttachments[0].storeAction = .Store
 
     // Render the sphere.
+    let encoder = buffer.renderCommandEncoderWithDescriptor(renderDesc)
     encoder.setDepthStencilState(depthState)
     encoder.setRenderPipelineState(renderState)
     encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 0)

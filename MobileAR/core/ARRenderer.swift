@@ -147,16 +147,16 @@ class ARRenderer {
     ])
 
     // Compute the view matrix.
-    let viewMat = trans * rotZ * rotX * rotY
+    viewMat = trans * rotZ * rotX * rotY
 
     // Compute the projection matrix.
     let aspect = Float(view.frame.width) / Float(view.frame.height)
     let tanFOV = Float(tan((45.0 / 180.0 * M_PI) / 2.0))
     let yScale = 1.0 / tanFOV
     let xScale = 1.0 / (aspect * tanFOV)
-    let f: Float = 200.0
+    let f: Float = 100.0
     let n: Float = 0.1
-    let projMat = float4x4([
+    projMat = float4x4([
         float4(xScale,      0,                   0,  0),
         float4(     0, yScale,                   0,  0),
         float4(     0,      0,   (f + n) / (n - f), -1),
@@ -170,9 +170,6 @@ class ARRenderer {
         float4( 0,  0,  1,  0),
         float4( 0,  0,  0,  1)
     ])
-    
-    self.projMat = projMat
-    self.viewMat = viewMat
 
     let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
     params.memory.proj      = projMat

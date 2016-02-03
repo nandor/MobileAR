@@ -3,5 +3,6 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 #import "ARCalibrator.h"
+#import "AREnvironmentBuilder.h"
 #import "ARSceneTracker.h"
 #import "UIImage+MTLTexture.h"

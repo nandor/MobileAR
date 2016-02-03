@@ -7,6 +7,8 @@
 #include <metal_stdlib>
 #include <metal_texture>
 
+#include "ARParams.h"
+
 using namespace metal;
 
 /**
@@ -43,29 +45,6 @@ constant float2 SCREEN_SIZE = float2(667, 375);
  Very small number.
  */
 constant float EPS = 1e-2;
-
-
-/**
- Parameters passed to the shader.
- */
-struct ARParams {
-  /// Projection matrix.
-  float4x4 proj;
-  /// Inverse projection matrix.
-  float4x4 invProj;
-  /// View matrix.
-  float4x4 view;
-  /// Normal matrix for the view.
-  float4x4 normView;
-  /// Inverse view matrix.
-  float4x4 invView;
-  /// Model matrix.
-  float4x4 model;
-  /// Normal matrix for the model.
-  float4x4 normModel;
-  /// Inverse model matrix.
-  float4x4 invModel;
-};
 
 
 /**
