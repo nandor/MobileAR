@@ -8,13 +8,22 @@
 
 + (UIImage *)imageWithCvMat:(const cv::Mat &)mtx
 {
+  uint32_t flags;
   CGColorSpaceRef colorSpace;
+  
   switch (mtx.elemSize()) {
     case 1: {
+      flags = kCGImageAlphaNone | kCGBitmapByteOrderDefault;
       colorSpace = CGColorSpaceCreateDeviceGray();
       break;
     }
     case 3: {
+      flags = kCGImageAlphaNone | kCGBitmapByteOrderDefault;
+      colorSpace = CGColorSpaceCreateDeviceRGB();
+      break;
+    }
+    case 4: {
+      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrderDefault;
       colorSpace = CGColorSpaceCreateDeviceRGB();
       break;
     }
@@ -32,9 +41,9 @@
       8 * mtx.elemSize(),                            // bits per pixel
       mtx.step[0],                                   // bytesPerRow
       colorSpace,                                    // colorspace
-      kCGImageAlphaNone | kCGBitmapByteOrderDefault, // bitmap info
+      flags,                                         // bitmap info
       provider,                                      // CGDataProviderRef
-      NULL,                                          // decode
+      nil,                                           // decode
       false,                                         // should interpolate
       kCGRenderingIntentDefault                      // intent
   );

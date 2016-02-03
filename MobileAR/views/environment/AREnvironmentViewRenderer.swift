@@ -125,6 +125,7 @@ class AREnvironmentViewRenderer : ARRenderer {
         mipmapped: false
     )
     texture = device.newTextureWithDescriptor(texDesc)
+    texture.label = "TEXEnvironment"
     environment.map.toMTLTexture(texture)
   }
 
@@ -144,6 +145,7 @@ class AREnvironmentViewRenderer : ARRenderer {
         mipmapped: false
     )
     texture = device.newTextureWithDescriptor(texDesc)
+    texture.label = "TEXEnvironment"
   }
 
   /**

@@ -32,14 +32,15 @@
       break;
     case 32:
       colorspace = CGColorSpaceCreateDeviceRGB();
-      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
+      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrderDefault;
       break;
     default:
       colorspace = nil;
       flags = 0;
+      NSAssert(NO, @"Invalid image format.");
       break;
   }
-  
+
   auto context = CGBitmapContextCreate(
       rawData.get(),
       width,

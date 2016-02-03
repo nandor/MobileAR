@@ -194,14 +194,14 @@ class AREnvironmentCaptureController
       renderer.update(preview)
     }
 
-    renderer.updatePose(
+    renderer.updatePose(ARPose(
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0
-    )
+    ))
     renderer.renderFrame()
   }
 }

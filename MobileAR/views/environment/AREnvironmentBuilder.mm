@@ -29,9 +29,9 @@
   width = width_;
   height = height_;
   preview = cv::Mat::zeros(
-      static_cast<int>(width),
       static_cast<int>(height),
-      CV_8UC3
+      static_cast<int>(width),
+      CV_8UC4
   );
 
   return self;
@@ -39,7 +39,16 @@
 
 
 - (void)update:(UIImage*)image attitude:(CMAttitude*)attitude {
-
+  
+  for (int r = 0; r < preview.rows; ++r) {
+    auto ptr = preview.ptr<cv::Vec4b>(r);
+    for (int c = 0; c < preview.cols; c += 1) {
+      ptr[c][0] = 0xFF;
+      ptr[c][1] = 0xFF;
+      ptr[c][2] = 0xFF;
+      ptr[c][3] = 0xFF;
+    }
+  }
 }
 
 
