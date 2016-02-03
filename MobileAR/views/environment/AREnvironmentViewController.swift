@@ -24,9 +24,7 @@ class AREnvironmentViewController : UIViewController {
 
   // Renderer used to display the sphere.
   private var renderer: AREnvironmentViewRenderer!
-
-  // Camera parameters.
-  private var params: ARParameters!
+  
 
   /**
    Initializes the controller with an environment.
@@ -65,10 +63,7 @@ class AREnvironmentViewController : UIViewController {
    */
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
-
-    // Load the camera parameters.
-    params = try! ARParameters.loadFromFile()
-
+    
     // Sets the tile of the view.
     title = environment.name ?? "Environment"
 
@@ -118,8 +113,20 @@ class AREnvironmentViewController : UIViewController {
       return
     }
 
+    let aspect = Float(view.frame.size.width) / Float(view.frame.size.height)
+    let tanFOV = Float(tan((45.0 / 180.0 * M_PI) / 2.0))
+    let yScale = 1.0 / tanFOV
+    let xScale = 1.0 / (aspect * tanFOV)
+    let f: Float = 100.0
+    let n: Float = 0.1
+    
     renderer.updatePose(ARPose(
-        params: params,
+        projMat: float4x4([
+            float4(xScale, 0, 0, 0),
+            float4(0, yScale, 0, 0),
+            float4(0, 0, (f + n) / (n - f), -1),
+            float4(0, 0, 2 * n * f / (n - f), 0)
+        ]),
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),
