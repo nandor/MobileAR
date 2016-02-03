@@ -7,6 +7,8 @@
 
 
 @class AREnvironment;
+@class ARPose;
+
 
 /**
  Bridge between Swift and C++ spherical stitching.
@@ -21,7 +23,7 @@
 /**
  Updates the preview with a frame.
 */
-- (void)update:(UIImage*)image attitude:(CMAttitude*)attitude;
+- (void)update:(UIImage*)image pose:(ARPose*)pose;
 
 /**
  Returns the preview image.

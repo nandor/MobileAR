@@ -101,4 +101,9 @@ import simd
         ])
     )
   }
+
+  @objc func unproject(v: float3) -> float3 {
+    let w = viewMat.inverse * projMat.inverse * float4(v.x, v.y, v.z, 1.0)
+    return float3(w.x / w.w, w.y / w.w, w.z / w.w)
+  }
 }

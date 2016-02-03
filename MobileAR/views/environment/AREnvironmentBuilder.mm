@@ -4,8 +4,10 @@
 
 #import "AREnvironmentBuilder.h"
 #import "UIImage+cvMat.h"
+#import "MobileAR-Swift.h"
 
 #include <opencv2/opencv.hpp>
+#include <simd/simd.h>
 
 
 @implementation AREnvironmentBuilder
@@ -17,6 +19,9 @@
   
   // OpenCV matrix holding the map.
   cv::Mat preview;
+
+  // OpenCV version of the current frame.
+  cv::Mat frame;
 }
 
 
@@ -38,15 +43,33 @@
 }
 
 
-- (void)update:(UIImage*)image attitude:(CMAttitude*)attitude {
-  
-  for (int r = 0; r < preview.rows; ++r) {
-    auto ptr = preview.ptr<cv::Vec4b>(r);
-    for (int c = 0; c < preview.cols; c += 1) {
-      ptr[c][0] = 0xFF;
-      ptr[c][1] = 0xFF;
-      ptr[c][2] = 0xFF;
-      ptr[c][3] = 0xFF;
+- (void)update:(UIImage*)image pose:(ARPose*)pose {
+  [image toCvMat: frame];
+
+  auto w = static_cast<float>(frame.cols);
+  auto h = static_cast<float>(frame.rows);
+
+  for (int r = 0; r < frame.rows; ++r) {
+    auto ptr = frame.ptr<cv::Vec4b>(r);
+    for (int c = 0; c < frame.cols; ++c) {
+      const auto pix = ptr[c];
+
+      // Cast a ray through the pixel.
+      const auto x = static_cast<float>(c) / w - 0.5f;
+      const auto y = 0.5f - static_cast<float>(r) / h;
+      const auto r = simd::normalize(simd::float3([pose unproject: {x, y, 0}]));
+
+      // Project it onto the unit sphere & compute UV.
+      const auto l = static_cast<float>(simd::length(r));
+      const auto u = static_cast<float>((atan2(r.y, r.x) - M_PI / 2) / (2 * M_PI));
+      const auto v = static_cast<float>(1.0 - acos(-r.z / l) / M_PI);
+
+      // Compute texture coordinate, wrap around.
+      const auto fx = (static_cast<int>(preview.cols * u) + preview.cols) % preview.cols;
+      const auto fy = (static_cast<int>(preview.rows * v) + preview.rows) % preview.rows;
+
+      // Write the preview image.
+      preview.at<cv::Vec4b>(fy, fx) = { ptr[c][2], ptr[c][1], ptr[c][0], ptr[c][3] };
     }
   }
 }

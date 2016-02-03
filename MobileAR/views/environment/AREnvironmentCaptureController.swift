@@ -179,7 +179,14 @@ class AREnvironmentCaptureController
     guard let attitude = motionManager.deviceMotion?.attitude else {
       return
     }
-    builder.update(frame, attitude: attitude)
+    builder.update(frame, pose: ARPose(
+        rx: -Float(attitude.pitch),
+        ry: -Float(attitude.yaw),
+        rz: Float(attitude.roll),
+        tx: 0.0,
+        ty: 0.0,
+        tz: 0.0
+    ))
   }
 
   /**
