@@ -34,7 +34,10 @@
       colorspace = CGColorSpaceCreateDeviceRGB();
       flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
       break;
-    default: colorspace = nil; break;
+    default:
+      colorspace = nil;
+      flags = 0;
+      break;
   }
   
   auto context = CGBitmapContextCreate(
@@ -53,12 +56,12 @@
       self.CGImage
   );
 
-  [texture replaceRegion:MTLRegionMake2D(0, 0, width, height)
-             mipmapLevel:0
-                   slice:0
-               withBytes:rawData.get()
-             bytesPerRow:bytesPerRow
-           bytesPerImage:height * bytesPerRow];
+  [texture replaceRegion: MTLRegionMake2D(0, 0, width, height)
+             mipmapLevel: 0
+                   slice: 0
+               withBytes: rawData.get()
+             bytesPerRow: bytesPerRow
+           bytesPerImage: height * bytesPerRow];
 
   CGColorSpaceRelease(colorspace);
   CGContextRelease(context);
