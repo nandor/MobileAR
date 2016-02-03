@@ -10,14 +10,22 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
   // Location manager used to sort environments by distance.
   private var locationManager : CLLocationManager!
 
+  // Motion manager used to capture attitude data.
+  private var motionManager: CMMotionManager!
+
   // Location provided by the location manager.
   private var location : CLLocation?
 
+  // Timer used to redraw frames.
+  private var timer: CADisplayLink!
+
+  // Renderer used to display the sphere.
+  private var renderer: AREnvironmentViewRenderer!
+
   /**
-   Called before the view is displayed.
+   Called when the view is first created.
    */
-  override func viewWillAppear(animated: Bool) {
-    super.viewWillAppear(animated)
+  override func viewDidLoad() {
 
     // Set up the location manager.
     locationManager = CLLocationManager()
@@ -26,6 +34,20 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
     locationManager.requestWhenInUseAuthorization()
     locationManager.startUpdatingLocation()
 
+    // Set up motionManager updates at a rate of 30Hz.
+    motionManager = CMMotionManager()
+    motionManager.deviceMotionUpdateInterval = 1 / 30.0
+    motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
+        CMAttitudeReferenceFrame.XTrueNorthZVertical
+    )
+  }
+
+  /**
+   Called before the view is displayed.
+   */
+  override func viewWillAppear(animated: Bool) {
+    super.viewWillAppear(animated)
+
     // Hide the toolbar and show the navigation bar.
     navigationController?.hidesBarsOnSwipe = false;
     navigationController?.setNavigationBarHidden(false, animated: animated)
@@ -33,15 +55,25 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
     // Set the title of the view.
     title = "Capture"
 
-    // Set the background color to black.
-    view.backgroundColor = UIColor.blackColor();
-
     // Set up the save button.
     navigationItem.rightBarButtonItem = UIBarButtonItem(
         barButtonSystemItem: .Save,
         target: self,
         action: Selector("onSave")
     )
+
+    // Timer to run the rendering/update loop.
+    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
+  }
+
+  /**
+   Called before the view is going to disappear.
+   */
+  override func viewWillDisappear(animated: Bool) {
+    super.viewWillDisappear(animated)
+
+    timer.invalidate()
   }
 
   /**
@@ -105,5 +137,26 @@ class AREnvironmentCaptureController : UIViewController, CLLocationManagerDelega
     ))
 
     presentViewController(alert, animated: true, completion: nil)
+  }
+
+
+  /**
+   Called when attitude is refreshed. Renders feedback to the user.
+   */
+  func onFrame() {
+    guard let attitude = motionManager.deviceMotion?.attitude else {
+      return
+    }
+    /*
+    renderer.updatePose(
+        rx: -Float(attitude.pitch),
+        ry: -Float(attitude.yaw),
+        rz: Float(attitude.roll),
+        tx: 0.0,
+        ty: 0.0,
+        tz: 0.0
+    )
+    renderer.renderFrame()
+    */
   }
 }

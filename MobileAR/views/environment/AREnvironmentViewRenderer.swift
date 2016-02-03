@@ -105,16 +105,6 @@ class AREnvironmentViewRenderer : ARRenderer {
         length: sizeofValue(ibo[0]) * ibo.count,
         options: MTLResourceOptions()
     )
-
-    // Initialize the environment map texture.
-    let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-        .BGRA8Unorm,
-        width: Int(environment.map.size.width),
-        height: Int(environment.map.size.height),
-        mipmapped: false
-    )
-    texture = device.newTextureWithDescriptor(texDesc)
-    environment.map.toMTLTexture(texture);
   }
 
   /**

@@ -14,16 +14,16 @@ import QuartzCore
 class AREnvironmentViewController : UIViewController {
 
   // Environment being displayed.
-  var environment: AREnvironment!
+  private var environment: AREnvironment!
 
   // Motion manager used to capture attitude data.
-  var motionManager: CMMotionManager!
+  private var motionManager: CMMotionManager!
 
   // Timer used to redraw frames.
-  var timer: CADisplayLink!
+  private var timer: CADisplayLink!
 
   // Renderer used to display the sphere.
-  var renderer: ARRenderer!
+  private var renderer: AREnvironmentViewRenderer!
 
   /**
    Initializes the controller with an environment.
