@@ -109,8 +109,8 @@ fragment float4 background(
 {
   constexpr sampler texSampler(address::clamp_to_edge, filter::linear);
   
-  half4 background = texBackground.sample(texSampler, in.uv);
-  float ao = texAO.sample(texSampler, in.uv).x;
+  const half4 background = texBackground.sample(texSampler, in.uv);
+  const float ao = texAO.sample(texSampler, in.uv).x;
   
   return float4(background) * ao;
 }
