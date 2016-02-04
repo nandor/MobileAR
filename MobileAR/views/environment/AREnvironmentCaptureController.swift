@@ -209,7 +209,12 @@ class AREnvironmentCaptureController
     }
 
     renderer.updatePose(ARPose(
-        params: params,
+        projMat: float4x4(
+            aspect: Float(view.frame.size.width / view.frame.size.height),
+            fov: 45.0,
+            n: 0.1,
+            f: 100.0
+        ),
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
         rz: Float(attitude.roll),

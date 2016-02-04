@@ -52,8 +52,6 @@
   for (int r = 0; r < frame.rows; ++r) {
     auto ptr = frame.ptr<cv::Vec4b>(r);
     for (int c = 0; c < frame.cols; ++c) {
-      const auto pix = ptr[c];
-
       // Cast a ray through the pixel.
       const auto x = static_cast<float>(c) / w * 2.0f - 1.0f;
       const auto y = 1.0f - static_cast<float>(r) / h * 2.0f;
@@ -69,7 +67,7 @@
       const auto fy = (static_cast<int>(preview.rows * v) + preview.rows) % preview.rows;
 
       // Write the preview image.
-      preview.at<cv::Vec4b>(fy, fx) = { ptr[c][2], ptr[c][1], ptr[c][0], ptr[c][3] };
+      preview.at<cv::Vec4b>(fy, fx) = cv::Vec4b(ptr[c][2], ptr[c][1], ptr[c][0], 0xFF);
     }
   }
 }
