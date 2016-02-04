@@ -2,6 +2,7 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
+
 #import <CoreMotion/CoreMotion.h>
 #import <UIKit/UIKit.h>
 
@@ -18,7 +19,7 @@
 /**
  Creates a new spherical image builder.
  */
-- (instancetype)initWithWidth:(size_t)width height: (size_t)height;
+- (instancetype)initWithWidth:(size_t)width height:(size_t)height;
 
 /**
  Updates the preview with a frame.

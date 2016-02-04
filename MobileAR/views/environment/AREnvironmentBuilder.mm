@@ -25,8 +25,8 @@
 }
 
 
-- (instancetype) initWithWidth:(size_t)width_ height: (size_t)height_ {
-  
+- (instancetype)initWithWidth:(size_t)width_ height:(size_t)height_
+{
   if (!(self = [super init])) {
     return nil;
   }

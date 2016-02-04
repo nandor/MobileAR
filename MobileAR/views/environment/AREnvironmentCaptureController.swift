@@ -5,12 +5,35 @@
 import CoreLocation
 import UIKit
 
+
+/**
+ List of exposure times to capture.
+ */
+let kExposures = [
+  CMTimeMake(1, 7500),
+  CMTimeMake(1, 5000),
+  CMTimeMake(1, 2500),
+  CMTimeMake(1, 1000),
+  CMTimeMake(1, 750),
+  CMTimeMake(1, 500),
+  CMTimeMake(1, 250),
+  CMTimeMake(1, 100),
+  CMTimeMake(1, 70),
+  CMTimeMake(1, 50),
+  CMTimeMake(1, 25)
+]
+
+
+/**
+ Controller responsible for HDR panoramic reconstruction.
+ */
 class AREnvironmentCaptureController
     : UIViewController
     , CLLocationManagerDelegate
     , ARHDRCameraDelegate
 {
-
+  // Set of exposure times to capture.
+  
   // Location manager used to sort environments by distance.
   private var locationManager : CLLocationManager!
 
@@ -40,6 +63,7 @@ class AREnvironmentCaptureController
 
   // Camera parameters.
   private var params: ARParameters!
+  
 
   /**
    Called when the view is first created.
@@ -86,8 +110,7 @@ class AREnvironmentCaptureController
         action: Selector("onSave")
     )
 
-    // Create the environment builder.
-    builder = AREnvironmentBuilder(width: kWidth, height: kHeight)
+    // Create the environment renderer.
     renderer = try! AREnvironmentViewRenderer(view: view, width: kWidth, height: kHeight)
 
     // Timer to run the rendering/update loop.
@@ -109,12 +132,13 @@ class AREnvironmentCaptureController
     // minimized.
     camera = try! ARHDRCamera(
         delegate: self,
-        exposures: [
-            CMTimeMake(1, 30),
-            CMTimeMake(1, 20),
-            CMTimeMake(1, 10)
-        ],
+        motion: motionManager,
+        exposures: kExposures,
         ISO: 700
+    )
+    builder = AREnvironmentBuilder(
+        width: kWidth,
+        height: kHeight
     )
     camera?.start()
   }
@@ -195,15 +219,12 @@ class AREnvironmentCaptureController
   /**
    Processes a frame from the device's camera.
    */
-  func onCameraFrame(frame: [(CMTime, UIImage)]) {
-    guard let attitude = motionManager.deviceMotion?.attitude else {
-      return
-    }
-    builder.update(frame.last!.1, pose: ARPose(
+  func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
+    builder.update(frame.last!.2, pose: ARPose(
         params: params,
-        rx: -Float(attitude.pitch),
-        ry: -Float(attitude.yaw),
-        rz: Float(attitude.roll),
+        rx: -Float(frame.last!.1.pitch),
+        ry: -Float(frame.last!.1.yaw),
+        rz: Float(frame.last!.1.roll),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0

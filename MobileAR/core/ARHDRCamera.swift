@@ -9,7 +9,7 @@ import Foundation
  Protocol to handle a set of frames.
  */
 protocol ARHDRCameraDelegate {
-  func onCameraFrame(frame: [(CMTime, UIImage)])
+  func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)])
 }
 
 /**
@@ -27,6 +27,9 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   // Camera delegate that receives the frames.
   private let hdrDelegate: ARHDRCameraDelegate?
   
+  // Motion manager used to capture attitude data.
+  private let motion: CMMotionManager
+  
   // Fixed ISO value, controlling sensor gain.
   private let ISO: Float
   
@@ -34,7 +37,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   private var exposure: Int = 0
   
   // Buffer of saved frames.
-  private var buffer: [(CMTime, UIImage)] = []
+  private var buffer: [(CMTime, CMAttitude, UIImage)] = []
   
   // True if device is being configured.
   private var isBeingConfigured = false
@@ -45,10 +48,15 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   /**
    Initializes the camera.
    */
-  init(delegate: ARHDRCameraDelegate?, exposures: [CMTime], ISO: Float) throws {
-    
+  init(
+      delegate: ARHDRCameraDelegate?,
+      motion: CMMotionManager,
+      exposures: [CMTime],
+      ISO: Float) throws
+  {
     // Save config.
     self.hdrDelegate = delegate
+    self.motion = motion
     self.exposures = exposures
     self.ISO = ISO
     
@@ -63,6 +71,11 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
    */
   func onCameraFrame(frame: UIImage) {
     
+    // Skip if attitude cannot be read.
+    guard let attitude = motion.deviceMotion?.attitude else {
+      return
+    }
+
     // Skip if config is being tweaked.
     if (isBeingConfigured) {
       return
@@ -71,7 +84,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
     if (canTakeFrame) {
       
       // If exposure is right, add image to buffer.
-      buffer.append((exposures[exposure], frame))
+      buffer.append((exposures[exposure], attitude, frame))
       exposure += 1
       
       // If buffer full, start new frame.

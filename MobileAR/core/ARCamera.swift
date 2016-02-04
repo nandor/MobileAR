@@ -59,7 +59,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     // Configure the device.
     try device.lockForConfiguration()
-    device.activeVideoMaxFrameDuration = CMTimeMake(1, 15)
+    device.activeVideoMaxFrameDuration = CMTimeMake(1, 30)
     device.unlockForConfiguration()
 
     let videoInput = try AVCaptureDeviceInput(device: device)
