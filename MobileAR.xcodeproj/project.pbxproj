@@ -19,6 +19,7 @@
 		7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */; };
 		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
+		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
 		7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
@@ -64,6 +65,7 @@
 		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		7A5B46AF1BCFBB83003F87BE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
+		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7AC9F6111C5E7BF100AF86BC /* cup.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cup.obj; path = MobileAR/models/cup.obj; sourceTree = "<group>"; };
 		7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARLight.swift; sourceTree = "<group>"; };
 		7AFCF8381BCE40CB00A108F9 /* MobileAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -189,6 +191,7 @@
 				7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */,
 				C13F879F0B032ECFC39BCFDE /* ARObject.swift */,
 				C13F8122CE1435E12E5EA7C5 /* ARParams.h */,
+				7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -336,6 +339,7 @@
 				7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
+				7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */,
 				C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */,
 				C13F80202E2E4BB0701AA1BB /* ARParameters.swift in Sources */,
 				C13F85B0A2D9C29A9765B5E9 /* AREnvironment.swift in Sources */,

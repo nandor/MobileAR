@@ -27,20 +27,26 @@ protocol ARCameraDelegate {
  Wrapper around AVFoundation camera.
  */
 class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
-
-  // Capture session for start/stop.
-  let captureSession = AVCaptureSession()
-
-  // User-specified callback.
-  let delegate: ARCameraDelegate
-
+  
   // Dispatch queue to execute camera code on.
-  let queue = dispatch_queue_create("uk.ac.ic.MobileAR.ARCamera", DISPATCH_QUEUE_SERIAL)
-
+  private let queue = dispatch_queue_create(
+      "uk.ac.ic.MobileAR.ARCamera",
+      DISPATCH_QUEUE_SERIAL
+  )
+  
+  // Capture session for start/stop.
+  internal let captureSession = AVCaptureSession()
+  
+  // User-specified callback.
+  internal var delegate: ARCameraDelegate?
+  
+  // Camera device.
+  internal var device: AVCaptureDevice!
+  
   /**
    Iniitalizes the camera wrapper.
    */
-  required init(delegate: ARCameraDelegate) throws {
+  init(delegate: ARCameraDelegate?) throws {
     self.delegate = delegate
 
     super.init()
@@ -49,6 +55,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     guard let device = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo) else {
       throw ARCameraError.NotAuthorized
     }
+    self.device = device
 
     // Configure the device.
     try device.lockForConfiguration()
@@ -113,7 +120,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
       return
     }
 
-    delegate.onCameraFrame(UIImage(CGImage: image))
+    delegate?.onCameraFrame(UIImage(CGImage: image))
   }
 
   /**

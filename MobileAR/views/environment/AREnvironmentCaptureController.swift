@@ -8,7 +8,7 @@ import UIKit
 class AREnvironmentCaptureController
     : UIViewController
     , CLLocationManagerDelegate
-    , ARCameraDelegate
+    , ARHDRCameraDelegate
 {
 
   // Location manager used to sort environments by distance.
@@ -18,7 +18,7 @@ class AREnvironmentCaptureController
   private var motionManager: CMMotionManager!
 
   // Camera wrapper.
-  private var camera: ARCamera!
+  private var camera: ARHDRCamera!
 
   // Location provided by the location manager.
   private var location : CLLocation?
@@ -101,7 +101,21 @@ class AREnvironmentCaptureController
   override func viewDidAppear(animated: Bool) {
     super.viewDidAppear(animated)
 
-    camera = try! ARCamera(delegate: self)
+    // Craete the camera. ISO is set very high in order to capture dark areas
+    // with a short exposure duration. Exposure times are sorted shorted to
+    // longest, such that the brightest image is taken last. The last image is
+    // shown as feedback to the user, thus the time delay between recording that
+    // image and showing it at its current pose using the gyro reading must be
+    // minimized.
+    camera = try! ARHDRCamera(
+        delegate: self,
+        exposures: [
+            CMTimeMake(1, 30),
+            CMTimeMake(1, 20),
+            CMTimeMake(1, 10)
+        ],
+        ISO: 700
+    )
     camera?.start()
   }
 
@@ -181,11 +195,11 @@ class AREnvironmentCaptureController
   /**
    Processes a frame from the device's camera.
    */
-  func onCameraFrame(frame: UIImage) {
+  func onCameraFrame(frame: [(CMTime, UIImage)]) {
     guard let attitude = motionManager.deviceMotion?.attitude else {
       return
     }
-    builder.update(frame, pose: ARPose(
+    builder.update(frame.last!.1, pose: ARPose(
         params: params,
         rx: -Float(attitude.pitch),
         ry: -Float(attitude.yaw),
