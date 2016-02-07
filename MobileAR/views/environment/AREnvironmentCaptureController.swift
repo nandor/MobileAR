@@ -239,8 +239,8 @@ class AREnvironmentCaptureController
     builder.update(display.2, pose: ARPose(
         params: params,
         rx: -Float(display.1.pitch),
-        ry: -Float(display.1.yaw),
-        rz: Float(display.1.roll),
+        ry:  Float(display.1.roll),
+        rz: -Float(display.1.yaw),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0
@@ -267,8 +267,8 @@ class AREnvironmentCaptureController
             f: 100.0
         ),
         rx: -Float(attitude.pitch),
-        ry: -Float(attitude.yaw),
-        rz: Float(attitude.roll),
+        ry:  Float(attitude.roll),
+        rz: -Float(attitude.yaw),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0

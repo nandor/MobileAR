@@ -57,22 +57,21 @@
   for (const auto &keypoint : keypoints) {
     cv::circle(frame, keypoint.pt, 3, { 255, 0, 255 });
   }
-
-  auto w = static_cast<float>(frame.cols);
-  auto h = static_cast<float>(frame.rows);
-
+  
   for (int r = 0; r < frame.rows; ++r) {
     auto ptr = frame.ptr<cv::Vec4b>(r);
     for (int c = 0; c < frame.cols; ++c) {
       // Cast a ray through the pixel.
-      const auto x = static_cast<float>(c) / w * 2.0f - 1.0f;
-      const auto y = 1.0f - static_cast<float>(r) / h * 2.0f;
-      const auto r = simd::normalize(simd::float3([pose unproject: {x, y, 0}]));
+      const auto ray = simd::normalize(-simd::float3([pose unproject: {
+          static_cast<float>(frame.cols - c - 1),
+          static_cast<float>(r),
+          1.0f,
+      }]));
 
       // Project it onto the unit sphere & compute UV.
-      const auto l = static_cast<float>(simd::length(r));
-      const auto u = static_cast<float>((atan2(r.y, r.x) - M_PI / 2) / (2 * M_PI));
-      const auto v = static_cast<float>(1.0 - acos(-r.z / l) / M_PI);
+      const auto l = static_cast<float>(simd::length(ray));
+      const auto u = static_cast<float>(atan2(ray.x, ray.y) / (2 * M_PI));
+      const auto v = static_cast<float>(acos(ray.z / l) / M_PI);
 
       // Compute texture coordinate, wrap around.
       const auto fx = (static_cast<int>(preview.cols * u) + preview.cols) % preview.cols;

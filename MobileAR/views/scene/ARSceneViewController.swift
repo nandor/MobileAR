@@ -79,9 +79,9 @@ class AREntity {
     // Obtain permission to use the camera. Fetch camera params & environment.
     obtainCamera()
     obtainCalibration()
-    obtainEnvironment()
+    //obtainEnvironment()
 
-    if camera == nil || params == nil || environment == nil {
+    if camera == nil || params == nil {//|| environment == nil {
       return
     }
 
@@ -243,7 +243,6 @@ class AREntity {
     self.renderer.updateFrame(frame)
   }
   
-  var angle: Float = 0.0
   /**
    Updates the tracker & renders a frame.
    */
@@ -260,18 +259,7 @@ class AREntity {
     tracker.trackSensor(attitude, acceleration: acceleration)
     
     // Update the extrinsic parameters in the renderer.
-    renderer.updatePose(ARPose(
-        params: params!,
-        rx: angle,
-        ry: 0.0,
-        rz: 0.3,
-        tx: 0.0,
-        ty: -1.0,
-        tz: -7.0
-    ))
-    
-    angle += 0.01
-    //renderer.updatePose(tracker.getPose())
+    renderer.updatePose(tracker.getPose())
     
     self.renderer.renderFrame()
   }

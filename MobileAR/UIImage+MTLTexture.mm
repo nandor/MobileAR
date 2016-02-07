@@ -32,7 +32,7 @@
       break;
     case 32:
       colorspace = CGColorSpaceCreateDeviceRGB();
-      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrderDefault;
+      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
       break;
     default:
       colorspace = nil;

@@ -56,32 +56,32 @@ extension float4x4 {
       float4(0, 0, 0, 1)
     ])
     
-    // Yaw.
+    // Roll.
     let rotY = float4x4([
-      float4(+cos(ry), +sin(ry), 0, 0),
-      float4(-sin(ry), +cos(ry), 0, 0),
-      float4(0, 0, 1, 0),
+      float4(1, 0, 0, 0),
+      float4(0, +cos(ry), +sin(ry), 0),
+      float4(0, -sin(ry), +cos(ry), 0),
       float4(0, 0, 0, 1)
     ])
     
-    // Roll.
+    // Yaw.
     let rotZ = float4x4([
-      float4(1, 0, 0, 0),
-      float4(0, +cos(rz), +sin(rz), 0),
-      float4(0, -sin(rz), +cos(rz), 0),
+      float4(+cos(rz), +sin(rz), 0, 0),
+      float4(-sin(rz), +cos(rz), 0, 0),
+      float4(0, 0, 1, 0),
       float4(0, 0, 0, 1)
     ])
     
     // Translation.
     let trans = float4x4([
-      float4(1, 0, 0, 0),
-      float4(0, 1, 0, 0),
-      float4(0, 0, 1, 0),
+      float4( 1,  0,  0, 0),
+      float4( 0,  1,  0, 0),
+      float4( 0,  0,  1, 0),
       float4(tx, ty, tz, 1)
     ])
     
     self.init(
-      viewMat: trans * rotZ * rotX * rotY,
+      viewMat: trans * rotY * rotX * rotZ,
       projMat: projMat
     )
   }
@@ -95,16 +95,12 @@ extension float4x4 {
       ty: Float,
       tz: Float)
   {
-    // Compute the projection matrix.
-    let f: Float = 100.0
-    let n: Float = 0.1
-
     self.init(
         projMat: float4x4([
-            float4(params.fx / params.cx, 0, 0, 0),
-            float4(0, params.fy / params.cy, 0, 0),
-            float4(0, 0, (f + n) / (n - f), -1),
-            float4(0, 0, 2 * n * f / (n - f), 0)
+            float4(params.fx, 0, 0, 0),
+            float4(0, params.fy, 0, 0),
+            float4(params.cx, params.cy, 1, 0),
+            float4(0, 0, 0, 1)
         ]),
         rx: rx,
         ry: ry,
@@ -124,20 +120,10 @@ extension float4x4 {
     // to match the orientation of the display and the depth buffer.
     self.init(
         viewMat: float4x4([
-            float4(1,  0,  0, 0),
-            float4(0, -1,  0, 0),
-            float4(0,  0, -1, 0),
-            float4(0,  0,  0, 1)
-        ]) * float4x4([
-            float4(viewMat[ 0], viewMat[ 1], viewMat[ 2], viewMat[ 3]),
-            float4(viewMat[ 4], viewMat[ 5], viewMat[ 6], viewMat[ 7]),
-            float4(viewMat[ 8], viewMat[ 9], viewMat[10], viewMat[11]),
-            float4(viewMat[12], viewMat[13], viewMat[14], viewMat[15])
-        ]) * float4x4([
-            float4(1,  0,  0, 0),
-            float4(0,  0, -1, 0),
-            float4(0,  1,  0, 0),
-            float4(0,  0,  0, 1)
+            float4( viewMat[ 0], -viewMat[ 1], -viewMat[ 2],  viewMat[ 3]),
+            float4(-viewMat[ 8],  viewMat[ 9],  viewMat[10], -viewMat[11]),
+            float4( viewMat[ 4], -viewMat[ 5], -viewMat[ 6],  viewMat[ 7]),
+            float4( viewMat[12], -viewMat[13], -viewMat[14],  viewMat[15])
         ]),
         projMat: float4x4([
             float4(projMat[ 0], projMat[ 1], projMat[ 2], projMat[ 3]),
