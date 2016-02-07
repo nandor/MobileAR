@@ -146,7 +146,7 @@ class AREnvironment {
   /**
    Returns the directory storing the environments.
    */
-  static func getEnvironmentsDirectoryURL() -> NSURL{
+  static func getEnvironmentsDirectoryURL() -> NSURL {
     return NSFileManager.defaultManager().URLsForDirectory(
         .DocumentDirectory,
         inDomains: .UserDomainMask

@@ -10,17 +10,11 @@ import UIKit
  List of exposure times to capture.
  */
 let kExposures = [
-  CMTimeMake(1, 7500),
-  CMTimeMake(1, 5000),
-  CMTimeMake(1, 2500),
   CMTimeMake(1, 1000),
-  CMTimeMake(1, 750),
-  CMTimeMake(1, 500),
   CMTimeMake(1, 250),
   CMTimeMake(1, 100),
-  CMTimeMake(1, 70),
   CMTimeMake(1, 50),
-  CMTimeMake(1, 25)
+  CMTimeMake(1, 10),
 ]
 
 
@@ -133,8 +127,7 @@ class AREnvironmentCaptureController
     camera = try! ARHDRCamera(
         delegate: self,
         motion: motionManager,
-        exposures: kExposures,
-        ISO: 700
+        exposures: kExposures
     )
     builder = AREnvironmentBuilder(
         width: kWidth,
@@ -216,15 +209,38 @@ class AREnvironmentCaptureController
     presentViewController(alert, animated: true, completion: nil)
   }
 
+  //var count = 0
   /**
    Processes a frame from the device's camera.
    */
   func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
-    builder.update(frame.last!.2, pose: ARPose(
+    let display = frame.last!
+
+    /*
+    let dir = NSFileManager.defaultManager().URLsForDirectory(
+        .DocumentDirectory,
+        inDomains: .UserDomainMask
+    )[0].URLByAppendingPathComponent("Temp").URLByAppendingPathComponent("\(count)")
+    count += 1
+
+    try! NSFileManager.defaultManager().createDirectoryAtURL(
+        dir,
+        withIntermediateDirectories: true,
+        attributes: nil
+    )
+    
+    for var i in 0...frame.count - 1 {
+      let att = frame[i].1
+      let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
+      UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
+    }
+    */
+
+    builder.update(display.2, pose: ARPose(
         params: params,
-        rx: -Float(frame.last!.1.pitch),
-        ry: -Float(frame.last!.1.yaw),
-        rz: Float(frame.last!.1.roll),
+        rx: -Float(display.1.pitch),
+        ry: -Float(display.1.yaw),
+        rz: Float(display.1.roll),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0

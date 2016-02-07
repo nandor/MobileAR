@@ -30,9 +30,6 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   // Motion manager used to capture attitude data.
   private let motion: CMMotionManager
   
-  // Fixed ISO value, controlling sensor gain.
-  private let ISO: Float
-  
   // Current exposure index.
   private var exposure: Int = 0
   
@@ -51,14 +48,12 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   init(
       delegate: ARHDRCameraDelegate?,
       motion: CMMotionManager,
-      exposures: [CMTime],
-      ISO: Float) throws
+      exposures: [CMTime]) throws
   {
     // Save config.
     self.hdrDelegate = delegate
     self.motion = motion
     self.exposures = exposures
-    self.ISO = ISO
     
     // Initialize superclass, registering this class as a handler.
     try super.init(delegate: nil)
@@ -104,13 +99,11 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
       // Stop the device & lock for config.
       try device.lockForConfiguration()
       
-      device.whiteBalanceMode = .Locked
-      
       // Change exposure level.
       isBeingConfigured = true
       device.setExposureModeCustomWithDuration(
           exposures[exposure],
-          ISO: ISO)
+          ISO: AVCaptureISOCurrent)
       { (CMTime time) in
         self.device.unlockForConfiguration()
         self.isBeingConfigured = false

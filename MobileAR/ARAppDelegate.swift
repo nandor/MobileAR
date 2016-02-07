@@ -28,10 +28,6 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
       didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?
   ) -> Bool
   {
-
-    let env = AREnvironment.all()[0]
-    NSUserDefaults().setObject(env.path.path!, forKey: "environment")
-
     // Create the navigation controller.
     navigation = UINavigationController()
     navigation.viewControllers = [AREnvironmentCaptureController()]

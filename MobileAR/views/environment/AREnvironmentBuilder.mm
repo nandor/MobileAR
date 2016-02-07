@@ -22,6 +22,8 @@
 
   // OpenCV version of the current frame.
   cv::Mat frame;
+  // Grayscale version of current frame.
+  cv::Mat gray;
 }
 
 
@@ -45,6 +47,16 @@
 
 - (void)update:(UIImage*)image pose:(ARPose*)pose {
   [image toCvMat: frame];
+  
+  std::vector<cv::KeyPoint> keypoints;
+  
+  cv::cvtColor(frame, gray, CV_BGR2GRAY);
+  auto detector = cv::FastFeatureDetector::create(50);
+  detector->detect(gray, keypoints);
+  
+  for (const auto &keypoint : keypoints) {
+    cv::circle(frame, keypoint.pt, 3, { 255, 0, 255 });
+  }
 
   auto w = static_cast<float>(frame.cols);
   auto h = static_cast<float>(frame.rows);
