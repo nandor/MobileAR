@@ -13,17 +13,17 @@
   
   switch (mtx.elemSize()) {
     case 1: {
-      flags = kCGImageAlphaNone | kCGBitmapByteOrderDefault;
+      flags = kCGImageAlphaNone;
       colorSpace = CGColorSpaceCreateDeviceGray();
       break;
     }
     case 3: {
-      flags = kCGImageAlphaNone | kCGBitmapByteOrderDefault;
+      flags = kCGImageAlphaNone | kCGBitmapByteOrder32Little;
       colorSpace = CGColorSpaceCreateDeviceRGB();
       break;
     }
     case 4: {
-      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrderDefault;
+      flags = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
       colorSpace = CGColorSpaceCreateDeviceRGB();
       break;
     }
