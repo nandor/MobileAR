@@ -298,14 +298,26 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
     lightEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
     
+    struct Light {
+      var direction: float3
+      var ambient: float3
+      var diffuse: float3
+      var specular: float3
+    }
+    
     for var batch = 0; batch < lights.count; batch += 32 {
-      let data = UnsafeMutablePointer<ARLight>(lightBuffer.contents())
+      let data = UnsafeMutablePointer<Light>(lightBuffer.contents())
       for var i = 0; i < min(32, lights.count - batch * 32); ++i {
         let light = lights[batch * 32 + i]
-        let n: float4 = viewMat.inverse.transpose * light.direction
+        let n: float4 = viewMat.inverse.transpose * float4(
+            light.direction.x,
+            light.direction.y,
+            light.direction.z,
+            1
+        )
         let l = -Float(sqrt(n.x * n.x + n.y * n.y + n.z * n.z))
         
-        data.memory.direction = float4(n.x / l, n.y / l, n.z / l, 1.0)
+        data.memory.direction = float3(n.x / l, n.y / l, n.z / l)
         data.memory.ambient = light.ambient
         data.memory.diffuse = light.diffuse
         data.memory.specular = light.specular
@@ -497,14 +509,6 @@ class ARSceneRenderer : ARRenderer {
    Initializes all light sources.
    */
   private func setupLightSources() throws {
-    
-    // Create a sample light source.
-    lights.append(ARLight(
-        direction: float4(-1.0, -1.0, -1.0, 0.0),
-        ambient:   float4( 0.4,  0.4,  0.4, 0.0),
-        diffuse:   float4( 0.7,  0.7,  0.7, 0.0),
-        specular:  float4( 1.0,  1.0,  1.0, 1.0)
-    ))
     
     // Create a buffer for 32 light sources.
     lightBuffer = device.newBufferWithLength(

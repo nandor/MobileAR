@@ -8,16 +8,28 @@ import simd
 /**
  Represents a directional light source.
  */
-struct ARLight {
+@objc class ARLight : NSObject {
   /// Position of the light.
-  var direction: float4
+  let direction: float3
 
   /// Ambient component.
-  var ambient: float4
+  let ambient: float3
   
   /// Diffuse component.
-  var diffuse: float4
+  let diffuse: float3
   
   /// Specular component.
-  var specular: float4
+  let specular: float3
+  
+  init(
+      direction: float3,
+      ambient: float3,
+      diffuse: float3,
+      specular: float3)
+  {
+    self.direction = direction
+    self.ambient = ambient
+    self.diffuse = diffuse
+    self.specular = specular
+  }
 }

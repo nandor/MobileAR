@@ -4,14 +4,21 @@
 
 #pragma once
 
+#include "LightProbeSampler.h"
+
 namespace ar {
 
-
 /**
- * Implements variance cut sampling.
+ * Class that implements median cut sampling.
  */
-class VarianceCutSampler {
+class VarianceCutSampler : public LightProbeSampler{
+ public:
+  VarianceCutSampler(size_t depth);
 
+  std::vector<LightSource> sample(const cv::Mat &image);
+
+ private:
+  const size_t depth_;
 };
 
 }

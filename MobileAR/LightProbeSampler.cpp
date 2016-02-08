@@ -2,13 +2,11 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#include "PhotoSphereBuilder.h"
+#include "LightProbeSampler.h"
 
-using namespace ar;
+namespace ar {
 
-
-PhotoSphereBuilder::PhotoSphereBuilder() {
+LightProbeSampler::~LightProbeSampler() {
 }
 
-PhotoSphereBuilder::~PhotoSphereBuilder() {
 }

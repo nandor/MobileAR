@@ -4,14 +4,21 @@
 
 #pragma once
 
+#include "LightProbeSampler.h"
 
 namespace ar {
 
 /**
  * Class that implements median cut sampling.
  */
-class MedianCutSampler {
+class MedianCutSampler : public LightProbeSampler{
+ public:
+  MedianCutSampler(size_t depth);
 
+  std::vector<LightSource> sample(const cv::Mat &image);
+
+ private:
+  const uint8_t depth_;
 };
 
 }

@@ -99,10 +99,10 @@ class AREntity {
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view)
     renderer.lights.append(ARLight(
-        direction: float4(-1, -1, -1, 0.0),
-        ambient: float4(0.4, 0.4, 0.4, 0.0),
-        diffuse: float4(1.0, 1.0, 1.0, 0.0),
-        specular: float4(1.0, 1.0, 1.0, 0.0)
+        direction: float3(-1, -1, -1),
+        ambient: float3(0.4, 0.4, 0.4),
+        diffuse: float3(1.0, 1.0, 1.0),
+        specular: float3(1.0, 1.0, 1.0)
     ))
     renderer.objects.append(ARObject(
         mesh: "cube",

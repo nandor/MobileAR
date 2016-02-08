@@ -4,5 +4,6 @@
 
 #import "ARCalibrator.h"
 #import "AREnvironmentBuilder.h"
+#import "ARLightProbeSampler.h"
 #import "ARSceneTracker.h"
 #import "UIImage+MTLTexture.h"
