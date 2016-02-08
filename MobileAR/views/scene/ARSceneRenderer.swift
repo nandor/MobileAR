@@ -20,13 +20,13 @@ class ARSceneRenderer : ARRenderer {
   // +-------+-------+-------+---------+
   // |   ar  |  ag   |  ab   |  spec   |
   // +-------+-------+-------+---------+
-  // |        ambient occlusion        |
+  // |       AO      |      envmap     |
   // +---------------------------------+
   private var fboDepthStencil: MTLTexture!
   private var fboNormal: MTLTexture!
   private var fboMaterial: MTLTexture!
-  private var fboSSAO: MTLTexture!
-  private var fboSSAOBlur: MTLTexture!
+  private var fboSSAOEnv: MTLTexture!
+  private var fboSSAOBlurEnv: MTLTexture!
 
   // Data to render the quad spanning the entire screen.
   private var quadLE: MTLDepthStencilState!
@@ -124,6 +124,10 @@ class ARSceneRenderer : ARRenderer {
     geomPass.colorAttachments[1].texture = fboMaterial
     geomPass.colorAttachments[1].loadAction = .DontCare
     geomPass.colorAttachments[1].storeAction = .Store
+    geomPass.colorAttachments[2].texture = fboSSAOEnv
+    geomPass.colorAttachments[2].loadAction = .Clear
+    geomPass.colorAttachments[2].storeAction = .Store
+    geomPass.colorAttachments[2].clearColor = MTLClearColorMake(1, 0, 0, 0)
     geomPass.depthAttachment.loadAction = .Clear
     geomPass.depthAttachment.storeAction = .Store
     geomPass.depthAttachment.texture = fboDepthStencil
@@ -209,10 +213,9 @@ class ARSceneRenderer : ARRenderer {
     // of data from textures and buffers from random locations. It requires a
     // separate pass since it writes to the AO texture.
     let ssaoPass = MTLRenderPassDescriptor()
-    ssaoPass.colorAttachments[0].texture = fboSSAO
-    ssaoPass.colorAttachments[0].loadAction = .Clear
+    ssaoPass.colorAttachments[0].texture = fboSSAOEnv
+    ssaoPass.colorAttachments[0].loadAction = .Load
     ssaoPass.colorAttachments[0].storeAction = .Store
-    ssaoPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 1, 1, 1)
     ssaoPass.depthAttachment.loadAction = .Load
     ssaoPass.depthAttachment.storeAction = .DontCare
     ssaoPass.depthAttachment.texture = fboDepthStencil
@@ -236,10 +239,10 @@ class ARSceneRenderer : ARRenderer {
 
     // Blur the SSAO texture using a 4x4 box blur.
     let blurPass = MTLRenderPassDescriptor()
-    blurPass.colorAttachments[0].texture = fboSSAOBlur
+    blurPass.colorAttachments[0].texture = fboSSAOBlurEnv
     blurPass.colorAttachments[0].loadAction = .Clear
     blurPass.colorAttachments[0].storeAction = .Store
-    blurPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 1, 1, 1)
+    blurPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 1, 1)
     blurPass.depthAttachment.loadAction = .DontCare
     blurPass.depthAttachment.storeAction = .DontCare
     blurPass.depthAttachment.texture = fboDepthStencil
@@ -253,7 +256,7 @@ class ARSceneRenderer : ARRenderer {
     blurEncoder.setDepthStencilState(quadLE)
     blurEncoder.setRenderPipelineState(ssaoBlurState)
     blurEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
-    blurEncoder.setFragmentTexture(fboSSAO, atIndex: 0)
+    blurEncoder.setFragmentTexture(fboSSAOEnv, atIndex: 0)
     blurEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     blurEncoder.endEncoding()
     
@@ -281,7 +284,7 @@ class ARSceneRenderer : ARRenderer {
     backgroundEncoder.setRenderPipelineState(backgroundRenderState)
     backgroundEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
     backgroundEncoder.setFragmentTexture(backgroundTexture, atIndex: 0)
-    backgroundEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 1)
+    backgroundEncoder.setFragmentTexture(fboSSAOBlurEnv, atIndex: 1)
     backgroundEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     backgroundEncoder.endEncoding()
     
@@ -311,7 +314,7 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
     lightEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
-    lightEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
+    lightEncoder.setFragmentTexture(fboSSAOBlurEnv, atIndex: 3)
     lightEncoder.setFragmentTexture(envMap, atIndex: 4)
     
     for var batch = 0; batch < lights.count; batch += kLightBatch {
@@ -407,16 +410,16 @@ class ARSceneRenderer : ARRenderer {
     fboMaterial.label = "FBOMaterial"
 
     // The AO texture stores vertex positions.
-    let fboSSAODesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
-      .R32Float,
+    let fboSSAOEnvDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+      .RG16Float,
       width: width,
       height: height,
       mipmapped: false
     )
-    fboSSAO = device.newTextureWithDescriptor(fboSSAODesc)
-    fboSSAO.label = "FBOAO"
-    fboSSAOBlur = device.newTextureWithDescriptor(fboSSAODesc)
-    fboSSAOBlur.label = "FBOSSAOBlur"
+    fboSSAOEnv = device.newTextureWithDescriptor(fboSSAOEnvDesc)
+    fboSSAOEnv.label = "FBOAOEnv"
+    fboSSAOBlurEnv = device.newTextureWithDescriptor(fboSSAOEnvDesc)
+    fboSSAOBlurEnv.label = "FBOSSAOBlurEnv"
   }
 
   /**
@@ -524,7 +527,8 @@ class ARSceneRenderer : ARRenderer {
     ssaoRenderDesc.sampleCount = 1
     ssaoRenderDesc.vertexFunction = fullscreen
     ssaoRenderDesc.fragmentFunction = ssao
-    ssaoRenderDesc.colorAttachments[0].pixelFormat = .R32Float
+    ssaoRenderDesc.colorAttachments[0].pixelFormat = .RG16Float
+    ssaoRenderDesc.colorAttachments[0].writeMask = MTLColorWriteMask.Red
     ssaoRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoRenderState = try device.newRenderPipelineStateWithDescriptor(ssaoRenderDesc)
@@ -537,7 +541,7 @@ class ARSceneRenderer : ARRenderer {
     ssaoBlurDesc.sampleCount = 1
     ssaoBlurDesc.vertexFunction = fullscreen
     ssaoBlurDesc.fragmentFunction = ssaoBlur
-    ssaoBlurDesc.colorAttachments[0].pixelFormat = .R32Float
+    ssaoBlurDesc.colorAttachments[0].pixelFormat = .RG16Float
     ssaoBlurDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurState = try device.newRenderPipelineStateWithDescriptor(ssaoBlurDesc)
@@ -678,6 +682,7 @@ class ARSceneRenderer : ARRenderer {
     objectRenderDesc.fragmentFunction = objectFrag
     objectRenderDesc.colorAttachments[0].pixelFormat = .RG16Snorm
     objectRenderDesc.colorAttachments[1].pixelFormat = .RGBA8Unorm
+    objectRenderDesc.colorAttachments[2].pixelFormat = .RG16Float
     objectRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)

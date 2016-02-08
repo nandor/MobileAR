@@ -35,7 +35,7 @@ struct ARObjectIn {
  Vertex shader to fragment shader.
  */
 struct ARObjectInOut {
-  float3 v     [[ user(ver) ]];
+  float3 v        [[ user(ver) ]];
   
   float2 uv       [[ user(uv) ]];
   float4 position [[ position ]];
@@ -52,6 +52,7 @@ struct ARObjectInOut {
 struct ARObjectOut {
   half2  normal     [[ color(0) ]];
   float4 material   [[ color(1) ]];
+  half2  ao         [[ color(2) ]];
 };
 
 
@@ -104,11 +105,12 @@ fragment ARObjectOut objectFrag(
   
   // Encode the normal vector in 2 channels & sample diffuse & specular.
   return {
-    half2(normalize(in.n).xy),//normalize(tbn * normal).xy),
+    half2(normalize(tbn * normal).xy),
     float4(
         float3(texDiff.sample(texSampler, in.uv).xyz),
         float(texSpec.sample(texSampler, in.uv).x)
-    )
+    ),
+    half2(0.0, 0.0)
   };
 }
 

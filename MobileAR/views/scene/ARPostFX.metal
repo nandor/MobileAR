@@ -119,7 +119,7 @@ fragment float4 background(
 /**
  Fragment shader to compute Screen Space Ambient Occlusion (SSAO).
  */
-fragment float ssao(
+fragment half2 ssao(
     ARQuadInOut         in         [[ stage_in ]],
     constant ARParams&  params     [[ buffer(0) ]],
     constant float3*    samples    [[ buffer(1) ]],
@@ -177,16 +177,19 @@ fragment float ssao(
     ao += step(smplDepth, smpl.z) * range;
   }
   
-  return min(1.0, pow(1 - ao / SSAO_SAMPLES, SSAO_POWER));
+  return {
+      half(min(1.0, pow(1 - ao / SSAO_SAMPLES, SSAO_POWER))),
+      0.0f
+  };
 }
 
 
 /**
  4x4 blur for the ssao shader.
  */
-fragment float4 ssaoBlur(
-    ARQuadInOut      in    [[ stage_in ]],
-    texture2d<float> texAO [[ texture(0) ]])
+fragment half2 ssaoBlur(
+    ARQuadInOut     in       [[ stage_in ]],
+    texture2d<half> texAOEnv [[ texture(0) ]])
 {
   // Find the pixel coordinate based on UV.
   const int2 uv = int2(SCREEN_SIZE * in.uv);
@@ -195,10 +198,13 @@ fragment float4 ssaoBlur(
   float ao = 0.0f;
   for (int j = -2; j < 2; ++j) {
     for (int i = -2; i < 2; ++i) {
-      ao += texAO.read(uint2(uv + int2(j, i))).x;
+      ao += texAOEnv.read(uint2(uv + int2(j, i))).x;
     }
   }
-  return ao / 16.0f;
+  return {
+    half(ao / 16.0f),
+    texAOEnv.read(uint2(uv)).y
+  };
 }
 
                          
@@ -212,7 +218,7 @@ fragment float4 lighting(
     texture2d<float>              texDepth    [[ texture(0) ]],
     texture2d<float>              texNormal   [[ texture(1) ]],
     texture2d<half>               texMaterial [[ texture(2) ]],
-    texture2d<float>              texAO       [[ texture(3) ]],
+    texture2d<half>               texAOEnv    [[ texture(3) ]],
     texture2d<half>               envMap      [[ texture(4) ]])
 {
   constexpr sampler envSampler(address::repeat, filter::linear);
@@ -224,11 +230,13 @@ fragment float4 lighting(
   const float2 normal = texNormal.read(uv).xy;
   const half4 material = texMaterial.read(uv);
   const float depth = texDepth.read(uv).x;
-  const float ao = texAO.read(uv).x;
+  const half2 aoEnv = texAOEnv.read(uv).xy;
   
-  // Decode normal vector, diffuse and specular and position.
+  // Decode ao, normal vector, diffuse and specular and position.
+  const float ao = aoEnv.x;
+  const float env = aoEnv.y;
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
-  const float3 albedo = float3(material.xyz);
+  const float3 objAlbedo = float3(material.xyz);
   const float  spec = float(material.w) * 100.0 * MU;
   const float4 vproj = params.invProj * float4(
       in.uv.x * 2 - 1.0,
@@ -240,6 +248,15 @@ fragment float4 lighting(
   
   // Find the eye direction.
   const float3 e = normalize(v);
+  
+  // Sample the environment map.
+  const float3 ed = normalize(reflect(e, n));
+  const float eu = atan2(ed.x, ed.z) / (2 * PI);
+  const float ev = acos(ed.y) / PI;
+  const float3 envAlbedo = float4(envMap.sample(envSampler, {eu, ev})).xyz;
+  
+  // Abedo is a mix between object color the sampled environment map.
+  const float3 albedo = mix(objAlbedo, envAlbedo, env);
   
   // Apply lighting equation for each light.
   float3 ambient = float3(0.0, 0.0, 0.0);
@@ -258,6 +275,7 @@ fragment float4 lighting(
     specular += light.specular * pow(specFact, spec);
   }
   
+  // Sample the environment map.
   return float4(albedo * (ao * ambient + diffuse + specular), 1);
 }
 
