@@ -106,10 +106,6 @@ class AREnvironmentCaptureController
 
     // Create the environment renderer.
     renderer = try! AREnvironmentViewRenderer(view: view, width: kWidth, height: kHeight)
-
-    // Timer to run the rendering/update loop.
-    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
-    timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
   }
 
   /**
@@ -134,6 +130,10 @@ class AREnvironmentCaptureController
         height: kHeight
     )
     camera?.start()
+    
+    // Timer to run the rendering/update loop.
+    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
   }
 
   /**
