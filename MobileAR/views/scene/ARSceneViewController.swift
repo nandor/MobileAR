@@ -98,10 +98,7 @@ class AREntity {
 
 
     // Initialize the renderer.
-    renderer = try! ARSceneRenderer(view: view)
-    // TODO: move this to environment saving.
-    renderer.lights = ARLightProbeSampler(medianCutSampler: 5).sample(environment!.map)
-
+    renderer = try! ARSceneRenderer(view: view, environment: environment!)
     renderer.objects.append(ARObject(
         mesh: "cube",
         model: float4x4([

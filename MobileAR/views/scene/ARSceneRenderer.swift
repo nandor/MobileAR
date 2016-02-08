@@ -61,7 +61,10 @@ class ARSceneRenderer : ARRenderer {
       "uk.ac.ic.MobileAR.ARSceneRenderer",
       DISPATCH_QUEUE_CONCURRENT
   )
-
+  
+  // Environment map texture.
+  private var envMap: MTLTexture!
+  
   // Object cache.
   private var meshes: [String: ARMesh?] = [String: ARMesh?]()
   
@@ -85,15 +88,16 @@ class ARSceneRenderer : ARRenderer {
   /**
    Initializes the renderer.
    */
-  override init(view: UIView) throws {
+  init(view: UIView, environment: AREnvironment) throws {
     try super.init(view: view)
     
     try setupObject()
     try setupGeometryBuffer()
     try setupFXPrograms()
-    try setupLightSources()
+    try setupLightSources(environment.lights)
     try setupSSAOBuffers()
     try setupPedestal()
+    try setupEnvironmentMap(environment.map)
   }
 
   /**
@@ -308,6 +312,7 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
     lightEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
+    lightEncoder.setFragmentTexture(envMap, atIndex: 4)
     
     for var batch = 0; batch < lights.count; batch += kLightBatch {
       var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
@@ -541,7 +546,10 @@ class ARSceneRenderer : ARRenderer {
   /**
    Initializes all light sources.
    */
-  private func setupLightSources() throws {
+  private func setupLightSources(lights: [ARLight]) throws {
+    
+    // Save the light sources.
+    self.lights = lights
     
     // Create a buffer for 32 light sources.
     lightBuffer = device.newBufferWithLength(
@@ -675,6 +683,23 @@ class ARSceneRenderer : ARRenderer {
     objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)
   }
   
+  /**
+   Sets up the environment map.
+   */
+  private func setupEnvironmentMap(map: UIImage) throws {
+    
+    // Two channels store the x and y components of a normal vector.
+    let envMapDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+      .BGRA8Unorm,
+      width: Int(map.size.width),
+      height: Int(map.size.height),
+      mipmapped: false
+    )
+    envMap = device.newTextureWithDescriptor(envMapDesc)
+    envMap.label = "TEXEnvMap"
+
+    map.toMTLTexture(envMap)
+  }
   
   
   // 32 random vectors in a hemisphere.

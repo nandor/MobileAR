@@ -12,11 +12,6 @@
 using namespace metal;
 
 /**
- A digit is wrong.
- */
-constant float PI = 3.1415926535897932384626433833795;
-
-/**
  Number of regions to split the sphere into.
  */
 constant int SPLIT = 9;

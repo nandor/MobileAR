@@ -22,6 +22,9 @@ class AREnvironment {
   // GPS coordinate where the image was taken.
   var location: CLLocation?
 
+  // List of light sources.
+  var lights: [ARLight] = []
+  
   /**
    Creates a new environment.
    */
@@ -80,6 +83,9 @@ class AREnvironment {
       throw AREnvironmentError.MissingEnvironmentMap
     }
     self.map = UIImage(contentsOfFile: environmentPath)
+    
+    // TODO(nandor): Sample only when environment is saved.
+    self.lights = ARLightProbeSampler(medianCutSampler: 5).sample(map)
   }
 
   /**

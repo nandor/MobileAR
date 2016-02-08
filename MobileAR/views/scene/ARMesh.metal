@@ -104,7 +104,7 @@ fragment ARObjectOut objectFrag(
   
   // Encode the normal vector in 2 channels & sample diffuse & specular.
   return {
-    half2(normalize(tbn * normal).xy),
+    half2(normalize(in.n).xy),//normalize(tbn * normal).xy),
     float4(
         float3(texDiff.sample(texSampler, in.uv).xyz),
         float(texSpec.sample(texSampler, in.uv).x)

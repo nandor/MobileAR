@@ -212,8 +212,11 @@ fragment float4 lighting(
     texture2d<float>              texDepth    [[ texture(0) ]],
     texture2d<float>              texNormal   [[ texture(1) ]],
     texture2d<half>               texMaterial [[ texture(2) ]],
-    texture2d<float>              texAO       [[ texture(3) ]])
+    texture2d<float>              texAO       [[ texture(3) ]],
+    texture2d<half>               envMap      [[ texture(4) ]])
 {
+  constexpr sampler envSampler(address::repeat, filter::linear);
+  
   // Find the pixel coordinate based on UV.
   const uint2 uv = uint2(SCREEN_SIZE * in.uv);
   

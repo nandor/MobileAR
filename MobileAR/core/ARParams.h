@@ -29,3 +29,8 @@ struct ARParams {
   /// Inverse model matrix.
   float4x4 invModel;
 };
+
+/**
+ A digit is wrong.
+ */
+constant float PI = 3.1415926535897932384626433833795;
