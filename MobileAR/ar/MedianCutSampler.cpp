@@ -25,10 +25,15 @@ std::vector<ar::LightSource> MedianCutSampler::sample(const cv::Mat &image) {
   }
 
   // Compute the luminance.
-  std::vector<cv::Mat> channels;
-  cv::split(image, channels);
   illum_ = cv::Mat(image.rows, image.cols, CV_32FC1);
-  illum_ = channels[2] * 0.0721 + channels[1] * 0.7154 + channels[0] * 0.2125;
+  for (int r = 0; r < image_.rows; ++r) {
+    auto pl = illum_.ptr<float>(r);
+    auto pi = image_.ptr<cv::Vec4b>(r);
+    for (int c = 0; c < image_.cols; ++c) {
+      const auto &pix = pi[c];
+      pl[c] = pix[0] * 0.0721 + pix[1] * 0.7154 + pix[2] * 0.2125;
+    }
+  }
 
   // Compute the SST.
   sst_ = cv::Mat::zeros(illum_.rows + 1, illum_.cols + 1, CV_32FC1);
@@ -114,23 +119,24 @@ ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
       sumR += pix[2];
     }
   }
-
-  // Compute average intensity.
-  const auto area = image_.rows * image_.cols;
-  const float b = sumB / area / 255.0f;
-  const float g = sumG / area / 255.0f;
-  const float r = sumR / area / 255.0f;
+    // Compute average intensity.
+  const float area = (r1 - r0 + 1) * (c1 - c0 + 1);
+  const float scale = area * std::max(1ul, count_ / 4) * 255.0f;
+  
+  const float b = sumB / scale;
+  const float g = sumG / scale;
+  const float r = sumR / scale;
   
   // Find the direction of the light source.
   const float y = (r1 + r0) / 2.0f;
   const float x = (c1 + c0) / 2.0f;
-
-  const auto phi = static_cast<float>(2 * M_PI * x / image_.cols);
-  const auto theta = static_cast<float>(M_PI * y / image_.rows);
+  
+  const auto phi = static_cast<float>(M_PI / 2.0 - M_PI * y / image_.rows);
+  const auto theta = static_cast<float>(2 * M_PI * x / image_.cols);
 
   const auto vx = static_cast<float>(cos(phi) * sin(theta));
-  const auto vy = static_cast<float>(cos(phi) * cos(theta));
-  const auto vz = static_cast<float>(sin(theta));
+  const auto vy = static_cast<float>(sin(phi));
+  const auto vz = static_cast<float>(cos(phi) * cos(theta));
 
   // Create the light source.
   return {
@@ -140,9 +146,9 @@ ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
           -vz
       },
       simd::float3{
-          r / 2.0f,
-          g / 2.0f,
-          b / 2.0f
+          r / 5.0f,
+          g / 5.0f,
+          b / 5.0f
       },
       simd::float3{
           r,
@@ -150,9 +156,9 @@ ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
           b
       },
       simd::float3{
-          r * 1.2f,
-          g * 1.2f,
-          b * 1.2f
+          r * 1.5f,
+          g * 1.5f,
+          b * 1.5f
       }
   };
 }

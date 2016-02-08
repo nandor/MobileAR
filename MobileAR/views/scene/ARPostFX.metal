@@ -237,7 +237,7 @@ fragment float4 lighting(
   const float env = aoEnv.y;
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
   const float3 objAlbedo = float3(material.xyz);
-  const float  spec = float(material.w) * 100.0 * MU;
+  const float  spec = float(material.w + 0.01) * 100.0 * MU;
   const float4 vproj = params.invProj * float4(
       in.uv.x * 2 - 1.0,
       1.0 - in.uv.y * 2,
