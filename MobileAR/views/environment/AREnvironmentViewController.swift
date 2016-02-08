@@ -121,8 +121,8 @@ class AREnvironmentViewController : UIViewController {
             f: 100.0
         ),
         rx: -Float(attitude.pitch),
-        ry: -Float(attitude.yaw),
-        rz: Float(attitude.roll),
+        ry:  Float(attitude.roll),
+        rz: -Float(attitude.yaw),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0

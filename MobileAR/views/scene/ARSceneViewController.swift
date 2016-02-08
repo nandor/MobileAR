@@ -99,7 +99,8 @@ class AREntity {
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view)
-    renderer.lights = ARLightProbeSampler(medianCutSampler: 8).sample(environment!.map)
+    // TODO: move this to environment saving.
+    renderer.lights = ARLightProbeSampler(medianCutSampler: 5).sample(environment!.map)
 
     renderer.objects.append(ARObject(
         mesh: "cube",
@@ -240,6 +241,8 @@ class AREntity {
     self.renderer.updateFrame(frame)
   }
   
+  var angle: Float = 0.0
+  
   /**
    Updates the tracker & renders a frame.
    */
@@ -255,8 +258,24 @@ class AREntity {
     // Update the tracker.
     tracker.trackSensor(attitude, acceleration: acceleration)
     
+    renderer.updatePose(ARPose(
+      projMat: float4x4(
+        aspect: Float(view.frame.size.width / view.frame.size.height),
+        fov: 45.0,
+        n: 0.1,
+        f: 100.0
+      ),
+      rx: angle,
+      ry: 0.4,
+      rz: 0.0,
+      tx: 0.0,
+      ty: -1.0,
+      tz: -6.0
+    ))
+    angle += 0.01
+    
     // Update the extrinsic parameters in the renderer.
-    renderer.updatePose(tracker.getPose())
+    //renderer.updatePose(tracker.getPose())
     
     self.renderer.renderFrame()
   }

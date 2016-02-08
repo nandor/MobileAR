@@ -9,6 +9,7 @@ namespace ar {
 
 MedianCutSampler::MedianCutSampler(size_t depth)
   : depth_(depth)
+  , count_(1 << depth)
   , lights_(depth)
 {
 }
@@ -18,8 +19,8 @@ std::vector<ar::LightSource> MedianCutSampler::sample(const cv::Mat &image) {
   // Save the image.
   image_ = image;
 
-  // Ensure image is BGR.
-  if (image_.channels() != 3) {
+  // Ensure image is BGRA.
+  if (image_.channels() != 4) {
     return {};
   }
 
@@ -60,7 +61,7 @@ void MedianCutSampler::split(int r0, int c0, int r1, int c1, int depth) {
       sst_.at<float>(r1, c1) + sst_.at<float>(r0, c0) -
       sst_.at<float>(r0, c1) - sst_.at<float>(r1, c0);
 
-  if (r1 - r0 > c1 - c0) {
+  if (r1 - r0 >= c1 - c0) {
     auto bestRow = r0;
     auto bestDiff = std::numeric_limits<float>::max();
 
@@ -104,7 +105,7 @@ ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
   // Sum up light intensities.
   float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f;
   for (int r = r0 - 1; r < r1; ++r) {
-    const auto &row = image_.ptr<cv::Vec3b>(r);
+    const auto &row = image_.ptr<cv::Vec4b>(r);
     for (int c = c0 - 1; c < c1; ++c) {
       const auto &pix = row[c];
 
@@ -115,14 +116,14 @@ ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
   }
 
   // Compute average intensity.
-  const int area = (r1 - r0 + 1) * (c1 - c0 + 1);
-  const float b = sumB / area;
-  const float g = sumG / area;
-  const float r = sumR / area;
-
+  const auto area = image_.rows * image_.cols;
+  const float b = sumB / area / 255.0f;
+  const float g = sumG / area / 255.0f;
+  const float r = sumR / area / 255.0f;
+  
   // Find the direction of the light source.
-  const float y = (r1 - r0) / 2.0f;
-  const float x = (c1 - c0) / 2.0f;
+  const float y = (r1 + r0) / 2.0f;
+  const float x = (c1 + c0) / 2.0f;
 
   const auto phi = static_cast<float>(2 * M_PI * x / image_.cols);
   const auto theta = static_cast<float>(M_PI * y / image_.rows);
@@ -149,9 +150,9 @@ ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
           b
       },
       simd::float3{
-          1.0f,
-          1.0f,
-          1.0f
+          r * 1.2f,
+          g * 1.2f,
+          b * 1.2f
       }
   };
 }

@@ -9,29 +9,13 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "MobileAR/core/ARPose.swift"
-            timestampString = "476574614.188163"
+            filePath = "MobileAR/views/scene/ARSceneRenderer.swift"
+            timestampString = "476639906.944502"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "131"
-            endingLineNumber = "131"
-            landmarkName = "init(viewMat:projMat:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MobileAR/UIImage+MTLTexture.mm"
-            timestampString = "476574206.578987"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "34"
-            endingLineNumber = "34"
-            landmarkName = "-toMTLTexture:"
+            startingLineNumber = "350"
+            endingLineNumber = "350"
+            landmarkName = "onRenderFrame(_:buffer:)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

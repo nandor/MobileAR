@@ -65,6 +65,17 @@ class ARSceneRenderer : ARRenderer {
   // Object cache.
   private var meshes: [String: ARMesh?] = [String: ARMesh?]()
   
+  // Information about a single light source.
+  private struct Light {
+    var direction: float4
+    var ambient: float4
+    var diffuse: float4
+    var specular: float4
+  }
+  
+  // Number of light sources to render in a batch.
+  private let kLightBatch = 32
+  
   // Objects to be rendered.
   internal var objects: [ARObject] = []
   // Light sources to be used.
@@ -298,17 +309,11 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
     lightEncoder.setFragmentTexture(fboSSAOBlur, atIndex: 3)
     
-    struct Light {
-      var direction: float3
-      var ambient: float3
-      var diffuse: float3
-      var specular: float3
-    }
-    
-    for var batch = 0; batch < lights.count; batch += 32 {
-      let data = UnsafeMutablePointer<Light>(lightBuffer.contents())
-      for var i = 0; i < min(32, lights.count - batch * 32); ++i {
-        let light = lights[batch * 32 + i]
+    for var batch = 0; batch < lights.count; batch += kLightBatch {
+      var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
+      let size = min(kLightBatch, lights.count - batch * kLightBatch)
+      for var i = 0; i < size; ++i {
+        let light = lights[batch * kLightBatch + i]
         let n: float4 = viewMat.inverse.transpose * float4(
             light.direction.x,
             light.direction.y,
@@ -317,12 +322,40 @@ class ARSceneRenderer : ARRenderer {
         )
         let l = -Float(sqrt(n.x * n.x + n.y * n.y + n.z * n.z))
         
-        data.memory.direction = float3(n.x / l, n.y / l, n.z / l)
-        data.memory.ambient = light.ambient
-        data.memory.diffuse = light.diffuse
-        data.memory.specular = light.specular
+        data.memory.direction = float4(
+            n.x / l,
+            n.y / l,
+            n.z / l,
+            0.0
+        )
+        data.memory.ambient = float4(
+            light.ambient.x,
+            light.ambient.y,
+            light.ambient.z,
+            1.0
+        )
+        data.memory.diffuse = float4(
+            light.diffuse.x,
+            light.diffuse.y,
+            light.diffuse.z,
+            1.0
+        )
+        data.memory.specular = float4(
+            light.specular.x,
+            light.specular.y,
+            light.specular.z,
+            1.0
+        )
         
-        data.advancedBy(sizeof(ARLight))
+        data = data.successor()
+      }
+      
+      for var i = size; i < kLightBatch; ++i {
+        data.memory.direction = float4(0, 0, 0, 1)
+        data.memory.ambient = float4(0, 0, 0, 1)
+        data.memory.diffuse = float4(0, 0, 0, 1)
+        data.memory.specular = float4(0, 0, 0, 1)
+        data = data.successor()
       }
       
       lightEncoder.setFragmentBuffer(lightBuffer, offset: 0, atIndex: 1)
@@ -512,7 +545,7 @@ class ARSceneRenderer : ARRenderer {
     
     // Create a buffer for 32 light sources.
     lightBuffer = device.newBufferWithLength(
-      sizeof(ARLight) * 32,
+      kLightBatch * sizeof(Light),
       options: MTLResourceOptions()
     )
     lightBuffer.label = "VBOLightSources"

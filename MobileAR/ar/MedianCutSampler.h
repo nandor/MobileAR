@@ -37,6 +37,8 @@ class MedianCutSampler : public LightProbeSampler{
  private:
   /// Max depth for the algorithm.
   const size_t depth_;
+  /// Number of light sources.
+  const size_t count_;
   /// Input image.
   cv::Mat image_;
   /// Luminance map.
