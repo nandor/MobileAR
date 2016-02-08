@@ -18,7 +18,7 @@
 }
 
 
-- (instancetype)initVarianceCutSampler:(size_t)levels
+- (instancetype)initWithVarianceCutSampler:(size_t)levels
 {
   if (!(self = [super init])) {
     return nil;
@@ -27,7 +27,7 @@
   return self;
 }
 
-- (instancetype)initMedianCutSampler:(size_t)levels
+- (instancetype)initWithMedianCutSampler:(size_t)levels
 {
   if (!(self = [super init])) {
     return nil;

@@ -79,11 +79,12 @@ class AREntity {
     // Obtain permission to use the camera. Fetch camera params & environment.
     obtainCamera()
     obtainCalibration()
-    //obtainEnvironment()
+    obtainEnvironment()
 
-    if camera == nil || params == nil {//|| environment == nil {
+    if camera == nil || params == nil || environment == nil {
       return
     }
+    
 
     // Start tracking orientation.
     motionManager = CMMotionManager()
@@ -98,12 +99,8 @@ class AREntity {
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view)
-    renderer.lights.append(ARLight(
-        direction: float3(-1, -1, -1),
-        ambient: float3(0.4, 0.4, 0.4),
-        diffuse: float3(1.0, 1.0, 1.0),
-        specular: float3(1.0, 1.0, 1.0)
-    ))
+    renderer.lights = ARLightProbeSampler(medianCutSampler: 8).sample(environment!.map)
+
     renderer.objects.append(ARObject(
         mesh: "cube",
         model: float4x4([

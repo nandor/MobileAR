@@ -14,12 +14,12 @@
 /**
  Creates a new Variance Cut Sampler.
  */
-- (instancetype)initVarianceCutSampler:(size_t)levels;
+- (instancetype)initWithVarianceCutSampler:(size_t)levels;
 
 /**
  Initializes a new Median Cut Sampler.
  */
-- (instancetype)initMedianCutSampler:(size_t)levels;
+- (instancetype)initWithMedianCutSampler:(size_t)levels;
 
 /**
  Returns the sampled light sources.

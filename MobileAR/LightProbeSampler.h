@@ -17,22 +17,14 @@ namespace ar {
  Light source info.
  */
 struct LightSource {
-  const simd::float3 direction;
-  const simd::float3 ambient;
-  const simd::float3 diffuse;
-  const simd::float3 specular;
-
-  LightSource(
-      const simd::float3 &direction,
-      const simd::float3 &ambient,
-      const simd::float3 &diffuse,
-      const simd::float3 &specular)
-    : direction(direction)
-    , ambient(ambient)
-    , diffuse(diffuse)
-    , specular(specular)
-  {
-  }
+  /// Direction of the light source.
+  simd::float3 direction;
+  /// Ambient intensity.
+  simd::float3 ambient;
+  /// Diffuse intensity.
+  simd::float3 diffuse;
+  /// Specular intensity.
+  simd::float3 specular;
 };
 
 /**
