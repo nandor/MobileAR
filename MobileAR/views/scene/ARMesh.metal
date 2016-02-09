@@ -35,7 +35,7 @@ struct ARObjectIn {
  Vertex shader to fragment shader.
  */
 struct ARObjectInOut {
-  float3 v        [[ user(ver) ]];
+  float3 v        [[ user(vert) ]];
   
   float2 uv       [[ user(uv) ]];
   float4 position [[ position ]];
@@ -61,24 +61,29 @@ struct ARObjectOut {
  */
 vertex ARObjectInOut objectVert(
     constant ARObjectIn*     in     [[ buffer(0) ]],
-    constant ARParams&       params [[ buffer(1) ]],
-    uint                     id     [[ vertex_id ]])
+    constant ARCameraParams& params [[ buffer(1) ]],
+    constant ARObjectParams* object [[ buffer(2) ]],
+    uint                     vid    [[ vertex_id ]],
+    uint                     iid    [[ instance_id ]])
 {
+  // Input attribute.
+  constant ARObjectIn& vert = in[vid];
+  
   // Concatenate matrices.
-  const float4x4 mv = params.view * params.model;
-  const float4x4 nv = params.normView * params.normModel;
+  const float4x4 mv = params.view * object[iid].model;
+  const float4x4 nv = params.normView * object[iid].normModel;
   
   // Compute view space vertex.
-  float4 v = mv * float4(float3(in[id].v), 1);
+  float4 v = mv * float4(float3(vert.v), 1);
   
   // Transfer stuff to fragment shader.
   return {
       v.xyz,
-      float2(in[id].uv),
+      float2(in[vid].uv),
       params.proj * v,
-      (nv * float4(float3(in[id].t))).xyz,
-      (nv * float4(float3(in[id].b))).xyz,
-      (nv * float4(float3(in[id].n))).xyz
+      (nv * float4(float3(vert.t))).xyz,
+      (nv * float4(float3(vert.b))).xyz,
+      (nv * float4(float3(vert.n))).xyz
   };
 }
 
@@ -114,15 +119,30 @@ fragment ARObjectOut objectFrag(
   };
 }
 
+
+/**
+ Vertex shader to fragment shader.
+ */
+struct ARPedestalInOut {
+  float4 position [[ position ]];
+  float3 normal   [[ user(normal) ]];
+};
+
+
 /**
  Vertex shader for the pedestal.
  */
-vertex float4 pedestalVert(
+vertex ARPedestalInOut pedestalVert(
     constant float4*         in     [[ buffer(0) ]],
-    constant ARParams&       params [[ buffer(1) ]],
-    uint                     id     [[ vertex_id ]])
+    constant ARCameraParams& params [[ buffer(1) ]],
+    constant ARObjectParams* object [[ buffer(2) ]],
+    uint                     vid    [[ vertex_id ]],
+    uint                     iid    [[ instance_id ]])
 {
-  return params.proj * params.view * params.model * in[id];
+  return {
+      params.proj * params.view * object[iid].model * in[vid],
+      (params.normView * object[iid].normModel * float4(0, 1, 0, 0)).xyz
+  };
 }
 
 
@@ -130,8 +150,7 @@ vertex float4 pedestalVert(
  Fragment shader for the pedestal.
  */
 fragment float2 pedestalFrag(
-    constant ARParams& params [[ buffer(0) ]])
+    ARPedestalInOut   in  [[ stage_in ]])
 {
-  const float4x4 norm = params.normView * params.normModel;
-  return (normalize((norm * float4(0, 1, 0, 0)).xyz)).xy;
+  return normalize(in.normal).xy;
 }

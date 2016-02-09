@@ -24,6 +24,18 @@ extension float4x4 {
         float4(0, 0, 2 * n * f / (n - f), 0)
     ])
   }
+
+  /**
+   Initializer to create a translation matrix.
+   */
+  init(t: float3) {
+    self.init([
+        float4(  1,   0,   0, 0),
+        float4(  0,   1,   0, 0),
+        float4(  0,   0,   1, 0),
+        float4(t.x, t.y, t.z, 1)
+    ])
+  }
 }
 
 

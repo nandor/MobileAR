@@ -28,7 +28,7 @@ class AREntity {
   private var camera: ARCamera!
 
   // Pose tracker.
-  private var tracker: ARSceneTracker!
+  private var tracker: ARPoseTracker!
 
   // Renderer used to draw the scene.
   private var renderer: ARSceneRenderer!
@@ -38,6 +38,12 @@ class AREntity {
 
   // Timer used to redraw frames.
   private var timer: CADisplayLink!
+
+  struct ARPlane {
+    let n: float3
+    let o: float3
+  }
+  private let plane = ARPlane(n: float3(0, 1, 0), o: float3(0, 0, 0))
   
   /**
    Callend when the window is first created.
@@ -94,8 +100,8 @@ class AREntity {
     )
 
     // Initialize the scene tracker.
-    tracker = ARSceneTracker(parameters: params)
-
+    //tracker = ARMarkerPoseTracker(parameters: params)
+    tracker = ARDemoPoseTracker(aspect: Float(view.frame.width / view.frame.height));
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
@@ -237,9 +243,7 @@ class AREntity {
     tracker.trackFrame(frame)
     self.renderer.updateFrame(frame)
   }
-  
-  var angle: Float = 0.0
-  
+
   /**
    Updates the tracker & renders a frame.
    */
@@ -254,26 +258,39 @@ class AREntity {
 
     // Update the tracker.
     tracker.trackSensor(attitude, acceleration: acceleration)
-    
-    renderer.updatePose(ARPose(
-      projMat: float4x4(
-        aspect: Float(view.frame.size.width / view.frame.size.height),
-        fov: 45.0,
-        n: 0.1,
-        f: 100.0
-      ),
-      rx: angle,
-      ry: 0.4,
-      rz: 0.0,
-      tx: 0.0,
-      ty: -1.0,
-      tz: -6.0
-    ))
-    angle += 0.01
-    
-    // Update the extrinsic parameters in the renderer.
-    //renderer.updatePose(tracker.getPose())
-    
+    renderer.updatePose(tracker.getPose())
     self.renderer.renderFrame()
+  }
+
+  /**
+   Called when the user taps on the screen and an object is to be added.
+   */
+  override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
+    let pose = tracker.getPose()
+
+    for touch in touches {
+      // Find the screen space coordinate of the touch.
+      let location = touch.locationInView(view)
+      let x = Float(location.x / view.frame.width * 2.0 - 1.0)
+      let y = Float(1.0 - location.y / view.frame.height * 2.0)
+
+      // Unproject to get intersection on near & far planes.
+      let p0 = pose.unproject(float3(x, y, -1.0))
+      let p1 = pose.unproject(float3(x, y,  1.0))
+      let dir = normalize(p1 - p0)
+
+      // Intersect the ray with the plane.
+      let d = -(dot(p0, plane.n) - dot(plane.o, plane.n)) / dot(dir, plane.n)
+      if d <= 0.0 {
+        continue
+      }
+      let t = p0 + d * dir
+
+      // Add an object.
+      renderer.objects.append(ARObject(
+          mesh: "cube",
+          model: float4x4(t: t)
+      ))
+    }
   }
 }

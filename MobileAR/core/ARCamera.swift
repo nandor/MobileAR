@@ -92,6 +92,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
       return
     }
+    
 
     CVPixelBufferLockBaseAddress(imageBuffer, 0)
 
@@ -119,7 +120,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     guard let image = quartzImage else {
       return
     }
-
+  
     delegate?.onCameraFrame(UIImage(CGImage: image))
   }
 

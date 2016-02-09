@@ -7,6 +7,8 @@
 #import <CoreMotion/CoreMotion.h>
 #import <UIKit/UIKit.h>
 
+#import "ARPoseTracker.h"
+
 @class ARParameters;
 @class ARPose;
 
@@ -14,7 +16,7 @@
 /**
  Class responsible for tracking using a patterna and sensors.
  */
-@interface ARSceneTracker : NSObject
+@interface ARMarkerPoseTracker : NSObject<ARPoseTracker>
 
 /**
  Initializes the tracker.
@@ -35,6 +37,5 @@
  Returns the tracked pose.
  */
 - (ARPose *)getPose;
-
 
 @end

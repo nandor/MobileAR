@@ -38,7 +38,12 @@ class ARRenderer {
     var normView: float4x4
     /// Inverse view matrix.
     var invView: float4x4
-    
+  }
+  
+  /**
+   Per-object parameters.
+   */
+  struct ARObjectParameters {
     /// Model matrix.
     var model: float4x4
     /// Normal matrix for model.
@@ -114,14 +119,6 @@ class ARRenderer {
    */
   func updatePose(pose: ARPose) {
     
-    // Model (identity).
-    let modelMat = float4x4([
-      float4( 1,  0,  0,  0),
-      float4( 0,  1,  0,  0),
-      float4( 0,  0,  1,  0),
-      float4( 0,  0,  0,  1)
-    ])
-    
     self.projMat = pose.projMat
     self.viewMat = pose.viewMat
     
@@ -131,9 +128,6 @@ class ARRenderer {
     params.memory.view      = pose.viewMat
     params.memory.normView  = pose.viewMat.inverse.transpose
     params.memory.invView   = pose.viewMat.inverse
-    params.memory.model     = modelMat
-    params.memory.normModel = modelMat.inverse.transpose
-    params.memory.invModel  = modelMat.inverse
   }
 
   /**

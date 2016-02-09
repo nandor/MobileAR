@@ -2,7 +2,7 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import "ARSceneTracker.h"
+#import "ARMarkerPoseTracker.h"
 #import "UIImage+cvMat.h"
 #import "MobileAR-Swift.h"
 
@@ -15,7 +15,7 @@
 static const cv::Size kPatternSize(4, 11);
 
 
-@implementation ARSceneTracker
+@implementation ARMarkerPoseTracker
 {
   // OpenCV images.
   cv::Mat rgba;

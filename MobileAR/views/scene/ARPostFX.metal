@@ -120,12 +120,12 @@ fragment float4 background(
  Fragment shader to compute Screen Space Ambient Occlusion (SSAO).
  */
 fragment half2 ssao(
-    ARQuadInOut         in         [[ stage_in ]],
-    constant ARParams&  params     [[ buffer(0) ]],
-    constant float3*    samples    [[ buffer(1) ]],
-    constant float3*    random     [[ buffer(2) ]],
-    texture2d<float>    texDepth   [[ texture(0) ]],
-    texture2d<float>    texNormal  [[ texture(1) ]])
+    ARQuadInOut               in         [[ stage_in ]],
+    constant ARCameraParams&  params     [[ buffer(0) ]],
+    constant float3*          samples    [[ buffer(1) ]],
+    constant float3*          random     [[ buffer(2) ]],
+    texture2d<float>          texDepth   [[ texture(0) ]],
+    texture2d<float>          texNormal  [[ texture(1) ]])
 {
   // Find the pixel coordinate based on UV.
   const uint2 uv = uint2(SCREEN_SIZE * in.uv);
@@ -213,7 +213,7 @@ fragment half2 ssaoBlur(
  */
 fragment float4 lighting(
     ARQuadInOut                   in          [[ stage_in ]],
-    constant ARParams&            params      [[ buffer(0) ]],
+    constant ARCameraParams&      params      [[ buffer(0) ]],
     constant ARDirectionalLight*  lights      [[ buffer(1) ]],
     texture2d<float>              texDepth    [[ texture(0) ]],
     texture2d<float>              texNormal   [[ texture(1) ]],

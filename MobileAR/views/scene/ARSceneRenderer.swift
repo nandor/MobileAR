@@ -39,7 +39,6 @@ class ARSceneRenderer : ARRenderer {
 
   // Shader to apply phong shaders.
   private var lightingRenderState: MTLRenderPipelineState!
-  private var lightBuffer: MTLBuffer!
 
   // Shader to compute ambient occlusion.
   private var ssaoRenderState: MTLRenderPipelineState!
@@ -78,6 +77,8 @@ class ARSceneRenderer : ARRenderer {
   
   // Number of light sources to render in a batch.
   private let kLightBatch = 32
+  // Number of objects to render in an instance batch.
+  private let kInstanceBatch = 4
   
   // Objects to be rendered.
   internal var objects: [ARObject] = []
@@ -91,10 +92,11 @@ class ARSceneRenderer : ARRenderer {
   init(view: UIView, environment: AREnvironment) throws {
     try super.init(view: view)
     
+    self.lights = environment.lights
+    
     try setupObject()
     try setupGeometryBuffer()
     try setupFXPrograms()
-    try setupLightSources(environment.lights)
     try setupSSAOBuffers()
     try setupPedestal()
     try setupEnvironmentMap(environment.map)
@@ -111,12 +113,24 @@ class ARSceneRenderer : ARRenderer {
    Renders a single frame.
    */
   override func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
-
-    // Pass to render to the geometry buffer.
-    // This pass renders all objects and writes to the depth buffer, sets
-    // all pixels to 0xFF in the stencil buffer, writes the albedo + specular
-    // exponent to the material buffer and saves the X and Y components of the
-    // normalized normal vectors into the normal buffer.
+    renderGeometry(target, buffer: buffer)
+    renderPedestals(target, buffer: buffer)
+    renderSSAO(target, buffer: buffer)
+    renderSSAOBlur(target, buffer: buffer)
+    renderBackground(target, buffer: buffer)
+    renderLights(target, buffer: buffer)
+  }
+  
+  /**
+   Pass to render to the geometry buffer.
+    
+   This pass renders all objects and writes to the depth buffer, sets
+   all pixels to 0xFF in the stencil buffer, writes the albedo + specular
+   exponent to the material buffer and saves the X and Y components of the
+   normalized normal vectors into the normal buffer.
+   */
+  private func renderGeometry(target: MTLTexture, buffer: MTLCommandBuffer) {
+    
     let geomPass = MTLRenderPassDescriptor()
     geomPass.colorAttachments[0].texture = fboNormal
     geomPass.colorAttachments[0].loadAction = .DontCare
@@ -135,7 +149,7 @@ class ARSceneRenderer : ARRenderer {
     geomPass.stencilAttachment.loadAction = .Clear
     geomPass.stencilAttachment.storeAction = .Store
     geomPass.stencilAttachment.texture = fboDepthStencil
-
+    
     let geomEncoder = buffer.renderCommandEncoderWithDescriptor(geomPass)
     geomEncoder.label = "Geometry"
     geomEncoder.setCullMode(.Front)
@@ -143,15 +157,28 @@ class ARSceneRenderer : ARRenderer {
     geomEncoder.setDepthStencilState(objectDepthState)
     geomEncoder.setRenderPipelineState(objectRenderState)
     
+    var groups = [String: [float4x4]]()
     for object in objects {
-      switch meshes[object.mesh] {
+      if var group = groups[object.mesh] {
+        group.append(object.model)
+        groups[object.mesh] = group
+      } else {
+        groups[object.mesh] = [object.model]
+      }
+    }
+    
+    for (name, mats) in groups {
+      switch meshes[name] {
         case .None:
           // If the object was not encountered already, queue loading it.
-          self.meshes[object.mesh] = nil
+          self.meshes[name] = nil
           dispatch_async(backgroundQueue) {
-            self.meshes[object.mesh] = try? ARMesh.loadObject(
+            self.meshes[name] = try? ARMesh.loadObject(
                 self.device,
-                url: NSBundle.mainBundle().URLForResource(object.mesh, withExtension: "obj")!
+                url: NSBundle.mainBundle().URLForResource(
+                    name,
+                    withExtension: "obj"
+                )!
             )
           }
 
@@ -160,29 +187,56 @@ class ARSceneRenderer : ARRenderer {
           continue
 
         case .Some(.Some(let mesh)):
-          // Set up the model matrix.
-          let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
-          params.memory.model     = object.model
-          params.memory.invModel  = object.model.inverse
-          params.memory.normModel = object.model.inverse.transpose
-
-          // If the mesh was loaded, render it.
-          geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
+          // Prepare common attributes.
           geomEncoder.setVertexBuffer(mesh.vbo, offset: 0, atIndex: 0)
+          geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
           geomEncoder.setFragmentTexture(mesh.texDiffuse, atIndex: 0)
           geomEncoder.setFragmentTexture(mesh.texSpecular, atIndex: 1)
           geomEncoder.setFragmentTexture(mesh.texNormal, atIndex: 2)
-          geomEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: mesh.indices)
+          
+          for var batch = 0; batch < mats.count; batch += kInstanceBatch {
+            
+            // Create a temporary buffer to store object parameters.
+            let modelBuffer = device.newBufferWithLength(
+              sizeof(ARObjectParameters) * kInstanceBatch,
+              options: MTLResourceOptions()
+            )
+            
+            // Fill in the buffer with model matrices.
+            var data = UnsafeMutablePointer<ARObjectParameters>(modelBuffer.contents())
+            let size = min(kInstanceBatch, mats.count - batch)
+            for var i = 0; i < size; ++i {
+              let model = mats[batch + i]
+              data.memory.model = model
+              data.memory.invModel = model.inverse
+              data.memory.normModel = model.inverse.transpose
+              data = data.successor()
+            }
+            
+            // If the mesh was loaded, render it.
+            geomEncoder.setVertexBuffer(modelBuffer, offset: 0, atIndex: 2)
+            geomEncoder.drawPrimitives(
+                .Triangle,
+                vertexStart: 0,
+                vertexCount: mesh.indices,
+                instanceCount: size
+            )
+          }
       }
     }
     geomEncoder.endEncoding()
-    
-    // Pass to render a rectangle under each object into the depth buffer
-    // and to decrement values in the stencil buffer. This "pedestal" is used
-    // to add some slight shade under each object during the SSAO pass. Data is
-    // not written to the material buffer and the stencil buffer is set to 0xF0
-    // in order to distinguish this plane from actual objects. The background
-    // image will be modulated using AO, however lighting should not be applied.
+  }
+  
+  /** 
+   Pass to render a rectangle under each object into the depth buffer.
+   
+   Also and to decrement values in the stencil buffer. This "pedestal" is used
+   to add some slight shade under each object during the SSAO pass. Data is
+   not written to the material buffer and the stencil buffer is set to 0xF0
+   in order to distinguish this plane from actual objects. The background
+   image will be modulated using AO, however lighting should not be applied.
+   */
+  private func renderPedestals(target: MTLTexture, buffer: MTLCommandBuffer) {
     let pedestalPass = MTLRenderPassDescriptor()
     pedestalPass.colorAttachments[0].loadAction = .Load
     pedestalPass.colorAttachments[0].storeAction = .Store
@@ -202,16 +256,48 @@ class ARSceneRenderer : ARRenderer {
     pedestalEncoder.setRenderPipelineState(pedestalRenderState)
     pedestalEncoder.setVertexBuffer(pedestalBuffer, offset: 0, atIndex: 0)
     pedestalEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
-    pedestalEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
-    for _ in objects {
-      pedestalEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    
+    for var batch = 0; batch < objects.count; batch += kInstanceBatch {
+      
+      // Create a temporary buffer to store object parameters.
+      let modelBuffer = device.newBufferWithLength(
+        sizeof(ARObjectParameters) * kInstanceBatch,
+        options: MTLResourceOptions()
+      )
+      
+      // Fill in the buffer with model matrices.
+      var data = UnsafeMutablePointer<ARObjectParameters>(modelBuffer.contents())
+      let size = min(kInstanceBatch, objects.count - batch)
+      for var i = 0; i < size; ++i {
+        let model = objects[batch + i].model
+        data.memory.model = model
+        data.memory.invModel = model.inverse
+        data.memory.normModel = model.inverse.transpose
+        data = data.successor()
+      }
+      
+      pedestalEncoder.setVertexBuffer(modelBuffer, offset: 0, atIndex: 2)
+      for _ in objects {
+        pedestalEncoder.drawPrimitives(
+            .Triangle,
+            vertexStart: 0,
+            vertexCount: 6,
+            instanceCount: size
+        )
+      }
     }
     pedestalEncoder.endEncoding()
+  }
   
-    // Compute Screen Space Ambient Occlusion.
-    // This pass is very expensive due to the fact that it reads a large amount
-    // of data from textures and buffers from random locations. It requires a
-    // separate pass since it writes to the AO texture.
+  /**
+   Compute Screen Space Ambient Occlusion.
+  
+   This pass is very expensive due to the fact that it reads a large amount
+   of data from textures and buffers from random locations. It requires a
+   separate pass since it writes to the AO texture.
+   */
+  private func renderSSAO(target: MTLTexture, buffer: MTLCommandBuffer) {
+    
     let ssaoPass = MTLRenderPassDescriptor()
     ssaoPass.colorAttachments[0].texture = fboSSAOEnv
     ssaoPass.colorAttachments[0].loadAction = .Load
@@ -236,8 +322,13 @@ class ARSceneRenderer : ARRenderer {
     ssaoEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     ssaoEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     ssaoEncoder.endEncoding()
-
-    // Blur the SSAO texture using a 4x4 box blur.
+  }
+  
+  /**
+   Blur the SSAO texture using a 4x4 box blur.
+   */
+  private func renderSSAOBlur(target: MTLTexture, buffer: MTLCommandBuffer) {
+    
     let blurPass = MTLRenderPassDescriptor()
     blurPass.colorAttachments[0].texture = fboSSAOBlurEnv
     blurPass.colorAttachments[0].loadAction = .Clear
@@ -259,12 +350,18 @@ class ARSceneRenderer : ARRenderer {
     blurEncoder.setFragmentTexture(fboSSAOEnv, atIndex: 0)
     blurEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     blurEncoder.endEncoding()
-    
-    // Draw the background texture.
-    // In order to reduce the amount of pixels highlighted by the background
-    // texture, stencil testing is used to discard those regions which are
-    // occluded by objects rendered on top of the scene. The background texture
-    // is combined with the AO map to occlude a planar region around objects.
+  }
+  
+  /**
+   Draw the background texture.
+   
+   In order to reduce the amount of pixels highlighted by the background
+   texture, stencil testing is used to discard those regions which are
+   occluded by objects rendered on top of the scene. The background texture
+   is combined with the AO map to occlude a planar region around objects.
+   */
+  private func renderBackground(target: MTLTexture, buffer: MTLCommandBuffer) {
+  
     let backgroundPass = MTLRenderPassDescriptor()
     backgroundPass.colorAttachments[0].texture = target
     backgroundPass.colorAttachments[0].loadAction = .Clear
@@ -287,12 +384,18 @@ class ARSceneRenderer : ARRenderer {
     backgroundEncoder.setFragmentTexture(fboSSAOBlurEnv, atIndex: 1)
     backgroundEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     backgroundEncoder.endEncoding()
+  }
+  
+  /**
+   Apply all the light sources.
+   
+   Ligh sources are batched in groups of 32 and only those pixels are shaded
+   which belong to an object that was rendered previously. Also, the normal
+   matrix is applied to the light direction in order to avoid a matrix
+   multiplication and normalization in the fragment shader.
+   */
+  private func renderLights(target: MTLTexture, buffer: MTLCommandBuffer) {
     
-    // Apply all the light sources.
-    // Ligh sources are batched in groups of 32 and only those pixels are shaded
-    // which belong to an object that was rendered previously. Also, the normal
-    // matrix is applied to the light direction in order to avoid a matrix
-    // multiplication and normalization in the fragment shader.
     let lightPass = MTLRenderPassDescriptor()
     lightPass.colorAttachments[0].texture = target
     lightPass.colorAttachments[0].loadAction = .Load
@@ -318,10 +421,18 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(envMap, atIndex: 4)
     
     for var batch = 0; batch < lights.count; batch += kLightBatch {
+      
+      // Create a buffer to hold light parameters.
+      let lightBuffer = device.newBufferWithLength(
+        sizeof(Light) * kLightBatch,
+        options: MTLResourceOptions()
+      )
+      
+      // Fill in the buffer with light parameters.
       var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
-      let size = min(kLightBatch, lights.count - batch * kLightBatch)
+      let size = min(kLightBatch, lights.count - batch)
       for var i = 0; i < size; ++i {
-        let light = lights[batch * kLightBatch + i]
+        let light = lights[batch + i]
         let n: float4 = viewMat.inverse.transpose * float4(
             light.direction.x,
             light.direction.y,
@@ -545,22 +656,6 @@ class ARSceneRenderer : ARRenderer {
     ssaoBlurDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurState = try device.newRenderPipelineStateWithDescriptor(ssaoBlurDesc)
-  }
-
-  /**
-   Initializes all light sources.
-   */
-  private func setupLightSources(lights: [ARLight]) throws {
-    
-    // Save the light sources.
-    self.lights = lights
-    
-    // Create a buffer for 32 light sources.
-    lightBuffer = device.newBufferWithLength(
-      kLightBatch * sizeof(Light),
-      options: MTLResourceOptions()
-    )
-    lightBuffer.label = "VBOLightSources"
   }
 
   /**

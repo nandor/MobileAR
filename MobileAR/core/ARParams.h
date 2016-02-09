@@ -11,7 +11,7 @@ using namespace metal;
 /**
  Parameters passed to the shader.
  */
-struct ARParams {
+struct ARCameraParams {
   /// Projection matrix.
   float4x4 proj;
   /// Inverse projection matrix.
@@ -22,6 +22,12 @@ struct ARParams {
   float4x4 normView;
   /// Inverse view matrix.
   float4x4 invView;
+};
+
+/**
+ Objects parameters passed to the shader.
+ */
+struct ARObjectParams {
   /// Model matrix.
   float4x4 model;
   /// Normal matrix for the model.
