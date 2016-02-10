@@ -44,7 +44,7 @@ static inline T alpha(T d, T w) {
  */
 vertex ARSphereInOut sphereVert(
     constant packed_float3*  in     [[ buffer(0) ]],
-    constant ARParams&       params [[ buffer(1) ]],
+    constant ARCameraParams& params [[ buffer(1) ]],
     uint                     id     [[ vertex_id ]])
 {
   float3 vert = float3(in[id]);

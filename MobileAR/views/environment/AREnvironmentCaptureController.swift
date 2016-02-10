@@ -57,7 +57,6 @@ class AREnvironmentCaptureController
 
   // Camera parameters.
   private var params: ARParameters!
-  
 
   /**
    Called when the view is first created.
@@ -114,7 +113,7 @@ class AREnvironmentCaptureController
   override func viewDidAppear(animated: Bool) {
     super.viewDidAppear(animated)
 
-    // Craete the camera. ISO is set very high in order to capture dark areas
+    // Create the camera. ISO is set very high in order to capture dark areas
     // with a short exposure duration. Exposure times are sorted shorted to
     // longest, such that the brightest image is taken last. The last image is
     // shown as feedback to the user, thus the time delay between recording that

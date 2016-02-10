@@ -107,12 +107,7 @@ class AREntity {
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
     renderer.objects.append(ARObject(
         mesh: "cube",
-        model: float4x4([
-          float4(1, 0, 0, 0),
-          float4(0, 1, 0, 0),
-          float4(0, 0, 1, 0),
-          float4(0, 0, 0, 1)
-        ])
+        model: float4x4(t: float3(0, 0, 0))
     ))
 
 
@@ -284,12 +279,11 @@ class AREntity {
       if d <= 0.0 {
         continue
       }
-      let t = p0 + d * dir
-
-      // Add an object.
+      
+      // Add an object at the intersection point.
       renderer.objects.append(ARObject(
           mesh: "cube",
-          model: float4x4(t: t)
+          model: float4x4(t: p0 + d * dir)
       ))
     }
   }
