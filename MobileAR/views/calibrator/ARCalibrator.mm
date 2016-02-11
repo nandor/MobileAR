@@ -56,7 +56,7 @@ static const cv::Size kPatternSize(4, 11);
   // Initialize the coordinates in the grid pattern.
   for (int i = 0; i < kPatternSize.height; i++ ) {
     for (int j = 0; j < kPatternSize.width; j++) {
-      grid.emplace_back((2 * j + i % 2) * 1.0f, i * 1.0f, 0.0f);
+      grid.emplace_back((2 * j + i % 2) * 4.0f, i * 4.0f, 0.0f);
     }
   }
 

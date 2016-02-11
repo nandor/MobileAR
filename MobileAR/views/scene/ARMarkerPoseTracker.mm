@@ -33,6 +33,9 @@ static const cv::Size kPatternSize(4, 11);
   cv::Mat rvec;
   cv::Mat tvec;
   cv::Mat rmat;
+  
+  // Last frame timestamp.
+  double prevTime;
 }
 
 - (instancetype)initWithParameters:(ARParameters *)params
@@ -59,7 +62,7 @@ static const cv::Size kPatternSize(4, 11);
   // Initialize the coordinates in the grid pattern.
   for (int i = 0; i < kPatternSize.height; i++ ) {
     for (int j = 0; j < kPatternSize.width; j++) {
-      grid.emplace_back((2 * j + i % 2) * 1.0f, i * 1.0f, 0.0f);
+      grid.emplace_back((2 * j + i % 2) * 4.0f, i * 4.0f, 0.0f);
     }
   }
 
@@ -67,6 +70,9 @@ static const cv::Size kPatternSize(4, 11);
   tvec = cv::Mat::zeros(3, 1, CV_64F);
   rmat = cv::Mat::zeros(3, 3, CV_64F);
 
+  // Initialize the timer.
+  prevTime = CACurrentMediaTime();
+  
   return self;
 }
 
@@ -97,8 +103,34 @@ static const cv::Size kPatternSize(4, 11);
 
 - (void)trackSensor:(CMAttitude *)attitude acceleration:(CMAcceleration)acceleration
 {
+  // Compute time difference and clamp to 1FPS or more.
+  const double currTime = CACurrentMediaTime();
+  const double dt1 = (currTime - prevTime > 1.0) ? 0.0 : (currTime - prevTime);
+  const double dt2 = (dt1 * dt1) / 2.0f;
+  prevTime = currTime;
+  
+  // The state transition matrix A updates the state.
+  Eigen::Matrix<double, 9, 9> A;
+  A <<
+    1.0, 0.0, 0.0, dt1, 0.0, 0.0, dt2, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0, dt1, 0.0, 0.0, dt2, 0.0,
+    0.0, 0.0, 1.0, 0.0, 0.0, dt1, 0.0, 0.0, dt2,
+    0.0, 0.0, 0.0, 1.0, 0.0, 0.0, dt1, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, dt1, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, dt1,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0;
+  
+  // The measurement model relates the state to measurements.
+  Eigen::Matrix<double, 3, 9> H;
+  H <<
+    1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  
+  NSLog(@"%g %g %g", acceleration.x, acceleration.y, acceleration.z);
 }
-
 
 - (void)start
 {
