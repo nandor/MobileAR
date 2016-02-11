@@ -51,7 +51,7 @@ class AREnvironmentViewController : UIViewController {
     motionManager = CMMotionManager()
     motionManager.deviceMotionUpdateInterval = 1 / 30.0
     motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
-        CMAttitudeReferenceFrame.XTrueNorthZVertical
+        CMAttitudeReferenceFrame.XMagneticNorthZVertical
     )
 
     // Initialize the renderer.

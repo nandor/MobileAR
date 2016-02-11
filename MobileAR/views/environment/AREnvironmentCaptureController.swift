@@ -73,7 +73,7 @@ class AREnvironmentCaptureController
     motionManager = CMMotionManager()
     motionManager.deviceMotionUpdateInterval = 1 / 30.0
     motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
-        CMAttitudeReferenceFrame.XTrueNorthZVertical
+        CMAttitudeReferenceFrame.XMagneticNorthZVertical
     )
   }
 

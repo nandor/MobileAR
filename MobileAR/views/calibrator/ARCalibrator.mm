@@ -13,7 +13,7 @@
 
 
 /// Number of snapshots taken for calibration.
-static const size_t kCalibrationPoints = 16;
+static const size_t kCalibrationPoints = 32;
 
 /// Size of the asymetric circle pattern.
 static const cv::Size kPatternSize(4, 11);
@@ -23,7 +23,7 @@ static const cv::Size kPatternSize(4, 11);
 {
   // OpenCV images.
   cv::Mat gray;
-  cv::Mat rgb;
+  cv::Mat bgra;
   cv::Mat rgba;
 
   // Buffer for calibration points.
@@ -65,9 +65,9 @@ static const cv::Size kPatternSize(4, 11);
 
 - (UIImage*)findPattern:(UIImage*)frame
 {
-  [frame toCvMat:rgba];
-  cv::cvtColor(rgba, rgb, CV_RGBA2RGB);
-  cv::cvtColor(rgb, gray, CV_RGB2GRAY);
+  [frame toCvMat:bgra];
+  cv::cvtColor(bgra, rgba, CV_BGRA2RGBA);
+  cv::cvtColor(rgba, gray, CV_RGBA2GRAY);
 
   // Find the chessboard.
   std::vector<cv::Point2f> corners;
@@ -82,9 +82,9 @@ static const cv::Size kPatternSize(4, 11);
   }
 
   // Draw the detected pattern.
-  cv::drawChessboardCorners(rgb, kPatternSize, cv::Mat(corners), found);
+  cv::drawChessboardCorners(rgba, kPatternSize, cv::Mat(corners), found);
   if (imagePoints.size() >= kCalibrationPoints) {
-    return [UIImage imageWithCvMat:rgb];
+    return [UIImage imageWithCvMat:rgba];
   }
 
   // Add the point to the set of calibration points and report progress.
@@ -100,7 +100,7 @@ static const cv::Size kPatternSize(4, 11);
       auto rms = static_cast<float>(cv::calibrateCamera(
           std::vector<std::vector<cv::Point3f>>(kCalibrationPoints, grid),
           imagePoints,
-          rgb.size(),
+          rgba.size(),
           cameraMatrix,
           distCoeffs,
           {},
@@ -125,7 +125,7 @@ static const cv::Size kPatternSize(4, 11);
     });
   }
 
-  return [UIImage imageWithCvMat:rgb];
+  return [UIImage imageWithCvMat:rgba];
 }
 
 @end

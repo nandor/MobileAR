@@ -4,12 +4,29 @@
 
 import UIKit
 
-/**
- Object being rendered - references a model and a pose.
- */
-class AREntity {
 
+/**
+ Extension to provide access to acceleration in the reference frame.
+ */
+extension CMDeviceMotion {
+
+  var rotatedAcceleration: CMAcceleration {
+    get {
+      let a = self.userAcceleration
+      let r = self.attitude.rotationMatrix
+
+      let R = double3x3([
+          double3(r.m11, r.m21, r.m31),
+          double3(r.m12, r.m22, r.m32),
+          double3(r.m13, r.m23, r.m33)
+      ])
+      let ar = R.inverse * double3(a.x, a.y, a.z)
+
+      return CMAcceleration(x: ar.x, y: ar.y, z: ar.z)
+    }
+  }
 }
+
 
 /**
  Class responsible for displaying the main scene.
@@ -20,9 +37,6 @@ class AREntity {
 
   // Environment being used.
   private var environment: AREnvironment?
-
-  // Entities being rendered.
-  private var entities: [AREntity] = []
 
   // Camera wrapper.
   private var camera: ARCamera!
@@ -44,7 +58,7 @@ class AREntity {
     let o: float3
   }
   private let plane = ARPlane(n: float3(0, 0, -1), o: float3(0, 0, 0))
-  
+
   /**
    Callend when the window is first created.
    */
@@ -90,13 +104,13 @@ class AREntity {
     if camera == nil || params == nil || environment == nil {
       return
     }
-    
+
 
     // Start tracking orientation.
     motionManager = CMMotionManager()
     motionManager.deviceMotionUpdateInterval = 1 / 30.0
     motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
-        CMAttitudeReferenceFrame.XTrueNorthZVertical
+        CMAttitudeReferenceFrame.XMagneticNorthZVertical
     )
 
     // Initialize the scene tracker.
@@ -105,7 +119,13 @@ class AREntity {
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
-    
+
+    renderer.objects.append(ARObject(
+      mesh: "cube",
+      model: float4x4(t: float3(0, 0, 0))
+    ))
+
+
     // Timer to run the rendering/update loop.
     timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
@@ -242,7 +262,7 @@ class AREntity {
     guard let attitude = motionManager.deviceMotion?.attitude else {
       return
     }
-    guard let acceleration = motionManager.deviceMotion?.userAcceleration else {
+    guard let acceleration = motionManager.deviceMotion?.rotatedAcceleration else {
       return
     }
 
@@ -274,7 +294,7 @@ class AREntity {
       if d <= 0.0 {
         continue
       }
-      
+
       // Add an object at the intersection point.
       renderer.objects.append(ARObject(
           mesh: "cube",
