@@ -133,8 +133,8 @@ extension float4x4 {
     self.init(
         viewMat: float4x4([
             float4( viewMat[ 0], -viewMat[ 1], -viewMat[ 2],  viewMat[ 3]),
-            float4(-viewMat[ 8],  viewMat[ 9],  viewMat[10], -viewMat[11]),
             float4( viewMat[ 4], -viewMat[ 5], -viewMat[ 6],  viewMat[ 7]),
+            float4( viewMat[ 8], -viewMat[ 9], -viewMat[10],  viewMat[11]),
             float4( viewMat[12], -viewMat[13], -viewMat[14],  viewMat[15])
         ]),
         projMat: float4x4([

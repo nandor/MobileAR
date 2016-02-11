@@ -692,8 +692,8 @@ class ARSceneRenderer : ARRenderer {
 
     // Set up the depth state for objects.
     let pedestalStencil = MTLStencilDescriptor()
+    pedestalStencil.stencilCompareFunction = .Greater
     pedestalStencil.depthStencilPassOperation = .Replace
-    pedestalStencil.stencilCompareFunction = .Always
     pedestalStencil.stencilFailureOperation = .Keep
     pedestalStencil.depthFailureOperation = .Keep
     pedestalStencil.readMask = 0xFF
@@ -726,12 +726,12 @@ class ARSceneRenderer : ARRenderer {
     
     // Pedestal buffer data.
     let vbo: [float4] = [
-        float4( 1.5, 0,  1.5, 1),
-        float4(-1.5, 0, -1.5, 1),
-        float4(-1.5, 0,  1.5, 1),
-        float4(-1.5, 0, -1.5, 1),
-        float4( 1.5, 0,  1.5, 1),
-        float4( 1.5, 0, -1.5, 1),
+        float4( 1.5,  1.5, 0, 1),
+        float4(-1.5, -1.5, 0, 1),
+        float4(-1.5,  1.5, 0, 1),
+        float4(-1.5, -1.5, 0, 1),
+        float4( 1.5,  1.5, 0, 1),
+        float4( 1.5, -1.5, 0, 1),
     ]
     pedestalBuffer = device.newBufferWithBytes(
         vbo,

@@ -7,6 +7,7 @@
 #import "MobileAR-Swift.h"
 
 #include <opencv2/opencv.hpp>
+#include <Eigen/Eigen>
 
 
 /**

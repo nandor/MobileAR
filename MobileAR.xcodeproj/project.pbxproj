@@ -485,7 +485,10 @@
 					/usr/local/Frameworks,
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
-				HEADER_SEARCH_PATHS = ./MobileAR/;
+				HEADER_SEARCH_PATHS = (
+					./MobileAR/,
+					/usr/local/include/eigen3,
+				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_FAST_MATH = YES;
@@ -512,7 +515,10 @@
 					/usr/local/Frameworks,
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
-				HEADER_SEARCH_PATHS = ./MobileAR/;
+				HEADER_SEARCH_PATHS = (
+					./MobileAR/,
+					/usr/local/include/eigen3,
+				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_FAST_MATH = YES;
