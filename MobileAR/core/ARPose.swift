@@ -36,6 +36,42 @@ extension float4x4 {
         float4(t.x, t.y, t.z, 1)
     ])
   }
+  
+  /**
+   Initializer to create a rotation matrix around X.
+   */
+  init(rx: Float) {
+    self.init([
+      float4(+cos(rx), 0, -sin(rx), 0),
+      float4(0, 1, 0, 0),
+      float4(+sin(rx), 0, +cos(rx), 0),
+      float4(0, 0, 0, 1)
+    ])
+  }
+  
+  /**
+   Initializer to create a rotation matrix around X.
+   */
+  init(ry: Float) {
+    self.init([
+      float4(1, 0, 0, 0),
+      float4(0, +cos(ry), +sin(ry), 0),
+      float4(0, -sin(ry), +cos(ry), 0),
+      float4(0, 0, 0, 1)
+    ])
+  }
+  
+  /**
+   Initializer to create a rotation matrix around X.
+   */
+  init(rz: Float) {
+    self.init([
+      float4(+cos(rz), +sin(rz), 0, 0),
+      float4(-sin(rz), +cos(rz), 0, 0),
+      float4(0, 0, 1, 0),
+      float4(0, 0, 0, 1)
+    ])
+  }
 }
 
 
@@ -43,14 +79,24 @@ extension float4x4 {
  Represents a pose.
  */
 @objc class ARPose : NSObject {
+  
+  /// View matrix.
   let viewMat: float4x4
+  
+  /// Projection matrix.
   let projMat: float4x4
 
+  /**
+   Initializes the pose.
+   */
   required init(viewMat: float4x4, projMat: float4x4) {
     self.viewMat = viewMat
     self.projMat = projMat
   }
 
+  /**
+   Creates a pose using a user-defined projection matrix.
+   */
   convenience init(
       projMat: float4x4,
       rx: Float,
@@ -60,44 +106,20 @@ extension float4x4 {
       ty: Float,
       tz: Float)
   {
-    // Pitch.
-    let rotX = float4x4([
-      float4(+cos(rx), 0, -sin(rx), 0),
-      float4(0, 1, 0, 0),
-      float4(+sin(rx), 0, +cos(rx), 0),
-      float4(0, 0, 0, 1)
-    ])
-    
-    // Roll.
-    let rotY = float4x4([
-      float4(1, 0, 0, 0),
-      float4(0, +cos(ry), +sin(ry), 0),
-      float4(0, -sin(ry), +cos(ry), 0),
-      float4(0, 0, 0, 1)
-    ])
-    
-    // Yaw.
-    let rotZ = float4x4([
-      float4(+cos(rz), +sin(rz), 0, 0),
-      float4(-sin(rz), +cos(rz), 0, 0),
-      float4(0, 0, 1, 0),
-      float4(0, 0, 0, 1)
-    ])
-    
-    // Translation.
-    let trans = float4x4([
-      float4( 1,  0,  0, 0),
-      float4( 0,  1,  0, 0),
-      float4( 0,  0,  1, 0),
-      float4(tx, ty, tz, 1)
-    ])
-    
     self.init(
-      viewMat: trans * rotY * rotX * rotZ,
-      projMat: projMat
+        viewMat: (
+            float4x4(t: float3(tx, ty, tz)) *
+            float4x4(ry: ry) *
+            float4x4(rx: rx) *
+            float4x4(rz: rz)
+        ),
+        projMat: projMat
     )
   }
   
+  /**
+   Creates a pose using the OpenCV projection paramters.
+   */
   convenience init(
       params: ARParameters,
       rx: Float,
@@ -123,19 +145,20 @@ extension float4x4 {
     )
   }
   
+  /**
+   Story time. OpenCV's matrix was calibrated such that the marker is on
+   a plane with z = 0, which means that y must be swapped with z. Also,
+   y must be inverted and after applying transformation, the handedness
+   of the system must be corrected by inverting the direction of y and z
+   to match the orientation of the display and the depth buffer.
+   */
  convenience init(viewMat: [Float], projMat: [Float]) {
-    
-    // Story time. OpenCV's matrix was calibrated such that the marker is on
-    // a plane with z = 0, which means that y must be swapped with z. Also,
-    // y must be inverted and after applying transformation, the handedness
-    // of the system must be corrected by inverting the direction of y and z
-    // to match the orientation of the display and the depth buffer.
     self.init(
         viewMat: float4x4([
-            float4( viewMat[ 0], -viewMat[ 1], -viewMat[ 2],  viewMat[ 3]),
-            float4( viewMat[ 4], -viewMat[ 5], -viewMat[ 6],  viewMat[ 7]),
-            float4( viewMat[ 8], -viewMat[ 9], -viewMat[10],  viewMat[11]),
-            float4( viewMat[12], -viewMat[13], -viewMat[14],  viewMat[15])
+            float4(viewMat[ 0], -viewMat[ 1], -viewMat[ 2],  viewMat[ 3]),
+            float4(viewMat[ 4], -viewMat[ 5], -viewMat[ 6],  viewMat[ 7]),
+            float4(viewMat[ 8], -viewMat[ 9], -viewMat[10],  viewMat[11]),
+            float4(viewMat[12], -viewMat[13], -viewMat[14],  viewMat[15])
         ]),
         projMat: float4x4([
             float4(projMat[ 0], projMat[ 1], projMat[ 2], projMat[ 3]),
@@ -153,4 +176,8 @@ extension float4x4 {
     let w = viewMat.inverse * projMat.inverse * float4(v.x, v.y, v.z, 1.0)
     return float3(w.x / w.w, w.y / w.w, w.z / w.w)
   }
+  
+  // Objective-C accesors.
+  @objc var view: matrix_float4x4 { get { return viewMat.cmatrix } }
+  @objc var proj: matrix_float4x4 { get { return projMat.cmatrix } }
 }

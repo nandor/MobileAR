@@ -10,13 +10,17 @@
 #include <simd/simd.h>
 
 
+/// Minimum number of features required for tracking.
+static constexpr size_t kMinMatches = 20;
+
+
 @implementation AREnvironmentBuilder
 {
   // Width of the environment map.
   size_t width;
   // Height of the environment map.
   size_t height;
-  
+
   // OpenCV matrix holding the map.
   cv::Mat preview;
 
@@ -24,6 +28,21 @@
   cv::Mat frame;
   // Grayscale version of current frame.
   cv::Mat gray;
+
+  // Number of frames processed.
+  size_t count;
+
+  // Keypoint detctor & matcher.
+  cv::Ptr<cv::ORB> detector;
+  std::unique_ptr<cv::BFMatcher> matcher;
+
+  // Features describing frames.
+  std::vector<cv::KeyPoint> kp[2];
+  cv::Mat desc[2];
+
+  // Pose of the previous frame.
+  simd::float4x4 M;
+  simd::float4x4 P;
 }
 
 
@@ -32,7 +51,7 @@
   if (!(self = [super init])) {
     return nil;
   }
-  
+
   width = width_;
   height = height_;
   preview = cv::Mat::zeros(
@@ -41,37 +60,44 @@
       CV_8UC4
   );
 
+  count = 0;
+
+  detector = cv::ORB::create();
+  matcher = std::make_unique<cv::BFMatcher>(cv::NORM_HAMMING);
+
   return self;
 }
 
 
 - (void)update:(UIImage*)image pose:(ARPose*)pose {
   [image toCvMat: frame];
-  
-  std::vector<cv::KeyPoint> keypoints;
-  
+
+  // Track the pose using feature mathching on a grayscale image.
   cv::cvtColor(frame, gray, CV_BGR2GRAY);
-  auto detector = cv::FastFeatureDetector::create(50);
-  detector->detect(gray, keypoints);
-  
-  for (const auto &keypoint : keypoints) {
-    cv::circle(frame, keypoint.pt, 3, { 255, 0, 255 });
+  if (![self trackPose: pose image: gray]) {
+    return;
   }
-  
+
+  // Increment the number of successfully tracked frames.
+  ++count;
+
+  // Project the image onto the environment map.
   for (int r = 0; r < frame.rows; ++r) {
     auto ptr = frame.ptr<cv::Vec4b>(r);
     for (int c = 0; c < frame.cols; ++c) {
       // Cast a ray through the pixel.
-      const auto ray = simd::normalize(-simd::float3([pose unproject: {
+      const auto pr = simd::inverse(P * M) * simd::float4{
           static_cast<float>(frame.cols - c - 1),
           static_cast<float>(r),
           1.0f,
-      }]));
+          1.0f,
+      };
+      const auto wr = simd::normalize(-simd::float3{pr.x, pr.y, pr.z} / pr.w);
 
       // Project it onto the unit sphere & compute UV.
-      const auto l = static_cast<float>(simd::length(ray));
-      const auto u = static_cast<float>(atan2(ray.x, ray.y) / (2 * M_PI));
-      const auto v = static_cast<float>(acos(ray.z / l) / M_PI);
+      const auto l = static_cast<float>(simd::length(wr));
+      const auto u = static_cast<float>(atan2(wr.x, wr.y) / (2 * M_PI));
+      const auto v = static_cast<float>(acos(wr.z / l) / M_PI);
 
       // Compute texture coordinate, wrap around.
       const auto fx = (static_cast<int>(preview.cols * u) + preview.cols) % preview.cols;
@@ -81,6 +107,44 @@
       preview.at<cv::Vec4b>(fy, fx) = cv::Vec4b(ptr[c][2], ptr[c][1], ptr[c][0], 0xFF);
     }
   }
+}
+
+
+- (BOOL)trackPose:(ARPose*)pose image:(const cv::Mat&)image
+{
+  // Ping-pong between two sets of features.
+  size_t i0 = (count + 0) & 1;
+  size_t i1 = (count + 1) & 1;
+  auto &kp0 = kp[i0], &kp1 = kp[i1];
+  auto &ds0 = desc[i0], &ds1 = desc[i1];
+
+  // Detect features & keypoints in the current image.
+  detector->detectAndCompute(image, {}, kp1, ds1);
+  if (kp0.size() < kMinMatches || kp1.size() < kMinMatches) {
+    if (count != 0) {
+      return NO;
+    }
+
+    P = [pose proj];
+    M = [pose view];
+    return YES;
+  }
+
+  // Match the corresponding features.
+  std::vector<cv::DMatch> matches;
+  matcher->match(ds0, ds1, matches);
+  if (matches.size() <= kMinMatches || count == 0) {
+    return NO;
+  }
+
+  // Find a homography between the two sets of keypoints.
+  std::vector<cv::Point2f> xs0, xs1;
+  for (const auto &match: matches) {
+    xs0.push_back(kp0[match.queryIdx].pt);
+    xs1.push_back(kp1[match.trainIdx].pt);
+  }
+  
+  return YES;
 }
 
 
