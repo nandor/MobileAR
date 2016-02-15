@@ -97,9 +97,9 @@ extension CMDeviceMotion {
    */
   override func viewDidAppear(animated: Bool) {
     // Obtain permission to use the camera. Fetch camera params & environment.
-    obtainCamera()
     obtainCalibration()
     obtainEnvironment()
+    obtainCamera()
 
     if camera == nil || params == nil || environment == nil {
       return
@@ -211,7 +211,7 @@ extension CMDeviceMotion {
    */
   func obtainCamera() {
 
-    if let cam = try? ARCamera(delegate: self) {
+    if let cam = try? ARCamera(delegate: self, f: params?.f ?? 0.5) {
       camera = cam
       return
     }

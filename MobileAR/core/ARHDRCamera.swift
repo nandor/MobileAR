@@ -48,7 +48,8 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   init(
       delegate: ARHDRCameraDelegate?,
       motion: CMMotionManager,
-      exposures: [CMTime]) throws
+      exposures: [CMTime],
+      f: Float) throws
   {
     // Save config.
     self.hdrDelegate = delegate
@@ -56,7 +57,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
     self.exposures = exposures
     
     // Initialize superclass, registering this class as a handler.
-    try super.init(delegate: nil)
+    try super.init(delegate: nil, f: f)
     super.delegate = self
   }
   

@@ -58,7 +58,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
   /**
    Iniitalizes the camera wrapper.
    */
-  init(delegate: ARCameraDelegate?) throws {
+  init(delegate: ARCameraDelegate?, f: Float) throws {
     self.delegate = delegate
 
     super.init()
@@ -72,8 +72,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     // Configure the device.
     try device.lockForConfiguration()
     device.activeVideoMaxFrameDuration = CMTimeMake(1, 30)
-    device.focusMode = .Locked
-    device.exposureMode = .Locked
+    device.setFocusModeLockedWithLensPosition(f, completionHandler: nil)
     device.unlockForConfiguration()
 
     let videoInput = try AVCaptureDeviceInput(device: device)
@@ -250,7 +249,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     case .Some("focusMode"):
       let old = AVCaptureFocusMode(rawValue: oldVal)
       let new = AVCaptureFocusMode(rawValue: newVal)
-      
+  
       if old == .AutoFocus && new == .Locked {
         dispatch_semaphore_signal(semaFocus)
       }

@@ -122,7 +122,8 @@ class AREnvironmentCaptureController
     camera = try! ARHDRCamera(
         delegate: self,
         motion: motionManager,
-        exposures: kExposures
+        exposures: kExposures,
+        f: params.f
     )
     builder = AREnvironmentBuilder(
         width: kWidth,

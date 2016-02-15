@@ -113,7 +113,7 @@ struct Focus {
   // Draw the detected pattern.
   cv::drawChessboardCorners(rgba, kPatternSize, cv::Mat(corners), found);
   if (imagePoints.size() >= kCalibrationPoints) {
-    return [UIImage imageWithCvMat:rgba];
+    return [UIImage imageWithCvMat: rgba];
   }
 
   // Add the point to the set of calibration points and report progress.
@@ -149,27 +149,29 @@ struct Focus {
                     k2: distCoeffs.at<float>(1, 0)
                     r1: distCoeffs.at<float>(2, 0)
                     r2: distCoeffs.at<float>(3, 0)
-                    f: focus->f
+                    f:  focus->f
         ]];
       }
     });
   }
 
-  return [UIImage imageWithCvMat:rgba];
+  return [UIImage imageWithCvMat: rgba];
 }
+
 
 - (void)focus:(float)f x:(float)x y:(float)y
 {
-  // Clear collected data.
-  imagePoints.clear();
-  
-  // Reset process.
-  if ([delegate respondsToSelector:@selector(onProgress:)]) {
-    [delegate onProgress: 0.0f];
-  }
-  
-  // Set the new focal point.
+  [self clearFocus];
   focus = std::make_unique<Focus>(f, x, y);
 }
 
+
+- (void)clearFocus
+{
+  focus = nullptr;
+  imagePoints.clear();
+  if ([delegate respondsToSelector:@selector(onProgress:)]) {
+    [delegate onProgress: 0.0f];
+  }
+}
 @end
