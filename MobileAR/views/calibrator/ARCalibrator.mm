@@ -13,30 +13,45 @@
 
 
 /// Number of snapshots taken for calibration.
-static const size_t kCalibrationPoints = 32;
-
+static constexpr size_t kCalibrationPoints = 32;
+/// Minimal average distance between points in two sets.
+static constexpr double kMinDistance = 5.0f;
 /// Size of the asymetric circle pattern.
 static const cv::Size kPatternSize(4, 11);
 
 
 /**
- Structure representing the focal point & distance.
+ Computes the distance between two sets of image points.
  */
-struct Focus {
-  /// Focal distance.
-  float f;
+static double distance(
+    const std::vector<cv::Point2f> &xs,
+    const std::vector<cv::Point2f>& ys)
+{
+  assert(xs.size() == ys.size());
   
-  /// Focus point.
-  float x;
-  float y;
-  
-  Focus(float f, float x, float y)
-    : f(f)
-    , x(x)
-    , y(y)
-  {
+  float sum = 0.0f;
+  for (size_t i = 0; i < xs.size(); ++i) {
+    const auto dist = xs[i] - ys[i];
+    sum += std::sqrt(dist.dot(dist));
   }
-};
+  return std::sqrt(sum / xs.size());
+}
+
+
+/**
+ Computes the minimal distance between a point and any sets of points.
+ */
+static double distance(
+    const std::vector<std::vector<cv::Point2f>> &xxs,
+    const std::vector<cv::Point2f> &ys)
+{
+  auto min = std::numeric_limits<double>::max();
+  for (const auto &xs: xxs) {
+    min = std::min(min, distance(xs, ys));
+  }
+  return min;
+}
+
 
 
 @implementation ARCalibrator
@@ -58,7 +73,7 @@ struct Focus {
   id<ARCalibratorDelegate> delegate;
   
   // Focal distance.
-  std::unique_ptr<Focus> focus;
+  NSNumber *focus;
 }
 
 - (instancetype)initWithDelegate:(id)delegate_
@@ -83,13 +98,16 @@ struct Focus {
     }
   }
 
+  // No focal point set.
+  focus = nil;
+  
   return self;
 }
 
 - (UIImage*)findPattern:(UIImage*)frame
 {
   // Focal distance must be set for calibration.
-  if (focus == nullptr) {
+  if (focus == nil) {
     return frame;
   }
   
@@ -112,13 +130,20 @@ struct Focus {
 
   // Draw the detected pattern.
   cv::drawChessboardCorners(rgba, kPatternSize, cv::Mat(corners), found);
+  
+  // If enough points were captured, bail out.
   if (imagePoints.size() >= kCalibrationPoints) {
+    return [UIImage imageWithCvMat: rgba];
+  }
+  
+  // If distance between two sets too small, return.
+  if (distance(imagePoints, corners) < kMinDistance) {
     return [UIImage imageWithCvMat: rgba];
   }
 
   // Add the point to the set of calibration points and report progress.
   imagePoints.push_back(corners);
-  if ([delegate respondsToSelector:@selector(onProgress:)]) {
+  if ([delegate respondsToSelector: @selector(onProgress:)]) {
     [delegate onProgress:static_cast<float>(imagePoints.size()) / kCalibrationPoints];
   }
 
@@ -149,7 +174,7 @@ struct Focus {
                     k2: distCoeffs.at<float>(1, 0)
                     r1: distCoeffs.at<float>(2, 0)
                     r2: distCoeffs.at<float>(3, 0)
-                    f:  focus->f
+                     f: [focus floatValue]
         ]];
       }
     });
@@ -161,17 +186,13 @@ struct Focus {
 
 - (void)focus:(float)f x:(float)x y:(float)y
 {
-  [self clearFocus];
-  focus = std::make_unique<Focus>(f, x, y);
-}
-
-
-- (void)clearFocus
-{
-  focus = nullptr;
+  focus = @(f);
+  
   imagePoints.clear();
+  
   if ([delegate respondsToSelector:@selector(onProgress:)]) {
     [delegate onProgress: 0.0f];
   }
 }
+
 @end

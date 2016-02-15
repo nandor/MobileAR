@@ -33,27 +33,24 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
       "uk.ac.ic.MobileAR.ARCameraFetchQueue",
       DISPATCH_QUEUE_SERIAL
   )
-
-  // Capture session for start/stop.
-  internal let captureSession = AVCaptureSession()
-
-  // User-specified callback.
-  internal var delegate: ARCameraDelegate?
-
-  // Camera device.
-  internal var device: AVCaptureDevice!
-  
   // Dispatch queue to execute notification blocks on.
   private let queueCalibrate = dispatch_queue_create(
-      "uk.ac.ic.MobileAR.ARCameraWaitQueue",
-      DISPATCH_QUEUE_SERIAL
+    "uk.ac.ic.MobileAR.ARCameraWaitQueue",
+    DISPATCH_QUEUE_SERIAL
   )
   
   // Semaphore to signal auto-focus.
   private let semaFocus = dispatch_semaphore_create(0)
-  
   // Semaphore to signal auto-exposure.
   private let semaExposure = dispatch_semaphore_create(0)
+  
+  
+  // Capture session for start/stop.
+  internal let captureSession = AVCaptureSession()
+  // User-specified callback.
+  internal var delegate: ARCameraDelegate?
+  // Camera device.
+  internal var device: AVCaptureDevice!
 
   /**
    Iniitalizes the camera wrapper.
@@ -71,6 +68,8 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     // Configure the device.
     try device.lockForConfiguration()
+    device.whiteBalanceMode = .ContinuousAutoWhiteBalance
+    device.exposureMode = .ContinuousAutoExposure
     device.activeVideoMaxFrameDuration = CMTimeMake(1, 30)
     device.setFocusModeLockedWithLensPosition(f, completionHandler: nil)
     device.unlockForConfiguration()
@@ -187,7 +186,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
   }
 
   /**
-   Sets the exposure point, but allows for auto-exposure.
+   Starts auto-exposure, focusing on a single point.
    */
   func expose(x x: Float, y: Float, f: Float, completionHandler: (CMTime) -> ()) {
     let point = CGPoint(x: CGFloat(x), y: CGFloat(y))
@@ -219,6 +218,9 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
       // Wait until the camera finishes configuring itself.
       dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER)
       dispatch_semaphore_wait(self.semaExposure, DISPATCH_TIME_FOREVER)
+      
+      // Lock white balance.
+      self.device.whiteBalanceMode = .Locked
       
       // Execute the callback.
       completionHandler(self.device.exposureDuration)

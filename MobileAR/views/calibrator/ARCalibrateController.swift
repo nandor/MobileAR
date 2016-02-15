@@ -213,12 +213,11 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
   override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
   
     // Get the other fingers of the screen!
-    guard touches.count == 1 else {
+    guard let touch = touches.first?.locationInView(view) else {
       return
     }
     
     // Find the touch location.
-    let touch = touches.first!.locationInView(view)
     let x = Float(touch.x / view.frame.width)
     let y = Float(touch.y / view.frame.height)
     

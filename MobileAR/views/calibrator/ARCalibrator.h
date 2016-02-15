@@ -37,9 +37,4 @@
  */
 - (void)focus:(float)f x:(float)x y:(float)y;
 
-/**
- Clears the focal distance.
- */
-- (void)clearFocus;
-
 @end
