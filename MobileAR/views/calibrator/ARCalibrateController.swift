@@ -4,18 +4,22 @@
 
 import UIKit
 
-class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDelegate  {
+class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDelegate {
+  
   // UI Elements.
-  private var imageView : UIImageView!
-  private var spinnerView : UIActivityIndicatorView!
-  private var textView : UILabel!
-  private var progressView : UIProgressView!
+  private var imageView: UIImageView!
+  private var spinnerView: UIActivityIndicatorView!
+  private var textView: UILabel!
+  private var progressView: UIProgressView!
 
   // Camera wrapper.
-  private var camera : ARCamera!
+  private var camera: ARCamera!
 
   // Calibrator context.
-  private var calibrator : ARCalibrator!
+  private var calibrator: ARCalibrator!
+  
+  // Focus point for the camera.
+  private var focusPoint: CGPoint?
 
   /**
    Called when the view is first loaded.
@@ -200,6 +204,27 @@ class ARCalibrateController : UIViewController, ARCameraDelegate, ARCalibratorDe
   func onCameraFrame(frame: UIImage) {
     dispatch_async(dispatch_get_main_queue()) {
       self.imageView.image = self.calibrator.findPattern(frame)
+    }
+  }
+  
+  /**
+   When the user taps on the screen, focus should be changed.
+   */
+  override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
+  
+    // Get the other fingers of the screen!
+    guard touches.count == 1 else {
+      return
+    }
+    
+    // Find the touch location.
+    let touch = touches.first!.locationInView(view)
+    let x = Float(touch.x / view.frame.width)
+    let y = Float(touch.y / view.frame.height)
+    
+    // Focus the camera.
+    camera.focus(x: x, y: y) { (Float f) in
+        print(f)
     }
   }
 }

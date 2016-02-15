@@ -4,25 +4,37 @@
 
 import Foundation
 
+enum ARParametersError: ErrorType {
+  case MissingKey
+  case InvalidType
+}
+
 @objc class ARParameters : NSObject {
+  // Focal distance & principal point.
   let fx: Float
   let fy: Float
   let cx: Float
   let cy: Float
+
+  // Distortion.
   let k1: Float
   let k2: Float
   let r1: Float
   let r2: Float
 
+  // Camera focal distance [0.0, 1.0f]
+  let f: Float
+
   @objc required init(
-    fx : Float,
-    fy : Float,
-    cx : Float,
-    cy : Float,
-    k1 : Float,
-    k2 : Float,
-    r1 : Float,
-    r2 : Float)
+    fx: Float,
+    fy: Float,
+    cx: Float,
+    cy: Float,
+    k1: Float,
+    k2: Float,
+    r1: Float,
+    r2: Float,
+    f: Float)
   {
     self.fx = fx
     self.fy = fy
@@ -32,6 +44,7 @@ import Foundation
     self.k2 = k2
     self.r1 = r1
     self.r2 = r2
+    self.f = f
   }
 
   /**
@@ -45,15 +58,23 @@ import Foundation
         options: NSJSONReadingOptions()
     ) as! [String: AnyObject]
 
+    let fetch: (String) throws -> Float = { (String key) throws in
+      guard let val = json[key] as? Float else {
+        throw ARParametersError.MissingKey
+      }
+      return val
+    }
+
     return ARParameters(
-        fx: json["fx"] as! Float,
-        fy: json["fy"] as! Float,
-        cx: json["cx"] as! Float,
-        cy: json["cy"] as! Float,
-        k1: json["k1"] as! Float,
-        k2: json["k2"] as! Float,
-        r1: json["r1"] as! Float,
-        r2: json["r2"] as! Float
+        fx: try fetch("fx"),
+        fy: try fetch("fy"),
+        cx: try fetch("cx"),
+        cy: try fetch("cy"),
+        k1: try fetch("k1"),
+        k2: try fetch("k2"),
+        r1: try fetch("r1"),
+        r2: try fetch("r2"),
+        f:  try fetch("f")
     )
   }
 
@@ -69,7 +90,8 @@ import Foundation
           "k1": params.k1,
           "k2": params.k2,
           "r1": params.r1,
-          "r2": params.r2
+          "r2": params.r2,
+          "f":  params.f
         ],
         options: NSJSONWritingOptions()
     )).writeToURL(getParametersFileURL(), atomically: true)

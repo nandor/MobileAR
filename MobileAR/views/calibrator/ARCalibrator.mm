@@ -19,6 +19,26 @@ static const size_t kCalibrationPoints = 32;
 static const cv::Size kPatternSize(4, 11);
 
 
+/**
+ Structure representing the focal point & distance.
+ */
+struct Focus {
+  /// Focal distance.
+  float f;
+  
+  /// Focus point.
+  float x;
+  float y;
+  
+  Focus(float f, float x, float y)
+    : f(f)
+    , x(x)
+    , y(y)
+  {
+  }
+};
+
+
 @implementation ARCalibrator
 {
   // OpenCV images.
@@ -36,6 +56,9 @@ static const cv::Size kPatternSize(4, 11);
 
   // Delegate that handles events.
   id<ARCalibratorDelegate> delegate;
+  
+  // Focal distance.
+  std::unique_ptr<Focus> focus;
 }
 
 - (instancetype)initWithDelegate:(id)delegate_
@@ -65,6 +88,12 @@ static const cv::Size kPatternSize(4, 11);
 
 - (UIImage*)findPattern:(UIImage*)frame
 {
+  // Focal distance must be set for calibration.
+  if (focus == nullptr) {
+    return frame;
+  }
+  
+  // Convert rgb to bgra.
   [frame toCvMat:bgra];
   cv::cvtColor(bgra, rgba, CV_BGRA2RGBA);
   cv::cvtColor(rgba, gray, CV_RGBA2GRAY);
@@ -119,13 +148,28 @@ static const cv::Size kPatternSize(4, 11);
                     k1: distCoeffs.at<float>(0, 0)
                     k2: distCoeffs.at<float>(1, 0)
                     r1: distCoeffs.at<float>(2, 0)
-                    r2: distCoeffs.at<float>(3, 0)]];
-
+                    r2: distCoeffs.at<float>(3, 0)
+                    f: focus->f
+        ]];
       }
     });
   }
 
   return [UIImage imageWithCvMat:rgba];
+}
+
+- (void)focus:(float)f x:(float)x y:(float)y
+{
+  // Clear collected data.
+  imagePoints.clear();
+  
+  // Reset process.
+  if ([delegate respondsToSelector:@selector(onProgress:)]) {
+    [delegate onProgress: 0.0f];
+  }
+  
+  // Set the new focal point.
+  focus = std::make_unique<Focus>(f, x, y);
 }
 
 @end

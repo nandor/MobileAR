@@ -11,8 +11,8 @@
 
 @protocol ARCalibratorDelegate <NSObject>
 
-- (void) onProgress:(float)progress;
-- (void) onComplete:(float)rms params:(ARParameters*)params;
+- (void)onProgress:(float)progress;
+- (void)onComplete:(float)rms params:(ARParameters*)params;
 
 @end
 
@@ -31,5 +31,10 @@
  Finds a pattern in a frame and highlights it.
  */
 - (UIImage *)findPattern:(UIImage *)frame;
+
+/**
+ Resets the calibrator when the focal distance changes.
+ */
+- (void)focus:(float)f x:(float)x y:(float)y;
 
 @end
