@@ -5,6 +5,7 @@
 #pragma once
 
 #include "LightProbeSampler.h"
+#include "Moments.h"
 
 namespace ar {
 
@@ -13,12 +14,29 @@ namespace ar {
  */
 class VarianceCutSampler : public LightProbeSampler{
  public:
-  VarianceCutSampler(size_t depth);
-
-  std::vector<LightSource> sample(const cv::Mat &image);
-
+  /**
+   Initializes the variance cut sampler.
+   */
+  VarianceCutSampler(size_t depth, const cv::Mat &image);
+  
  private:
-  const size_t depth_;
+  /**
+   * Splits the image vertically or horizontally into two and recurses.
+   */
+  void split(const Region &region, int depth);
+  
+  /**
+   Computes variance in a region.
+   */
+  int64_t variance(const Region &region);
+  
+ private:
+  /// Moments.
+  Moments<0, 0> m00_;
+  Moments<0, 1> m01_;
+  Moments<1, 0> m10_;
+  Moments<0, 2> m02_;
+  Moments<2, 0> m20_;
 };
 
 }

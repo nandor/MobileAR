@@ -4,163 +4,71 @@
 
 #include "MedianCutSampler.h"
 
-
 namespace ar {
 
-MedianCutSampler::MedianCutSampler(size_t depth)
-  : depth_(depth)
-  , count_(1 << depth)
-  , lights_(depth)
+MedianCutSampler::MedianCutSampler(size_t depth, const cv::Mat &image)
+  : LightProbeSampler(depth, image)
+  , m00_(illum_)
+  , m01_(illum_)
+  , m10_(illum_)
 {
 }
 
-std::vector<ar::LightSource> MedianCutSampler::sample(const cv::Mat &image) {
-
-  // Save the image.
-  image_ = image;
-
-  // Ensure image is BGRA.
-  if (image_.channels() != 4) {
-    return {};
-  }
-
-  // Compute the luminance.
-  illum_ = cv::Mat(image.rows, image.cols, CV_32FC1);
-  for (int r = 0; r < image_.rows; ++r) {
-    auto pl = illum_.ptr<float>(r);
-    auto pi = image_.ptr<cv::Vec4b>(r);
-    for (int c = 0; c < image_.cols; ++c) {
-      const auto &pix = pi[c];
-      pl[c] = pix[0] * 0.0721 + pix[1] * 0.7154 + pix[2] * 0.2125;
-    }
-  }
-
-  // Compute the SST.
-  sst_ = cv::Mat::zeros(illum_.rows + 1, illum_.cols + 1, CV_32FC1);
-  for (int r = 0; r < illum_.rows; ++r) {
-    const auto pl = illum_.ptr<float>(r);
-    const auto ps0 = sst_.ptr<float>(r + 0);
-    auto ps1 = sst_.ptr<float>(r + 1);
-
-    for (int c = 0; c < illum_.cols; ++c) {
-      ps1[c + 1] = ps1[c] + ps0[c + 1] - ps0[c] + pl[c];
-    }
-  }
-
-  // Kicks of sampling.
-  lights_.clear();
-  split(1, 1, illum_.rows, illum_.cols, 0);
-  return lights_;
-}
-
-void MedianCutSampler::split(int r0, int c0, int r1, int c1, int depth) {
+void MedianCutSampler::split(const Region &region, int depth) {
 
   // If max depth was reached, return light source.
   if (depth >= depth_) {
-    lights_.push_back(sample(r0, c0, r1, c1));
+    lights_.push_back(sample(
+        region,
+        static_cast<int>(m10_(region) / m00_(region)),
+        static_cast<int>(m01_(region) / m00_(region))
+    ));
     return;
   }
+  
+  // Try best cut along Y.
+  auto bestY = region.y0;
+  auto bestDiffY = std::numeric_limits<int64_t>::max();
+  {
 
-  // Cut perpendicular to the longer side of the rectangle.
-  const float total =
-      sst_.at<float>(r1, c1) + sst_.at<float>(r0, c0) -
-      sst_.at<float>(r0, c1) - sst_.at<float>(r1, c0);
-
-  if (r1 - r0 >= c1 - c0) {
-    auto bestRow = r0;
-    auto bestDiff = std::numeric_limits<float>::max();
-
-    for (int r = r0; r <= r1; ++r) {
-      const float sum =
-          sst_.at<float>( r, c1) + sst_.at<float>(r0, c0) -
-          sst_.at<float>(r0, c1) - sst_.at<float>( r, c0);
-
-      const float diff = std::abs(2.0f * sum - total);
-      if (diff < bestDiff) {
-        bestRow = r;
-        bestDiff = diff;
+    for (int y = region.y0; y < region.y1; ++y) {
+      const Region r0(region.y0, region.x0, y, region.x1);
+      const Region r1(y + 1, region.x0, region.y1, region.x1);
+      
+      const auto diff = std::abs(m00_(r0) - m00_(r1));
+      if (diff < bestDiffY) {
+        bestY = y;
+        bestDiffY = diff;
       }
     }
+  }
+  
+  // Try best cut along X.
+  auto bestX = region.x0;
+  auto bestDiffX = std::numeric_limits<int64_t>::max();
+  {
 
-    split(r0, c0, bestRow, c1, depth + 1);
-    split(bestRow, c0, r1, c1, depth + 1);
+    for (int x = region.x0; x < region.x1; ++x) {
+      const Region r0(region.y0, region.x0, region.y1, x);
+      const Region r1(region.y0, x + 1, region.y1, region.x1);
+      
+      const auto diff = std::abs(m00_(r0) - m00_(r1));
+      if (diff < bestDiffX) {
+        bestX = x;
+        bestDiffX = diff;
+      }
+    }
+  }
+  
+  // Cut along either Y or X.
+  if (bestDiffY < bestDiffX) {
+    split({ region.y0, region.x0, bestY + 0, region.x1 }, depth + 1);
+    split({ bestY + 1, region.x0, region.y1, region.x1 }, depth + 1);
   } else {
-    auto bestCol = c0;
-    auto bestDiff = std::numeric_limits<float>::max();
-
-    for (int c = c0; c <= c1; ++c) {
-      const float sum =
-          sst_.at<float>(r1, c) + sst_.at<float>(r0, c0) -
-          sst_.at<float>(r0,  c) - sst_.at<float>(r1, c0);
-
-      const float diff = std::abs(2.0f * sum - total);
-      if (diff < bestDiff) {
-        bestCol = c;
-        bestDiff = diff;
-      }
-    }
-
-    split(r0, c0, r1, bestCol, depth + 1);
-    split(r0, bestCol, r1, c1, depth + 1);
+    split({ region.y0, region.x0, region.y1, bestX + 0 }, depth + 1);
+    split({ region.y0, bestX + 1, region.y1, region.x1 }, depth + 1);
   }
 }
 
-ar::LightSource MedianCutSampler::sample(int r0, int c0, int r1, int c1) const {
-
-  // Sum up light intensities.
-  float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f;
-  for (int r = r0 - 1; r < r1; ++r) {
-    const auto &row = image_.ptr<cv::Vec4b>(r);
-    for (int c = c0 - 1; c < c1; ++c) {
-      const auto &pix = row[c];
-
-      sumB += pix[0];
-      sumG += pix[1];
-      sumR += pix[2];
-    }
-  }
-    // Compute average intensity.
-  const float area = (r1 - r0 + 1) * (c1 - c0 + 1);
-  const float scale = area * std::max(1ul, count_ / 4) * 255.0f;
   
-  const float b = sumB / scale;
-  const float g = sumG / scale;
-  const float r = sumR / scale;
-  
-  // Find the direction of the light source.
-  const float y = (r1 + r0) / 2.0f;
-  const float x = (c1 + c0) / 2.0f;
-  
-  const auto phi = static_cast<float>(M_PI / 2.0 - M_PI * y / image_.rows);
-  const auto theta = static_cast<float>(2 * M_PI * x / image_.cols);
-
-  const auto vx = static_cast<float>(cos(phi) * sin(theta));
-  const auto vy = static_cast<float>(sin(phi));
-  const auto vz = static_cast<float>(cos(phi) * cos(theta));
-
-  // Create the light source.
-  return {
-      simd::float3{
-          -vx,
-          -vy,
-          -vz
-      },
-      simd::float3{
-          r / 5.0f,
-          g / 5.0f,
-          b / 5.0f
-      },
-      simd::float3{
-          r,
-          g,
-          b
-      },
-      simd::float3{
-          r * 1.5f,
-          g * 1.5f,
-          b * 1.5f
-      }
-  };
-}
-
 }

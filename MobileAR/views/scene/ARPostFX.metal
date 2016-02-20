@@ -29,12 +29,12 @@ constant uint SSAO_SAMPLES = 32;
 /**
  Influence of the ambient occlusion factor.
  */
-constant float SSAO_POWER = 8.0;
+constant float SSAO_POWER = 5.0;
 
 /**
  Radius of the SSAO sampling.
  */
-constant float SSAO_FOCUS = 0.30;
+constant float SSAO_FOCUS = 1.0;
 
 /**
  Size of the screen for the iPhone 6S.

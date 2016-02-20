@@ -81,4 +81,10 @@
   CGContextRelease(contextRef);
 }
 
+- (cv::Mat)cvMat
+{
+  cv::Mat mat;
+  [self toCvMat: mat];
+  return mat;
+}
 @end

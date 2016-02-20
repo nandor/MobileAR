@@ -14,34 +14,25 @@
 
 @implementation ARLightProbeSampler
 {
-  std::unique_ptr<ar::LightProbeSampler> sampler;
 }
 
 
-- (instancetype)initWithVarianceCutSampler:(size_t)levels
++ (NSArray<ARLight*>*)sampleVarianceCut:(UIImage*)image levels:(size_t)levels
 {
-  if (!(self = [super init])) {
-    return nil;
-  }
-  sampler = std::make_unique<ar::VarianceCutSampler>(levels);
-  return self;
+  return [ARLightProbeSampler sample: ar::VarianceCutSampler(levels, [image cvMat])];
 }
 
-- (instancetype)initWithMedianCutSampler:(size_t)levels
+
++ (NSArray<ARLight*>*)sampleMedianCut:(UIImage*)image levels:(size_t)levels
 {
-  if (!(self = [super init])) {
-    return nil;
-  }
-  sampler = std::make_unique<ar::MedianCutSampler>(levels);
-  return self;
+  return [ARLightProbeSampler sample: ar::MedianCutSampler(levels, [image cvMat])];
 }
 
-- (NSArray<ARLight*>*)sample:(UIImage*)image
+
++ (NSArray<ARLight*>*)sample:(ar::LightProbeSampler&&)sampler
 {
   // Sample the light sources in the image.
-  cv::Mat mat;
-  [image toCvMat:mat];
-  auto lights = sampler->sample(mat);
+  auto lights = sampler();
 
   // Convert light sources to Swift ARLight.
   std::vector<ARLight*> ptrs;

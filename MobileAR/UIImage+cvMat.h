@@ -18,4 +18,9 @@
  */
 - (void)toCvMat:(cv::Mat &)mtx;
 
+/**
+ Returns a cv matrix.
+ */
+- (cv::Mat)cvMat;
+
 @end

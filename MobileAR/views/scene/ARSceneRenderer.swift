@@ -726,12 +726,12 @@ class ARSceneRenderer : ARRenderer {
     
     // Pedestal buffer data.
     let vbo: [float4] = [
-        float4( 1.5,  1.5, 0, 1),
-        float4(-1.5, -1.5, 0, 1),
-        float4(-1.5,  1.5, 0, 1),
-        float4(-1.5, -1.5, 0, 1),
-        float4( 1.5,  1.5, 0, 1),
-        float4( 1.5, -1.5, 0, 1),
+        float4( 6.0,  6.0, 0, 1),
+        float4(-6.0, -6.0, 0, 1),
+        float4(-6.0,  6.0, 0, 1),
+        float4(-6.0, -6.0, 0, 1),
+        float4( 6.0,  6.0, 0, 1),
+        float4( 6.0, -6.0, 0, 1),
     ]
     pedestalBuffer = device.newBufferWithBytes(
         vbo,

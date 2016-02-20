@@ -14,16 +14,11 @@
 /**
  Creates a new Variance Cut Sampler.
  */
-- (instancetype)initWithVarianceCutSampler:(size_t)levels;
++ (NSArray<ARLight*>*)sampleVarianceCut:(UIImage*)image levels:(size_t)levels;
 
 /**
  Initializes a new Median Cut Sampler.
  */
-- (instancetype)initWithMedianCutSampler:(size_t)levels;
-
-/**
- Returns the sampled light sources.
- */
-- (NSArray<ARLight*>*)sample:(UIImage*)image;
++ (NSArray<ARLight*>*)sampleMedianCut:(UIImage*)image levels:(size_t)levels;
 
 @end
