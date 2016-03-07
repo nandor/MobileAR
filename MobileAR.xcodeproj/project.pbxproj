@@ -10,6 +10,7 @@
 		7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARMesh.metal */; };
 		7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */; };
 		7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */; };
+		7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */; };
 		7A49DFDC1C604F9E00C47B8A /* cup_diff.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFD91C604F9E00C47B8A /* cup_diff.png */; };
 		7A49DFDD1C604F9E00C47B8A /* cup_norm.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDA1C604F9E00C47B8A /* cup_norm.png */; };
 		7A49DFDE1C604F9E00C47B8A /* cup_spec.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFDB1C604F9E00C47B8A /* cup_spec.png */; };
@@ -60,6 +61,8 @@
 		7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LightProbeSampler.cpp; path = ar/LightProbeSampler.cpp; sourceTree = "<group>"; };
 		7A2FE8FC1C77DF5A009BECCC /* LightProbeSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LightProbeSampler.h; path = ar/LightProbeSampler.h; sourceTree = "<group>"; };
 		7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARFileReader.swift; sourceTree = "<group>"; };
+		7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HDRBuilder.cpp; path = ar/HDRBuilder.cpp; sourceTree = "<group>"; };
+		7A48122E1C8DB0AC00521E35 /* HDRBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HDRBuilder.h; path = ar/HDRBuilder.h; sourceTree = "<group>"; };
 		7A49DFD91C604F9E00C47B8A /* cup_diff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cup_diff.png; path = MobileAR/models/cup_diff.png; sourceTree = "<group>"; };
 		7A49DFDA1C604F9E00C47B8A /* cup_norm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cup_norm.png; path = MobileAR/models/cup_norm.png; sourceTree = "<group>"; };
 		7A49DFDB1C604F9E00C47B8A /* cup_spec.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cup_spec.png; path = MobileAR/models/cup_spec.png; sourceTree = "<group>"; };
@@ -222,6 +225,8 @@
 		C13F8A2642DCE930150DD8E9 /* ar */ = {
 			isa = PBXGroup;
 			children = (
+				7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */,
+				7A48122E1C8DB0AC00521E35 /* HDRBuilder.h */,
 				7A2FE8FA1C77C00F009BECCC /* Moments.h */,
 				7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */,
 				7A2FE8FC1C77DF5A009BECCC /* LightProbeSampler.h */,
@@ -380,6 +385,7 @@
 				C13F8922F94928E19AF4B060 /* ARMesh.swift in Sources */,
 				7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */,
 				C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */,
+				7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */,
 				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 				C13F8C886918E43EBB1E4A6F /* ARObject.swift in Sources */,
 				C13F87C7A162442BE302226F /* AREnvironmentBuilder.mm in Sources */,
