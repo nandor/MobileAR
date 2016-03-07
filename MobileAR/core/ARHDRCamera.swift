@@ -67,6 +67,10 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
    */
   func onCameraFrame(frame: UIImage) {
     
+    guard !configuring else {
+      return
+    }
+    
     // Skip if attitude cannot be read.
     guard let attitude = motion.deviceMotion?.attitude else {
       return

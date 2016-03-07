@@ -14,6 +14,34 @@
 static constexpr size_t kMinMatches = 20;
 
 
+/**
+ Convers a CV matrix to a simd matrix.
+ */
+static simd::float4x4 convert(const cv::Mat &m) {
+  return simd::float4x4(
+      simd::float4{
+          static_cast<float>(m.at<double>(0, 0)),
+          static_cast<float>(m.at<double>(1, 0)),
+          static_cast<float>(m.at<double>(2, 0)),
+          0
+      },
+      simd::float4{
+          static_cast<float>(m.at<double>(0, 1)),
+          static_cast<float>(m.at<double>(1, 1)),
+          static_cast<float>(m.at<double>(2, 1)),
+          0
+      },
+      simd::float4{
+          static_cast<float>(m.at<double>(0, 2)),
+          static_cast<float>(m.at<double>(1, 2)),
+          static_cast<float>(m.at<double>(2, 2)),
+          0
+      },
+      simd::float4{ 0, 0, 0, 1 }
+  );
+}
+
+
 @implementation AREnvironmentBuilder
 {
   // Width of the environment map.
@@ -95,9 +123,8 @@ static constexpr size_t kMinMatches = 20;
       const auto wr = simd::normalize(-simd::float3{pr.x, pr.y, pr.z} / pr.w);
 
       // Project it onto the unit sphere & compute UV.
-      const auto l = static_cast<float>(simd::length(wr));
       const auto u = static_cast<float>(atan2(wr.x, wr.y) / (2 * M_PI));
-      const auto v = static_cast<float>(acos(wr.z / l) / M_PI);
+      const auto v = static_cast<float>(acos(wr.z) / M_PI);
 
       // Compute texture coordinate, wrap around.
       const auto fx = (static_cast<int>(preview.cols * u) + preview.cols) % preview.cols;
@@ -143,6 +170,9 @@ static constexpr size_t kMinMatches = 20;
     xs0.push_back(kp0[match.queryIdx].pt);
     xs1.push_back(kp1[match.trainIdx].pt);
   }
+  
+  P = [pose proj];
+  M = [pose view];
   
   return YES;
 }

@@ -4,7 +4,7 @@
 
 import CoreLocation
 import UIKit
-
+import QuartzCore
 
 /**
  List of exposure times to capture.
@@ -47,13 +47,13 @@ class AREnvironmentCaptureController
   private var renderer: AREnvironmentViewRenderer!
 
   // Class used to build the environment.
-  private var builder: AREnvironmentBuilder!
+  private var builder: AREnvironmentBuilder?
 
   // Width of the environment map.
-  private let kWidth = 2048
+  private static let kWidth = 2048
 
   // Height of the environment map.
-  private let kHeight = 1024
+  private static let kHeight = 1024
 
   // Camera parameters.
   private var params: ARParameters!
@@ -104,7 +104,11 @@ class AREnvironmentCaptureController
     )
 
     // Create the environment renderer.
-    renderer = try! AREnvironmentViewRenderer(view: view, width: kWidth, height: kHeight)
+    renderer = try! AREnvironmentViewRenderer(
+        view: view,
+        width: AREnvironmentCaptureController.kWidth,
+        height: AREnvironmentCaptureController.kHeight
+    )
   }
 
   /**
@@ -125,14 +129,16 @@ class AREnvironmentCaptureController
         exposures: kExposures,
         f: params.f
     )
-    builder = AREnvironmentBuilder(
-        width: kWidth,
-        height: kHeight
-    )
-    camera?.start()
+    camera.start()
+    camera.expose(x: 0.5, y: 0.5) { (CMTime) in
+      self.builder = AREnvironmentBuilder(
+          width: AREnvironmentCaptureController.kWidth,
+          height: AREnvironmentCaptureController.kHeight
+      )
+    }
     
     // Timer to run the rendering/update loop.
-    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer = CADisplayLink(target: self, selector: Selector("onFrame"))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
   }
 
@@ -142,7 +148,7 @@ class AREnvironmentCaptureController
   override func viewWillDisappear(animated: Bool) {
     super.viewWillDisappear(animated)
 
-    camera?.stop()
+    camera.stop()
     timer.invalidate()
   }
 
@@ -215,7 +221,6 @@ class AREnvironmentCaptureController
    */
   func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
     let display = frame.last!
-
     /*
     let dir = NSFileManager.defaultManager().URLsForDirectory(
         .DocumentDirectory,
@@ -229,14 +234,13 @@ class AREnvironmentCaptureController
         attributes: nil
     )
     
-    for var i in 0...frame.count - 1 {
+    for i in 0...frame.count - 1 {
       let att = frame[i].1
       let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
       UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
     }
     */
-
-    builder.update(display.2, pose: ARPose(
+    builder?.update(display.2, pose: ARPose(
         params: params,
         rx: -Float(display.1.pitch),
         ry:  Float(display.1.roll),
@@ -255,7 +259,7 @@ class AREnvironmentCaptureController
       return
     }
 
-    if let preview = builder.getPreview() {
+    if let preview = builder?.getPreview() {
       renderer.update(preview)
     }
 

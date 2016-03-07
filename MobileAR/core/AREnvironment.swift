@@ -85,7 +85,7 @@ class AREnvironment {
     self.map = UIImage(contentsOfFile: environmentPath)
     
     // TODO(nandor): Sample only when environment is saved.
-    self.lights = ARLightProbeSampler.sampleMedianCut(map, levels: 5)
+    self.lights = []//ARLightProbeSampler.sampleMedianCut(map, levels: 5)
   }
 
   /**

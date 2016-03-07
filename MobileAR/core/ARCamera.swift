@@ -51,7 +51,10 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
   internal var delegate: ARCameraDelegate?
   // Camera device.
   internal var device: AVCaptureDevice!
-
+  // Indicates that the camera is begin configured.
+  internal var configuring: Bool = false
+  
+  
   /**
    Iniitalizes the camera wrapper.
    */
@@ -67,7 +70,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     self.device = device
 
     // Configure the device.
-    try device.lockForConfiguration()
+    try! device.lockForConfiguration()
     device.whiteBalanceMode = .ContinuousAutoWhiteBalance
     device.exposureMode = .ContinuousAutoExposure
     device.activeVideoMaxFrameDuration = CMTimeMake(1, 30)
@@ -122,7 +125,6 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
       return
     }
-
     CVPixelBufferLockBaseAddress(imageBuffer, 0)
 
     let addr = CVPixelBufferGetBaseAddress(imageBuffer)
@@ -162,6 +164,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     let point = CGPoint(x: CGFloat(x), y: CGFloat(y))
     let scheduled = CFAbsoluteTimeGetCurrent()
     
+    configuring = true
     dispatch_async(queueCalibrate) {
       // Bail out if it took longer than half a second.
       guard CFAbsoluteTimeGetCurrent() - scheduled < 0.5 else {
@@ -182,48 +185,39 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
       
       // Execute the callback.
       completionHandler(self.device.lensPosition)
+      self.configuring = false
     }
   }
 
   /**
    Starts auto-exposure, focusing on a single point.
    */
-  func expose(x x: Float, y: Float, f: Float, completionHandler: (CMTime) -> ()) {
+  func expose(x x: Float, y: Float, completionHandler: (CMTime) -> ()) {
     let point = CGPoint(x: CGFloat(x), y: CGFloat(y))
     let scheduled = CFAbsoluteTimeGetCurrent()
     
+    configuring = true
     dispatch_async(queueCalibrate) {
       // Bail out if it took longer than half a second.
       guard CFAbsoluteTimeGetCurrent() - scheduled < 0.5 else {
         return
       }
       
-      let sema = dispatch_semaphore_create(0)
-      
-      // Fix the focal length first.
+      // Obtain access to camera.
       try! self.device.lockForConfiguration()
-      self.device.setFocusModeLockedWithLensPosition(f) { (CMTime) in
-        
-        // Start auto-exposure.
-        try! self.device.lockForConfiguration()
-        self.device.exposurePointOfInterest = point
-        self.device.exposureMode = .AutoExpose
-        self.device.unlockForConfiguration()
-        
-        // Signal blocked parent thread.
-        dispatch_semaphore_signal(sema)
-      }
-      self.device.unlockForConfiguration()
       
-      // Wait until the camera finishes configuring itself.
-      dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER)
+      // Start auto-exposure and wait for completion.
+      self.device.exposurePointOfInterest = point
+      self.device.exposureMode = .AutoExpose
       dispatch_semaphore_wait(self.semaExposure, DISPATCH_TIME_FOREVER)
-      
-      // Lock white balance.
       self.device.whiteBalanceMode = .Locked
+      
+      // Release access to camera.
+      self.device.unlockForConfiguration()
       
       // Execute the callback.
       completionHandler(self.device.exposureDuration)
+      self.configuring = false
     }
   }
 
