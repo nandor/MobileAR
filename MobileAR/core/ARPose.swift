@@ -42,9 +42,9 @@ extension float4x4 {
    */
   init(rx: Float) {
     self.init([
-      float4(+cos(rx), 0, -sin(rx), 0),
-      float4(0, 1, 0, 0),
-      float4(+sin(rx), 0, +cos(rx), 0),
+      float4(1, 0, 0, 0),
+      float4(0, +cos(rx), +sin(rx), 0),
+      float4(0, -sin(rx), +cos(rx), 0),
       float4(0, 0, 0, 1)
     ])
   }
@@ -54,9 +54,9 @@ extension float4x4 {
    */
   init(ry: Float) {
     self.init([
-      float4(1, 0, 0, 0),
-      float4(0, +cos(ry), +sin(ry), 0),
-      float4(0, -sin(ry), +cos(ry), 0),
+      float4(+cos(ry), 0, -sin(ry), 0),
+      float4(0, 1, 0, 0),
+      float4(+sin(ry), 0, +cos(ry), 0),
       float4(0, 0, 0, 1)
     ])
   }

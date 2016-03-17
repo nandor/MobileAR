@@ -81,9 +81,9 @@ vertex ARObjectInOut objectVert(
       v.xyz,
       float2(in[vid].uv),
       params.proj * v,
-      (nv * float4(float3(vert.t))).xyz,
-      (nv * float4(float3(vert.b))).xyz,
-      (nv * float4(float3(vert.n))).xyz
+      (nv * float4(float3(vert.t), 0)).xyz,
+      (nv * float4(float3(vert.b), 0)).xyz,
+      (nv * float4(float3(vert.n), 0)).xyz
   };
 }
 
@@ -141,7 +141,7 @@ vertex ARPedestalInOut pedestalVert(
 {
   return {
       params.proj * params.view * object[iid].model * in[vid],
-      (params.normView * object[iid].normModel * float4(0, 0, -1, 0)).xyz
+      (params.normView * object[iid].normModel * float4(0, 1, 0, 0)).xyz
   };
 }
 

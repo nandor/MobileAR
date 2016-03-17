@@ -57,7 +57,7 @@ extension CMDeviceMotion {
     let n: float3
     let o: float3
   }
-  private let plane = ARPlane(n: float3(0, 0, -1), o: float3(0, 0, 0))
+  private let plane = ARPlane(n: float3(0, 1, 0), o: float3(0, 0, 0))
 
   /**
    Callend when the window is first created.
@@ -114,8 +114,8 @@ extension CMDeviceMotion {
     )
 
     // Initialize the scene tracker.
-    tracker = ARMarkerPoseTracker(parameters: params)
-    //tracker = ARDemoPoseTracker(aspect: Float(view.frame.width / view.frame.height));
+    //tracker = ARMarkerPoseTracker(parameters: params)
+    tracker = ARDemoPoseTracker(aspect: Float(view.frame.width / view.frame.height));
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view, environment: environment!)

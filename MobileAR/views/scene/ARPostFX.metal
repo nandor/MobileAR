@@ -41,11 +41,6 @@ constant float SSAO_FOCUS = 1.0;
  */
 constant float2 SCREEN_SIZE = float2(667, 375);
 
-/**
- Very small number.
- */
-constant float EPS = 1e-2;
-
 
 /**
  Structure defining a single directional light.
@@ -146,7 +141,7 @@ fragment half2 ssao(
   
   // The vertex position is moved a tiny bit into the direction of the normal
   // in order to avoid self-occlusion on larger planar surfaces.
-  const float3 v = vproj.xyz / vproj.w + n * EPS;
+  const float3 v = vproj.xyz / vproj.w;
   
   // Compute the change-of-basis matrix.
   const float3 t = normalize(r - n * dot(r, n));
@@ -157,7 +152,8 @@ fragment half2 ssao(
   float ao = 0.0;
   for (uint i = 0; i < SSAO_SAMPLES; ++i) {
     // Project the sample in screen space.
-    const float3 smplView = tbn * samples[i] * SSAO_FOCUS + v;
+    const float3 sample = tbn * samples[i];
+    const float3 smplView = sample * SSAO_FOCUS + v;
     const float4 smplProj = params.proj * float4(smplView, 1);
     const float3 smpl = smplProj.xyz / smplProj.w;
     
@@ -279,3 +275,13 @@ fragment float4 lighting(
   return float4(albedo * (ao * ambient + diffuse + specular), 1);
 }
 
+
+/**
+ Fragment shader to perform FXAA.
+ */
+fragment half4 fxaa(
+    ARQuadInOut     in        [[ stage_in ]],
+    texture2d<half> texRGB    [[ texture(0) ]])
+{
+  return half4(0, 1, 0, 1);
+}

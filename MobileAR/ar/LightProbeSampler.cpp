@@ -34,7 +34,7 @@ LightProbeSampler::~LightProbeSampler() {
 
 std::vector<LightSource> LightProbeSampler::operator() () {
   if (lights_.empty()) {
-    split({ 0, 0, illum_.rows - 1, illum_.cols - 1 }, 0);
+    split({ 1, 0, illum_.rows - 1, illum_.cols - 1 }, 0);
   }
   return lights_;
 }
@@ -44,9 +44,9 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
 
   // Sum up light intensities.
   float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f;
-  for (int r = region.y0 - 1; r < region.y1; ++r) {
+  for (int r = region.y0; r <= region.y1; ++r) {
     const auto &row = image_.ptr<cv::Vec4b>(r);
-    for (int c = region.x0 - 1; c < region.x1; ++c) {
+    for (int c = region.x0; c <= region.x1; ++c) {
       const auto &pix = row[c];
 
       sumB += pix[0];

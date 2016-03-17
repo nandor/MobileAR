@@ -91,7 +91,7 @@ class ARRenderer {
     device = MTLCreateSystemDefaultDevice()!
     library = device.newDefaultLibrary()!
     queue = device.newCommandQueue()
-
+    
     // Save a reference to the view.
     self.view = view
     self.width = Int(view.frame.size.width)
