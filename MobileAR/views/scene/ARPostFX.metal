@@ -11,30 +11,7 @@
 
 using namespace metal;
 
-/**
- Number of light sources in a batch.
- */
-constant uint LIGHTS_PER_BATCH = 32;
 
-/**
- Factor in specular lighting.
- */
-constant float MU = 0.3;
-
-/**
- Number of samples for ssao.
- */
-constant uint SSAO_SAMPLES = 32;
-
-/**
- Influence of the ambient occlusion factor.
- */
-constant float SSAO_POWER = 5.0;
-
-/**
- Radius of the SSAO sampling.
- */
-constant float SSAO_FOCUS = 1.0;
 
 /**
  Size of the screen for the iPhone 6S.
@@ -65,16 +42,6 @@ struct ARQuadInOut {
   float2 uv       [[ user(uv) ]];
   float4 position [[ position ]];
 };
-
-
-/**
- Converts a depth value to a linear depth value.
- */
-static float linearize(float d) {
-  const float f = 100.0;
-  const float n = 0.1;
-  return (2 * n * f) / (f + n - d * (f - n));
-}
 
 
 
@@ -108,6 +75,33 @@ fragment float4 background(
   const float ao = texAO.sample(texSampler, in.uv).x;
   
   return float4(background) * ao;
+}
+
+
+
+/**
+ Number of samples for ssao.
+ */
+constant uint SSAO_SAMPLES = 32;
+
+/**
+ Influence of the ambient occlusion factor.
+ */
+constant float SSAO_POWER = 5.0;
+
+/**
+ Radius of the SSAO sampling.
+ */
+constant float SSAO_FOCUS = 1.0;
+
+
+/**
+ Converts a depth value to a linear depth value.
+ */
+static float linearize(float d) {
+  const float f = 100.0;
+  const float n = 0.1;
+  return (2 * n * f) / (f + n - d * (f - n));
 }
 
 
@@ -203,7 +197,19 @@ fragment half2 ssaoBlur(
   };
 }
 
-                         
+
+
+/**
+ Number of light sources in a batch.
+ */
+constant uint LIGHTS_PER_BATCH = 32;
+
+/**
+ Factor in specular lighting.
+ */
+constant float MU = 0.3;
+
+
 /**
  Fragment shader to apply the effects of a batch of directional lights.
  */
@@ -277,11 +283,22 @@ fragment float4 lighting(
 
 
 /**
+ Threshold for the difference between min and max luma.
+ */
+constant float FXAA_EDGE_THRESHOLD = 1.0f / 8.0f;
+
+/**
+ Minimum threshold to discard dark areas.
+ */
+constant float FXAA_EDGE_THRESHOLD_MIN = 1.0f / 16.0f;
+
+
+/**
  Fragment shader to perform FXAA.
  */
 fragment half4 fxaa(
-    ARQuadInOut     in        [[ stage_in ]],
-    texture2d<half> texRGB    [[ texture(0) ]])
+    ARQuadInOut                     in        [[ stage_in ]],
+    texture2d<half, access::sample> texRGB    [[ texture(0) ]])
 {
   return half4(0, 1, 0, 1);
 }

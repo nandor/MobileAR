@@ -27,10 +27,12 @@ class ARSceneRenderer : ARRenderer {
   private var fboMaterial: MTLTexture!
   private var fboSSAOEnv: MTLTexture!
   private var fboSSAOBlurEnv: MTLTexture!
+  private var fboFXAA: MTLTexture!
 
   // Data to render the quad spanning the entire screen.
   private var quadLE: MTLDepthStencilState!
   private var quadGE: MTLDepthStencilState!
+  private var quadAW: MTLDepthStencilState!
   private var quadVBO: MTLBuffer!
 
   // Shader to render the background.
@@ -40,6 +42,9 @@ class ARSceneRenderer : ARRenderer {
   // Shader to apply phong shaders.
   private var lightingRenderState: MTLRenderPipelineState!
 
+  // Shader to do FXAA.
+  private var fxaaRenderState: MTLRenderPipelineState!
+  
   // Shader to compute ambient occlusion.
   private var ssaoRenderState: MTLRenderPipelineState!
   private var ssaoBlurState: MTLRenderPipelineState!
@@ -119,6 +124,7 @@ class ARSceneRenderer : ARRenderer {
     renderSSAOBlur(target, buffer: buffer)
     renderBackground(target, buffer: buffer)
     renderLights(target, buffer: buffer)
+    renderFXAA(target, buffer: buffer)
   }
 
   /**
@@ -363,7 +369,7 @@ class ARSceneRenderer : ARRenderer {
   private func renderBackground(target: MTLTexture, buffer: MTLCommandBuffer) {
 
     let backgroundPass = MTLRenderPassDescriptor()
-    backgroundPass.colorAttachments[0].texture = target
+    backgroundPass.colorAttachments[0].texture = fboFXAA
     backgroundPass.colorAttachments[0].loadAction = .Clear
     backgroundPass.colorAttachments[0].storeAction = .Store
     backgroundPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
@@ -397,7 +403,7 @@ class ARSceneRenderer : ARRenderer {
   private func renderLights(target: MTLTexture, buffer: MTLCommandBuffer) {
 
     let lightPass = MTLRenderPassDescriptor()
-    lightPass.colorAttachments[0].texture = target
+    lightPass.colorAttachments[0].texture = fboFXAA
     lightPass.colorAttachments[0].loadAction = .Load
     lightPass.colorAttachments[0].storeAction = .Store
     lightPass.depthAttachment.loadAction = .DontCare
@@ -483,6 +489,26 @@ class ARSceneRenderer : ARRenderer {
 
     lightEncoder.endEncoding()
   }
+  
+  /**
+   Runs the FXAA shader on the final, tone-mapped RGB colour output.
+   */
+  private func renderFXAA(target: MTLTexture, buffer: MTLCommandBuffer) {
+    
+    let fxaaPass = MTLRenderPassDescriptor()
+    fxaaPass.colorAttachments[0].texture = target
+    fxaaPass.colorAttachments[0].loadAction = .DontCare
+    fxaaPass.colorAttachments[0].storeAction = .Store
+    
+    let fxaaEncoder = buffer.renderCommandEncoderWithDescriptor(fxaaPass)
+    fxaaEncoder.label = "FXAA"
+    fxaaEncoder.setRenderPipelineState(fxaaRenderState)
+    fxaaEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
+    fxaaEncoder.setFragmentTexture(fboFXAA, atIndex: 0)
+    fxaaEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    fxaaEncoder.endEncoding()
+  }
+
 
 
   /**
@@ -519,6 +545,16 @@ class ARSceneRenderer : ARRenderer {
     )
     fboMaterial = device.newTextureWithDescriptor(fboMaterialDesc)
     fboMaterial.label = "FBOMaterial"
+    
+    // Colour output as FXAA input.
+    let fboFXAADesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+      .BGRA8Unorm,
+      width: width,
+      height: height,
+      mipmapped: false
+    )
+    fboFXAA = device.newTextureWithDescriptor(fboFXAADesc)
+    fboFXAA.label = "FBOFXAA"
 
     // The AO texture stores vertex positions.
     let fboSSAOEnvDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
@@ -567,6 +603,12 @@ class ARSceneRenderer : ARRenderer {
     quadLEDesc.frontFaceStencil = quadStencilLE
     quadLEDesc.backFaceStencil = quadStencilLE
     quadLE = device.newDepthStencilStateWithDescriptor(quadLEDesc)
+    
+    // Depth state to always render a quad.
+    let quadAWDesc = MTLDepthStencilDescriptor()
+    quadAWDesc.depthCompareFunction = .Always
+    quadAWDesc.depthWriteEnabled = false
+    quadAW = device.newDepthStencilStateWithDescriptor(quadAWDesc)
 
     // Initialize the VBO of the full-screen quad.
     var vbo : [Float] = [
@@ -656,6 +698,17 @@ class ARSceneRenderer : ARRenderer {
     ssaoBlurDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     ssaoBlurState = try device.newRenderPipelineStateWithDescriptor(ssaoBlurDesc)
+    
+    // Fragment shader to perform FXAA.
+    guard let fxaa = library.newFunctionWithName("fxaa") else {
+      throw ARRendererError.MissingFunction
+    }
+    let fxaaDesc = MTLRenderPipelineDescriptor()
+    fxaaDesc.sampleCount = 1
+    fxaaDesc.vertexFunction = fullscreen
+    fxaaDesc.fragmentFunction = fxaa
+    fxaaDesc.colorAttachments[0].pixelFormat = .BGRA8Unorm
+    fxaaRenderState = try device.newRenderPipelineStateWithDescriptor(fxaaDesc)
   }
 
   /**
