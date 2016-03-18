@@ -36,7 +36,38 @@ struct ARObjectParams {
   float4x4 invModel;
 };
 
+
+/**
+ Structure defining a single directional light.
+ */
+struct ARDirectionalLight {
+  /// Light direction.
+  float3 dir;
+  /// Diffuse colour.
+  float3 ambient;
+  /// Ambient colour.
+  float3 diffuse;
+  /// Specular colour.
+  float3 specular;
+};
+
+
+/**
+ Vertex shader to fragment shader.
+ */
+struct ARQuadInOut {
+  float2 uv       [[ user(uv) ]];
+  float4 position [[ position ]];
+};
+
+
 /**
  A digit is wrong.
  */
 constant float PI = 3.1415926535897932384626433833795;
+
+
+/**
+ Size of the screen for the iPhone 6S.
+ */
+constant float2 SCREEN_SIZE = float2(667, 375);

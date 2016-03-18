@@ -509,8 +509,6 @@ class ARSceneRenderer : ARRenderer {
     fxaaEncoder.endEncoding()
   }
 
-
-
   /**
    Initializes all textures for the geometry buffer.
    */
@@ -551,7 +549,7 @@ class ARSceneRenderer : ARRenderer {
       .BGRA8Unorm,
       width: width,
       height: height,
-      mipmapped: false
+      mipmapped: true
     )
     fboFXAA = device.newTextureWithDescriptor(fboFXAADesc)
     fboFXAA.label = "FBOFXAA"

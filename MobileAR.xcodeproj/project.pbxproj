@@ -21,6 +21,9 @@
 		7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */; };
 		7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46A91BCF2247003F87BE /* CoreMedia.framework */; };
 		7A5B46B01BCFBB83003F87BE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5B46AF1BCFBB83003F87BE /* opencv2.framework */; };
+		7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */; };
+		7A62D67D1C9B887C00BE42C8 /* ARLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */; };
+		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
 		7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */; };
@@ -74,6 +77,9 @@
 		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		7A5B46AF1BCFBB83003F87BE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
+		7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARFXAA.metal; sourceTree = "<group>"; };
+		7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARLighting.metal; sourceTree = "<group>"; };
+		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
 		7AC9F6111C5E7BF100AF86BC /* cup.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cup.obj; path = MobileAR/models/cup.obj; sourceTree = "<group>"; };
@@ -275,6 +281,9 @@
 				C13F8B19027A11598919DBE2 /* ARPostFX.metal */,
 				7A9E91881C6A091100C52C68 /* ARPoseTracker.h */,
 				C13F8D450FF34AE29001A8A2 /* ARDemoPoseTracker.swift */,
+				7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */,
+				7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */,
+				7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */,
 			);
 			path = scene;
 			sourceTree = "<group>";
@@ -371,12 +380,14 @@
 				C13F8EC72C77C8E5EAE1D201 /* ARRenderer.swift in Sources */,
 				C13F8F30393D3043002256F5 /* UIImage+cvMat.mm in Sources */,
 				C13F82760C73FAEF9669526F /* ARCalibrateController.swift in Sources */,
+				7A62D67D1C9B887C00BE42C8 /* ARLighting.metal in Sources */,
 				C13F8E421E67F5ED13FF349B /* ARSceneViewController.swift in Sources */,
 				C13F8EDD9DE8863D980351CC /* ARParametersViewController.swift in Sources */,
 				C13F83151836377392660EB1 /* AREnvironmentCaptureController.swift in Sources */,
 				C13F86C929B9293243D5D9C1 /* AREnvironmentViewController.swift in Sources */,
 				C13F8F65B70AFD4AACB467B9 /* AREnvironmentListController.swift in Sources */,
 				C13F8D0C83BDCBAC09944968 /* AREnvironmentViewRenderer.swift in Sources */,
+				7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */,
 				7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */,
 				C13F82006DA8B43D435FEE39 /* AREnvironment.metal in Sources */,
 				C13F85F7CDF965ACFD469767 /* ARMarkerPoseTracker.mm in Sources */,
@@ -389,6 +400,7 @@
 				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 				C13F8C886918E43EBB1E4A6F /* ARObject.swift in Sources */,
 				C13F87C7A162442BE302226F /* AREnvironmentBuilder.mm in Sources */,
+				7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */,
 				C13F84FB9F32C57887CC6362 /* ARLightProbeSampler.mm in Sources */,
 				C13F8955820B5D1446EA96FD /* ARDemoPoseTracker.swift in Sources */,
 			);
