@@ -14,34 +14,6 @@
 static constexpr size_t kMinMatches = 20;
 
 
-/**
- Convers a CV matrix to a simd matrix.
- */
-static simd::float4x4 convert(const cv::Mat &m) {
-  return simd::float4x4(
-      simd::float4{
-          static_cast<float>(m.at<double>(0, 0)),
-          static_cast<float>(m.at<double>(1, 0)),
-          static_cast<float>(m.at<double>(2, 0)),
-          0
-      },
-      simd::float4{
-          static_cast<float>(m.at<double>(0, 1)),
-          static_cast<float>(m.at<double>(1, 1)),
-          static_cast<float>(m.at<double>(2, 1)),
-          0
-      },
-      simd::float4{
-          static_cast<float>(m.at<double>(0, 2)),
-          static_cast<float>(m.at<double>(1, 2)),
-          static_cast<float>(m.at<double>(2, 2)),
-          0
-      },
-      simd::float4{ 0, 0, 0, 1 }
-  );
-}
-
-
 @implementation AREnvironmentBuilder
 {
   // Width of the environment map.
