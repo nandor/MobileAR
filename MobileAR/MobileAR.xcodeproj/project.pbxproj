@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARMesh.metal */; };
+		7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A255CBC1CA1F277005D120A /* liblsd.a */; };
 		7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */; };
 		7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */; };
 		7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */; };
@@ -23,6 +24,7 @@
 		7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */; };
 		7A62D67D1C9B887C00BE42C8 /* ARLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */; };
 		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
+		7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A6B81F51CA29B9700D339AE /* libboost.a */; };
 		7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A78BE471CA1C5BD000EBBAE /* opencv2.framework */; };
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
@@ -54,12 +56,14 @@
 		C13F8E421E67F5ED13FF349B /* ARSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F86B2B5B85BE1365D2D33 /* ARSceneViewController.swift */; };
 		C13F8EC72C77C8E5EAE1D201 /* ARRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */; };
 		C13F8EDD9DE8863D980351CC /* ARParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F88C686AAE8A50096E0AE /* ARParametersViewController.swift */; };
+		C13F8EDE948538A50F0D75EE /* ARSlamPoseTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8F8FABC50146C2501D78 /* ARSlamPoseTracker.mm */; };
 		C13F8F30393D3043002256F5 /* UIImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8DF99955090111513222 /* UIImage+cvMat.mm */; };
 		C13F8F65B70AFD4AACB467B9 /* AREnvironmentListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8C65C26D8B7CB74A066B /* AREnvironmentListController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		7A1E3BB81C5962AF00E63312 /* ARMesh.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARMesh.metal; sourceTree = "<group>"; };
+		7A255CBC1CA1F277005D120A /* liblsd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblsd.a; path = "../../../Library/Developer/Xcode/DerivedData/MobileAR-anqurysiqxcprzadtfucllnkhbrc/Build/Products/Debug-iphoneos/liblsd.a"; sourceTree = "<group>"; };
 		7A2FE8FA1C77C00F009BECCC /* Moments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Moments.h; path = ar/Moments.h; sourceTree = "<group>"; };
 		7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LightProbeSampler.cpp; path = ar/LightProbeSampler.cpp; sourceTree = "<group>"; };
 		7A2FE8FC1C77DF5A009BECCC /* LightProbeSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LightProbeSampler.h; path = ar/LightProbeSampler.h; sourceTree = "<group>"; };
@@ -79,6 +83,7 @@
 		7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARFXAA.metal; sourceTree = "<group>"; };
 		7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARLighting.metal; sourceTree = "<group>"; };
 		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
+		7A6B81F51CA29B9700D339AE /* libboost.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost.a; path = ../../ofxiOSBoost/libs/boost/ios/libboost.a; sourceTree = "<group>"; };
 		7A78BE471CA1C5BD000EBBAE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
@@ -104,6 +109,7 @@
 		C13F86B2B5B85BE1365D2D33 /* ARSceneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARSceneViewController.swift; sourceTree = "<group>"; };
 		C13F86DB5D164F37984285F8 /* UIImage+cvMat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+cvMat.h"; sourceTree = "<group>"; };
 		C13F8719222268FFF85FDECB /* AREnvironmentBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AREnvironmentBuilder.h; sourceTree = "<group>"; };
+		C13F871F4C5B63CE995729F5 /* ARSlamPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARSlamPoseTracker.h; sourceTree = "<group>"; };
 		C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARRenderer.swift; sourceTree = "<group>"; };
 		C13F879F0B032ECFC39BCFDE /* ARObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARObject.swift; sourceTree = "<group>"; };
 		C13F87AF09D79753A79B4B45 /* MedianCutSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MedianCutSampler.cpp; path = ar/MedianCutSampler.cpp; sourceTree = "<group>"; };
@@ -125,6 +131,7 @@
 		C13F8DF99955090111513222 /* UIImage+cvMat.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "UIImage+cvMat.mm"; sourceTree = "<group>"; };
 		C13F8E7AB65F2B19C88A7050 /* VarianceCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VarianceCutSampler.h; path = ar/VarianceCutSampler.h; sourceTree = "<group>"; };
 		C13F8F06BFBB22987C893E2E /* ARCalibrateController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARCalibrateController.swift; sourceTree = "<group>"; };
+		C13F8F8FABC50146C2501D78 /* ARSlamPoseTracker.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARSlamPoseTracker.mm; sourceTree = "<group>"; };
 		C13F8FA8928E90CB2384D35B /* PhotoSphereBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PhotoSphereBuilder.h; path = ar/PhotoSphereBuilder.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -133,6 +140,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */,
+				7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */,
 				7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */,
 				7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */,
 				7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */,
@@ -161,6 +170,8 @@
 		7AFCF82F1BCE40CB00A108F9 = {
 			isa = PBXGroup;
 			children = (
+				7A6B81F51CA29B9700D339AE /* libboost.a */,
+				7A255CBC1CA1F277005D120A /* liblsd.a */,
 				7A78BE471CA1C5BD000EBBAE /* opencv2.framework */,
 				7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */,
 				7A5B46A91BCF2247003F87BE /* CoreMedia.framework */,
@@ -284,6 +295,8 @@
 				7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */,
 				7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */,
 				7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */,
+				C13F8F8FABC50146C2501D78 /* ARSlamPoseTracker.mm */,
+				C13F871F4C5B63CE995729F5 /* ARSlamPoseTracker.h */,
 			);
 			path = scene;
 			sourceTree = "<group>";
@@ -403,6 +416,7 @@
 				7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */,
 				C13F84FB9F32C57887CC6362 /* ARLightProbeSampler.mm in Sources */,
 				C13F8955820B5D1446EA96FD /* ARDemoPoseTracker.swift in Sources */,
+				C13F8EDE948538A50F0D75EE /* ARSlamPoseTracker.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -508,9 +522,13 @@
 				HEADER_SEARCH_PATHS = (
 					./MobileAR/,
 					/usr/local/include/eigen3,
+					../lsd/,
+					../lsd/lsd,
+					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
 				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = /Users/nandor/Projects/ofxiOSBoost/libs/boost/ios;
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
@@ -538,9 +556,13 @@
 				HEADER_SEARCH_PATHS = (
 					./MobileAR/,
 					/usr/local/include/eigen3,
+					../lsd/,
+					../lsd/lsd,
+					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
 				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = /Users/nandor/Projects/ofxiOSBoost/libs/boost/ios;
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;

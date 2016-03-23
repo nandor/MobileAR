@@ -35,19 +35,20 @@
 
 #include <unordered_map>
 
+#include "g2o_core_api.h"
 
 namespace g2o {
 
   /**
    * \brief computing the marginal covariance given a cholesky factor (lower triangle of the factor)
    */
-  class  MarginalCovarianceCholesky {
+  class G2O_CORE_API MarginalCovarianceCholesky {
     protected:
       /**
        * hash struct for storing the matrix elements needed to compute the covariance
        */
       typedef std::unordered_map<int, double>     LookupMap;
-
+    
     public:
       MarginalCovarianceCholesky();
       ~MarginalCovarianceCholesky();
@@ -62,7 +63,7 @@ namespace g2o {
       /**
        * compute the marginal cov for the given block indices, write the result in spinv).
        */
-      void computeCovariance(SparseBlockMatrix<MatrixXd>& spinv, const std::vector<int>& rowBlockIndices, const std::vector< std::pair<int, int> >& blockIndices);
+      void computeCovariance(SparseBlockMatrix<MatrixXD>& spinv, const std::vector<int>& rowBlockIndices, const std::vector< std::pair<int, int> >& blockIndices);
 
 
       /**

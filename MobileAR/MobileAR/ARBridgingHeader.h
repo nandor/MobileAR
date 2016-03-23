@@ -7,4 +7,5 @@
 #import "ARLightProbeSampler.h"
 #import "ARMarkerPoseTracker.h"
 #import "ARPoseTracker.h"
+#import "ARSlamPoseTracker.h"
 #import "UIImage+MTLTexture.h"

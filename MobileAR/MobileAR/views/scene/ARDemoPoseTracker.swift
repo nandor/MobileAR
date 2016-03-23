@@ -21,7 +21,8 @@
   /**
    No-op
    */
-  func trackFrame(image: UIImage) {
+  func trackFrame(image: UIImage) -> UIImage {
+    return image
   }
 
   /**

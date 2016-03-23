@@ -26,7 +26,8 @@
 
 #include "hyper_graph_action.h"
 #include "optimizable_graph.h"
-#include "../stuff/macros.h"
+#include "cache.h"
+#include "g2o/stuff/macros.h"
 
 
 #include <iostream>
@@ -232,6 +233,7 @@ namespace g2o {
     _name="draw";
     _previousParams = (Parameters*)0x42;
     refreshPropertyPtrs(0);
+    _cacheDrawActions = 0;
   }
 
   bool DrawAction::refreshPropertyPtrs(HyperGraphElementAction::Parameters* params_){
@@ -250,17 +252,39 @@ namespace g2o {
     return true;
   }
 
+  void DrawAction::initializeDrawActionsCache() {
+    if (! _cacheDrawActions){
+      _cacheDrawActions = HyperGraphActionLibrary::instance()->actionByName("draw");
+    }
+  }
+
+  void DrawAction::drawCache(CacheContainer* caches, HyperGraphElementAction::Parameters* params_) {
+    if (caches){
+      for (CacheContainer::iterator it=caches->begin(); it!=caches->end(); it++){
+        Cache* c = it->second;
+        (*_cacheDrawActions)(c, params_);
+      }
+    }
+  }
+
+  void DrawAction::drawUserData(HyperGraph::Data* data, HyperGraphElementAction::Parameters* params_){
+    while (data && _cacheDrawActions ){
+      (*_cacheDrawActions)(data, params_);
+      data=data->next();
+    }
+  }
+
   void applyAction(HyperGraph* graph, HyperGraphElementAction* action, HyperGraphElementAction::Parameters* params, const std::string& typeName)
   {
     for (HyperGraph::VertexIDMap::iterator it=graph->vertices().begin(); 
         it!=graph->vertices().end(); ++it){
-      if ( typeName.empty() || typeid(HyperGraph::Vertex).name()==typeName){
+      if ( typeName.empty() || typeid(*it->second).name()==typeName){
         (*action)(it->second, params);
       }
     }
     for (HyperGraph::EdgeSet::iterator it=graph->edges().begin(); 
         it!=graph->edges().end(); ++it){
-      if ( typeName.empty() || typeid(HyperGraph::Edge).name()==typeName)
+      if ( typeName.empty() || typeid(**it).name()==typeName)
         (*action)(*it, params);
     }
   }

@@ -29,6 +29,7 @@
 
 #include "optimizable_graph.h"
 #include "sparse_optimizer.h"
+#include "g2o_core_api.h"
 
 #include <map>
 #include <set>
@@ -43,7 +44,7 @@ namespace g2o {
    *
    * You may derive an own one, if necessary. The default is to return initialEstimatePossible(from, to) for the edge.
    */
-  class  EstimatePropagatorCost {
+  class G2O_CORE_API EstimatePropagatorCost {
     public:
       EstimatePropagatorCost (SparseOptimizer* graph);
       virtual double operator()(OptimizableGraph::Edge* edge, const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to_) const;
@@ -58,7 +59,7 @@ namespace g2o {
    * Initialize your graph along odometry edges. An odometry edge is assumed to connect vertices
    * whose IDs only differs by one.
    */
-  class  EstimatePropagatorCostOdometry : public EstimatePropagatorCost {
+  class G2O_CORE_API EstimatePropagatorCostOdometry : public EstimatePropagatorCost {
     public:
       EstimatePropagatorCostOdometry(SparseOptimizer* graph);
       virtual double operator()(OptimizableGraph::Edge* edge, const OptimizableGraph::VertexSet& from_, OptimizableGraph::Vertex* to_) const;
@@ -68,7 +69,7 @@ namespace g2o {
   /**
    * \brief propagation of an initial guess
    */
-  class  EstimatePropagator {
+  class G2O_CORE_API EstimatePropagator {
     public:
 
       /**
@@ -137,26 +138,26 @@ namespace g2o {
       EstimatePropagator(OptimizableGraph* g);
       OptimizableGraph::VertexSet& visited() {return _visited; }
       AdjacencyMap& adjacencyMap() {return _adjacencyMap; }
-      OptimizableGraph* graph() {return _graph;}
+      OptimizableGraph* graph() {return _graph;} 
 
       /**
        * propagate an initial guess starting from v. The function computes a spanning tree
        * whereas the cost for each edge is determined by calling cost() and the action applied to
        * each vertex is action().
        */
-      void propagate(OptimizableGraph::Vertex* v,
-          const EstimatePropagator::PropagateCost& cost,
+      void propagate(OptimizableGraph::Vertex* v, 
+          const EstimatePropagator::PropagateCost& cost, 
           const EstimatePropagator::PropagateAction& action = PropagateAction(),
-          double maxDistance=std::numeric_limits<double>::max(),
+          double maxDistance=std::numeric_limits<double>::max(), 
           double maxEdgeCost=std::numeric_limits<double>::max());
 
       /**
        * same as above but starting to propagate from a set of vertices instead of just a single one.
        */
-      void propagate(OptimizableGraph::VertexSet& vset,
-          const EstimatePropagator::PropagateCost& cost,
+      void propagate(OptimizableGraph::VertexSet& vset, 
+          const EstimatePropagator::PropagateCost& cost, 
           const EstimatePropagator::PropagateAction& action = PropagateAction(),
-          double maxDistance=std::numeric_limits<double>::max(),
+          double maxDistance=std::numeric_limits<double>::max(), 
           double maxEdgeCost=std::numeric_limits<double>::max());
 
     protected:

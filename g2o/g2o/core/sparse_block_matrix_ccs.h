@@ -31,7 +31,7 @@
 #include <cassert>
 #include <Eigen/Core>
 
-#include "config.h"
+#include "g2o/config.h"
 #include "matrix_operations.h"
 
 #include <unordered_map>
@@ -118,7 +118,7 @@ namespace g2o {
             const SparseMatrixBlock* a = it->block;
             int srcOffset = rowBaseOfBlock(it->row);
             // destVec += *a.transpose() * srcVec (according to the sub-vector parts)
-            internal::atxpy(*a, srcVec, srcOffset, destVec, destOffset);
+            internal::template atxpy<SparseMatrixBlock>(*a, srcVec, srcOffset, destVec, destOffset);
           }
         }
       }
@@ -205,7 +205,7 @@ namespace g2o {
   /**
    * \brief Sparse matrix which uses blocks based on hash structures
    *
-   * This class is used to construct the pattern of a sparse block matrix
+   * This class is used to construct the pattern of a sparse block matrix 
    */
   template <class MatrixType>
   class SparseBlockMatrixHashMap
