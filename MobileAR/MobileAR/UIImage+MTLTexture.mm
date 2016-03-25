@@ -15,7 +15,7 @@
   auto width = CGImageGetWidth(self.CGImage);
   auto height = CGImageGetHeight(self.CGImage);
 
-  if (width != texture.width || height != texture.height) {
+  if (width > texture.width || height > texture.height) {
     return;
   }
 
@@ -56,8 +56,15 @@
       CGRectMake(0.0f, 0.0f, width, height),
       self.CGImage
   );
+  
+  auto region = MTLRegionMake2D(
+      (texture.width - width) / 2,
+      (texture.height - height) / 2,
+      width,
+      height
+  );
 
-  [texture replaceRegion: MTLRegionMake2D(0, 0, width, height)
+  [texture replaceRegion: region
              mipmapLevel: 0
                    slice: 0
                withBytes: rawData.get()

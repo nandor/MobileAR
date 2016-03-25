@@ -24,7 +24,6 @@
 
 #include "settings.h"
 #include "SophusUtil.h"
-#include "TimestampedObject.h"
 
 
 

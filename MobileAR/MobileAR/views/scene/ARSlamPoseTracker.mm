@@ -20,8 +20,21 @@
   cv::Mat rgba;
   /// Grayscale image passed to SLAM.
   cv::Mat gray;
+  /// Undistorted image.
+  cv::Mat undistorted;
   /// Image counter.
   unsigned counter;
+  
+  /// Original camera matrix.
+  cv::Mat K0;
+  /// Cropped camera matrix.
+  cv::Mat K1;
+  /// Distortion parameters.
+  cv::Mat d;
+  /// Undistort map 1.
+  cv::Mat map1;
+  /// Unfistort map 2.
+  cv::Mat map2;
 }
 
 - (instancetype)initWithParameters:(ARParameters *)params
@@ -30,27 +43,29 @@
     return nil;
   }
   
-  cv::Mat K(3, 3, CV_32F);
-  K.at<float>(0, 0) = params.fx;
-  K.at<float>(1, 1) = params.fy;
-  K.at<float>(2, 2) = 1.0f;
-  K.at<float>(0, 2) = params.cx;
-  K.at<float>(1, 2) = params.cy;
+  // Initializes the undistort map.
+  K0 = cv::Mat::zeros(3, 3, CV_32F);
+  K0.at<float>(0, 0) = params.fx;
+  K0.at<float>(1, 1) = params.fy;
+  K0.at<float>(2, 2) = 1.0f;
+  K0.at<float>(0, 2) = params.cx;
+  K0.at<float>(1, 2) = params.cy;
   
-  cv::Mat d(4, 1, CV_32F);
+  d = cv::Mat::zeros(4, 1, CV_32F);
   d.at<float>(0) = params.k1;
   d.at<float>(1) = params.k2;
   d.at<float>(2) = params.r1;
   d.at<float>(3) = params.r2;
   
-  cv::Mat P = cv::getOptimalNewCameraMatrix(K, d, {640, 360}, 0, {640, 320});
+  K1 = cv::getOptimalNewCameraMatrix(K0, d, {640, 360}, 0, {640, 320});
+  cv::initUndistortRectifyMap(K0, d, {}, K1, {640, 320}, CV_16SC2, map1, map2);
   
   // Intrinsic camera parameters.
   Sophus::Matrix3f K_sophus;
   K_sophus <<
-      P.at<float>(0, 0), P.at<float>(0, 1), P.at<float>(0, 2),
-      P.at<float>(1, 0), P.at<float>(1, 1), P.at<float>(1, 2),
-      P.at<float>(2, 0), P.at<float>(2, 1), P.at<float>(2, 2);
+      K1.at<float>(0, 0), K1.at<float>(0, 1), K1.at<float>(0, 2),
+      K1.at<float>(1, 0), K1.at<float>(1, 1), K1.at<float>(1, 2),
+      K1.at<float>(2, 0), K1.at<float>(2, 1), K1.at<float>(2, 2);
   
   
   // SLAM system.
@@ -62,16 +77,21 @@
 
 - (UIImage*)trackFrame:(UIImage *)image
 {
+  // Crop, convert and undistort the image.
   [image toCvMat: rgba];
   cv::cvtColor(rgba(cv::Rect(0, 20, 640, 320)), gray, CV_BGRA2GRAY);
+  cv::remap(gray, undistorted, map1, map2, cv::INTER_LINEAR);
   
+  // Pass the image onto LSD SLAM.
   if (++counter == 1) {
-		odometry->randomInit(gray.data, time(0), 1);
+		odometry->randomInit(undistorted.data, time(0), 1);
   } else {
-    odometry->trackFrame(gray.data, counter, false, time(0));
+    odometry->trackFrame(undistorted.data, counter, false, time(0));
   }
   
-  return [UIImage imageWithCvMat:gray];
+  cv::Mat temp;
+  cv::cvtColor(undistorted, temp, CV_GRAY2RGBA);
+  return [UIImage imageWithCvMat: temp];
 }
 
 - (void)trackSensor:(CMAttitude *)attitude acceleration:(CMAcceleration)acceleration

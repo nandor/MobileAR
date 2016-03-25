@@ -32,7 +32,6 @@
 #include "Relocalizer.h"
 #include "settings.h"
 #include "SophusUtil.h"
-#include "Timestamp.h"
 
 
 namespace lsd_slam

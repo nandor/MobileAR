@@ -30,7 +30,6 @@
 		7A987C261CA225510061320D /* Sim3Tracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C001CA225510061320D /* Sim3Tracker.cpp */; };
 		7A987C271CA225510061320D /* SlamSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C021CA225510061320D /* SlamSystem.cpp */; };
 		7A987C281CA225510061320D /* SophusUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C0C1CA225510061320D /* SophusUtil.cpp */; };
-		7A987C291CA225510061320D /* Timestamp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C0E1CA225510061320D /* Timestamp.cpp */; };
 		7A987C2A1CA225510061320D /* TrackableKeyFrameSearch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C111CA225510061320D /* TrackableKeyFrameSearch.cpp */; };
 		7A987C2B1CA225510061320D /* TrackingReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C131CA225510061320D /* TrackingReference.cpp */; };
 		7A987C2C1CA225510061320D /* Undistorter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A987C151CA225510061320D /* Undistorter.cpp */; };
@@ -106,9 +105,6 @@
 		7A987C0B1CA225510061320D /* sophus.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = sophus.hpp; sourceTree = "<group>"; };
 		7A987C0C1CA225510061320D /* SophusUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SophusUtil.cpp; sourceTree = "<group>"; };
 		7A987C0D1CA225510061320D /* SophusUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SophusUtil.h; sourceTree = "<group>"; };
-		7A987C0E1CA225510061320D /* Timestamp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Timestamp.cpp; sourceTree = "<group>"; };
-		7A987C0F1CA225510061320D /* Timestamp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Timestamp.h; sourceTree = "<group>"; };
-		7A987C101CA225510061320D /* TimestampedObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimestampedObject.h; sourceTree = "<group>"; };
 		7A987C111CA225510061320D /* TrackableKeyFrameSearch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrackableKeyFrameSearch.cpp; sourceTree = "<group>"; };
 		7A987C121CA225510061320D /* TrackableKeyFrameSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrackableKeyFrameSearch.h; sourceTree = "<group>"; };
 		7A987C131CA225510061320D /* TrackingReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrackingReference.cpp; sourceTree = "<group>"; };
@@ -185,9 +181,6 @@
 				7A987C031CA225510061320D /* SlamSystem.h */,
 				7A987C0C1CA225510061320D /* SophusUtil.cpp */,
 				7A987C0D1CA225510061320D /* SophusUtil.h */,
-				7A987C0E1CA225510061320D /* Timestamp.cpp */,
-				7A987C0F1CA225510061320D /* Timestamp.h */,
-				7A987C101CA225510061320D /* TimestampedObject.h */,
 				7A987C111CA225510061320D /* TrackableKeyFrameSearch.cpp */,
 				7A987C121CA225510061320D /* TrackableKeyFrameSearch.h */,
 				7A987C131CA225510061320D /* TrackingReference.cpp */,
@@ -325,7 +318,6 @@
 				7A987C1B1CA225510061320D /* FrameMemory.cpp in Sources */,
 				7A987C2C1CA225510061320D /* Undistorter.cpp in Sources */,
 				7A987C281CA225510061320D /* SophusUtil.cpp in Sources */,
-				7A987C291CA225510061320D /* Timestamp.cpp in Sources */,
 				7A987C231CA225510061320D /* Relocalizer.cpp in Sources */,
 				7A987C241CA225510061320D /* SE3Tracker.cpp in Sources */,
 				7A987C1A1CA225510061320D /* Frame.cpp in Sources */,
