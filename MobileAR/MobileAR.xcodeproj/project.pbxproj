@@ -285,8 +285,8 @@
 			isa = PBXGroup;
 			children = (
 				C13F86B2B5B85BE1365D2D33 /* ARSceneViewController.swift */,
-				C13F8476C472F0C2A4F86A4B /* ARMarkerPoseTracker.mm */,
 				C13F8B98261588D0EC7551E5 /* ARMarkerPoseTracker.h */,
+				C13F8476C472F0C2A4F86A4B /* ARMarkerPoseTracker.mm */,
 				C13F8BBCDA1335F81A093177 /* ARSceneRenderer.swift */,
 				7A1E3BB81C5962AF00E63312 /* ARMesh.metal */,
 				C13F8B19027A11598919DBE2 /* ARPostFX.metal */,

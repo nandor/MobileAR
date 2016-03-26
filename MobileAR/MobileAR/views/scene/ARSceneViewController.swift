@@ -114,9 +114,9 @@ extension CMDeviceMotion {
     )
 
     // Initialize the scene tracker.
-    //tracker = ARMarkerPoseTracker(parameters: params)
+    tracker = ARMarkerPoseTracker(parameters: params)
     //tracker = ARDemoPoseTracker(aspect: Float(view.frame.width / view.frame.height));
-    tracker = ARSlamPoseTracker(parameters: params)
+    //tracker = ARSlamPoseTracker(parameters: params)
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
@@ -251,8 +251,8 @@ extension CMDeviceMotion {
    Processes a frame from the device's camera.
    */
   func onCameraFrame(frame: UIImage) {
-    let f = tracker.trackFrame(frame)
-    self.renderer.updateFrame(f)
+    tracker.trackFrame(frame)
+    self.renderer.updateFrame(frame)
   }
 
   /**

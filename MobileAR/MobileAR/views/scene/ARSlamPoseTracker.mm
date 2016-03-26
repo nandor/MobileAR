@@ -6,6 +6,7 @@
 #import "UIImage+cvMat.h"
 #import "MobileAR-Swift.h"
 
+#include <atomic>
 #include <memory>
 
 #include "lsd/SlamSystem.h"
@@ -35,6 +36,11 @@
   cv::Mat map1;
   /// Unfistort map 2.
   cv::Mat map2;
+  
+  /// Queue on which tracking is executed.
+  dispatch_queue_t queue;
+  /// Number of queued frames.
+  std::atomic<int> queued;
 }
 
 - (instancetype)initWithParameters:(ARParameters *)params
@@ -60,6 +66,10 @@
   K1 = cv::getOptimalNewCameraMatrix(K0, d, {640, 360}, 0, {640, 320});
   cv::initUndistortRectifyMap(K0, d, {}, K1, {640, 320}, CV_16SC2, map1, map2);
   
+  // Initialize the queue which executes tracking.
+  queue = dispatch_queue_create("ic.ac.uk.LSD_SLAM", DISPATCH_QUEUE_SERIAL);
+  queued = 0;
+  
   // Intrinsic camera parameters.
   Sophus::Matrix3f K_sophus;
   K_sophus <<
@@ -75,23 +85,28 @@
   return self;
 }
 
-- (UIImage*)trackFrame:(UIImage *)image
+- (void)trackFrame:(UIImage *)image
 {
-  // Crop, convert and undistort the image.
-  [image toCvMat: rgba];
-  cv::cvtColor(rgba(cv::Rect(0, 20, 640, 320)), gray, CV_BGRA2GRAY);
-  cv::remap(gray, undistorted, map1, map2, cv::INTER_LINEAR);
-  
-  // Pass the image onto LSD SLAM.
-  if (++counter == 1) {
-		odometry->randomInit(undistorted.data, time(0), 1);
-  } else {
-    odometry->trackFrame(undistorted.data, counter, false, time(0));
+  if (++queued >= 3) {
+    --queued;
+    return;
   }
   
-  cv::Mat temp;
-  cv::cvtColor(undistorted, temp, CV_GRAY2RGBA);
-  return [UIImage imageWithCvMat: temp];
+  // Crop, convert and undistort the image.
+  dispatch_async(queue, ^{
+    [image toCvMat: rgba];
+    cv::cvtColor(rgba(cv::Rect(0, 20, 640, 320)), gray, CV_BGRA2GRAY);
+    cv::remap(gray, undistorted, map1, map2, cv::INTER_LINEAR);
+  
+    // Pass the image onto LSD SLAM, returning the last pose.
+    if (++counter == 1) {
+      odometry->randomInit(undistorted.data, time(0), 1);
+    } else {
+      odometry->trackFrame(undistorted.data, counter, false, time(0));
+    }
+    
+    --queued;
+  });
 }
 
 - (void)trackSensor:(CMAttitude *)attitude acceleration:(CMAcceleration)acceleration
