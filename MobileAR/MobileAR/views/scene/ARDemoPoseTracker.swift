@@ -27,7 +27,7 @@
   /**
    No-op
    */
-  func trackSensor(attitude: CMAttitude, acceleration: CMAcceleration) {
+  func trackSensor(x: CMAttitude, a: CMAcceleration, w: CMRotationRate) {
     angle += 0.01;
   }
 

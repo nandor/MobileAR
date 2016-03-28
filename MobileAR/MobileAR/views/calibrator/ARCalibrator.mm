@@ -13,7 +13,7 @@
 
 
 /// Number of snapshots taken for calibration.
-static constexpr size_t kCalibrationPoints = 32;
+static constexpr size_t kCalibrationPoints = 64;
 /// Minimal average distance between points in two sets.
 static constexpr double kMinDistance = 5.0f;
 /// Size of the asymetric circle pattern.

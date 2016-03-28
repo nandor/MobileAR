@@ -11,6 +11,6 @@
 
 - (void)trackFrame:(UIImage *)image;
 - (ARPose*)getPose;
-- (void)trackSensor:(CMAttitude *)attitude acceleration:(CMAcceleration)acceleration;
+- (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w;
 
 @end

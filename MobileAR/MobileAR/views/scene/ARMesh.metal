@@ -141,7 +141,7 @@ vertex ARPedestalInOut pedestalVert(
 {
   return {
       params.proj * params.view * object[iid].model * in[vid],
-      (params.normView * object[iid].normModel * float4(0, 1, 0, 0)).xyz
+      (params.normView * object[iid].normModel * float4(0, 0, 1, 0)).xyz
   };
 }
 

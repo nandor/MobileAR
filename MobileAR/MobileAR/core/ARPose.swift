@@ -24,7 +24,7 @@ extension float4x4 {
         float4(0, 0, 2 * n * f / (n - f), 0)
     ])
   }
-
+  
   /**
    Initializer to create a translation matrix.
    */
@@ -146,19 +146,15 @@ extension float4x4 {
   }
   
   /**
-   Story time. OpenCV's matrix was calibrated such that the marker is on
-   a plane with z = 0, which means that y must be swapped with z. Also,
-   y must be inverted and after applying transformation, the handedness
-   of the system must be corrected by inverting the direction of y and z
-   to match the orientation of the display and the depth buffer.
+   Creates a pose from matrices stored in column-major order.
    */
  convenience init(viewMat: [Float], projMat: [Float]) {
     self.init(
-        viewMat: float4x4([
-            float4(viewMat[ 0], -viewMat[ 1], -viewMat[ 2],  viewMat[ 3]),
-            float4(viewMat[ 4], -viewMat[ 5], -viewMat[ 6],  viewMat[ 7]),
-            float4(viewMat[ 8], -viewMat[ 9], -viewMat[10],  viewMat[11]),
-            float4(viewMat[12], -viewMat[13], -viewMat[14],  viewMat[15])
+      viewMat: float4x4([
+            float4(viewMat[ 0], viewMat[ 1], viewMat[ 2],  viewMat[ 3]),
+            float4(viewMat[ 4], viewMat[ 5], viewMat[ 6],  viewMat[ 7]),
+            float4(viewMat[ 8], viewMat[ 9], viewMat[10],  viewMat[11]),
+            float4(viewMat[12], viewMat[13], viewMat[14],  viewMat[15])
         ]),
         projMat: float4x4([
             float4(projMat[ 0], projMat[ 1], projMat[ 2], projMat[ 3]),

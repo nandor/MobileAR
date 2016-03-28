@@ -31,7 +31,7 @@
 /**
  Updates the tracker using sensor measurements.
  */
-- (void)trackSensor:(CMAttitude *)attitude acceleration:(CMAcceleration)acceleration;
+- (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w;
 
 /**
  Returns the tracked pose.

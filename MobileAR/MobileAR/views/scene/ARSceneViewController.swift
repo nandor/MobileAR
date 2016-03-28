@@ -10,7 +10,7 @@ import UIKit
  */
 extension CMDeviceMotion {
 
-  var rotatedAcceleration: CMAcceleration {
+  var worldAcceleration: CMAcceleration {
     get {
       let a = self.userAcceleration
       let r = self.attitude.rotationMatrix
@@ -57,7 +57,7 @@ extension CMDeviceMotion {
     let n: float3
     let o: float3
   }
-  private let plane = ARPlane(n: float3(0, 1, 0), o: float3(0, 0, 0))
+  private let plane = ARPlane(n: float3(0, 0, 1), o: float3(0, 0, 0))
 
   /**
    Callend when the window is first created.
@@ -260,15 +260,15 @@ extension CMDeviceMotion {
    */
   func onFrame() {
 
-    guard let attitude = motionManager.deviceMotion?.attitude else {
+    guard let motion = motionManager.deviceMotion else {
       return
     }
-    guard let acceleration = motionManager.deviceMotion?.rotatedAcceleration else {
-      return
-    }
-
+    let x = motion.attitude
+    let a = motion.userAcceleration//worldAcceleration
+    let w = motion.rotationRate
+    
     // Update the tracker.
-    tracker.trackSensor(attitude, acceleration: acceleration)
+    tracker.trackSensor(x, a: a, w: w)
     if let pose = tracker.getPose() {
       renderer.updatePose(pose)
     }

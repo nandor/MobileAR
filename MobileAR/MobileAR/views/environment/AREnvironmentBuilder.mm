@@ -13,6 +13,25 @@
 /// Minimum number of features required for tracking.
 static constexpr size_t kMinMatches = 20;
 
+/**
+ Link between two frames.
+ */
+struct Link {
+  
+};
+
+/**
+ Information collected from a single frame.
+ */
+struct Frame {
+  // RGB version.
+  cv::Mat frame;
+  // Grayscale version.
+  cv::Mat gray;
+  // List of ORB keypoints.
+  std::vector<cv::KeyPoint> kps;
+};
+
 
 @implementation AREnvironmentBuilder
 {
@@ -36,6 +55,7 @@ static constexpr size_t kMinMatches = 20;
   cv::Ptr<cv::ORB> detector;
   std::unique_ptr<cv::BFMatcher> matcher;
 
+  
   // Features describing frames.
   std::vector<cv::KeyPoint> kp[2];
   cv::Mat desc[2];
