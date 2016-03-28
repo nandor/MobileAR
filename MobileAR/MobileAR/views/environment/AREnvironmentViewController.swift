@@ -24,7 +24,7 @@ class AREnvironmentViewController : UIViewController {
 
   // Renderer used to display the sphere.
   private var renderer: AREnvironmentViewRenderer!
-  
+
 
   /**
    Initializes the controller with an environment.
@@ -63,7 +63,7 @@ class AREnvironmentViewController : UIViewController {
    */
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
-    
+
     // Sets the tile of the view.
     title = environment.name ?? "Environment"
 
@@ -80,11 +80,11 @@ class AREnvironmentViewController : UIViewController {
         title: "Select",
         style: .Plain,
         target: self,
-        action: Selector("onSelect")
+        action: #selector(onSelect)
     )
 
     // Timer to run the rendering/update loop.
-    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer = QuartzCore.CADisplayLink(target: self, selector: #selector(onFrame))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
   }
 
@@ -104,7 +104,7 @@ class AREnvironmentViewController : UIViewController {
     NSUserDefaults().setObject(environment.path.path!, forKey: "environment")
     navigationController?.popToRootViewControllerAnimated(true)
   }
-  
+
   /**
    Called when attitude is refreshed.
    */

@@ -59,7 +59,7 @@ class AREnvironmentListController
     navigationItem.rightBarButtonItem = UIBarButtonItem(
         barButtonSystemItem: .Add,
         target: self,
-        action: Selector("onCapture")
+        action: #selector(onCapture)
     )
 
     // Reload the data in the table view.
@@ -85,7 +85,7 @@ class AREnvironmentListController
     manager.stopUpdatingLocation()
 
     // Sort environments by distance from current location.
-    environments.sortInPlace({ (AREnvironment env0, AREnvironment env1) in
+    environments.sortInPlace({ (env0, env1) in
       guard let l0 = env0.location else { return false }
       guard let l1 = env1.location else { return false }
       return l0.distanceFromLocation(loc) < l1.distanceFromLocation(loc)

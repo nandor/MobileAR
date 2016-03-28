@@ -94,7 +94,7 @@ class ARFileReader {
 
 extension ARFileReader : SequenceType {
   func generate() -> AnyGenerator<String> {
-    return anyGenerator {
+    return AnyGenerator {
       return self.nextLine()
     }
   }

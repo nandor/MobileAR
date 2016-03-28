@@ -22,7 +22,7 @@ enum ARRendererError : ErrorType {
  Class that handles rendering using Metal.
  */
 class ARRenderer {
-  
+
   /**
    Parameters passed to shaders.
    */
@@ -31,7 +31,7 @@ class ARRenderer {
     var proj: float4x4
     /// Inverse projection matrix.
     var invProj: float4x4
-    
+
     /// View matrix.
     var view: float4x4
     /// Normal matrix.
@@ -39,7 +39,7 @@ class ARRenderer {
     /// Inverse view matrix.
     var invView: float4x4
   }
-  
+
   /**
    Per-object parameters.
    */
@@ -68,7 +68,7 @@ class ARRenderer {
 
   // Buffer for view + projection matrix.
   internal var paramBuffer: MTLBuffer!
-  
+
   // Size of the view.
   internal let width: Int
   internal let height: Int
@@ -76,8 +76,8 @@ class ARRenderer {
   // Projection & view matrix from pose.
   internal var projMat = float4x4()
   internal var viewMat = float4x4()
-  
-  
+
+
   /**
    Initializes the core renderer.
    */
@@ -91,12 +91,12 @@ class ARRenderer {
     device = MTLCreateSystemDefaultDevice()!
     library = device.newDefaultLibrary()!
     queue = device.newCommandQueue()
-    
+
     // Save a reference to the view.
     self.view = view
     self.width = Int(view.frame.size.width)
     self.height = Int(view.frame.size.height)
-    
+
     // Set up the layer & the view.
     layer = CAMetalLayer()
     layer.device = device
@@ -118,10 +118,10 @@ class ARRenderer {
    Updates the pose of the camera.
    */
   func updatePose(pose: ARPose) {
-    
+
     self.projMat = pose.projMat
     self.viewMat = pose.viewMat
-    
+
     let params = UnsafeMutablePointer<ARCameraParameters>(paramBuffer.contents())
     params.memory.proj      = pose.projMat
     params.memory.invProj   = pose.projMat.inverse
@@ -145,7 +145,7 @@ class ARRenderer {
       // Create a command buffer & add up the semaphore on finish.
       let buffer = queue.commandBuffer()
       buffer.addCompletedHandler() {
-        (MTLCommandBuffer) in dispatch_semaphore_signal(self.sema)
+        (_) in dispatch_semaphore_signal(self.sema)
       }
 
       // Render the scene.

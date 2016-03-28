@@ -24,7 +24,7 @@ class AREnvironment {
 
   // List of light sources.
   var lights: [ARLight] = []
-  
+
   /**
    Creates a new environment.
    */
@@ -83,7 +83,7 @@ class AREnvironment {
       throw AREnvironmentError.MissingEnvironmentMap
     }
     self.map = UIImage(contentsOfFile: environmentPath)
-    
+
     // TODO(nandor): Sample only when environment is saved.
     self.lights = ARLightProbeSampler.sampleMedianCut(map, levels: 4)
   }
@@ -128,7 +128,7 @@ class AREnvironment {
         getEnvironmentsDirectoryURL(),
         includingPropertiesForKeys: [ NSURLIsDirectoryKey ],
         options: .SkipsSubdirectoryDescendants)
-    { (NSURL url, NSError err) in
+    { (url, err) in
       return false
     }
 

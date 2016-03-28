@@ -27,7 +27,7 @@ class AREnvironmentCaptureController
     , ARHDRCameraDelegate
 {
   // Set of exposure times to capture.
-  
+
   // Location manager used to sort environments by distance.
   private var locationManager : CLLocationManager!
 
@@ -100,7 +100,7 @@ class AREnvironmentCaptureController
     navigationItem.rightBarButtonItem = UIBarButtonItem(
         barButtonSystemItem: .Save,
         target: self,
-        action: Selector("onSave")
+        action: #selector(onSave)
     )
 
     // Create the environment renderer.
@@ -130,15 +130,15 @@ class AREnvironmentCaptureController
         f: params.f
     )
     camera.start()
-    camera.expose(x: 0.5, y: 0.5) { (CMTime) in
+    camera.expose(x: 0.5, y: 0.5) { (_) in
       self.builder = AREnvironmentBuilder(
           width: AREnvironmentCaptureController.kWidth,
           height: AREnvironmentCaptureController.kHeight
       )
     }
-    
+
     // Timer to run the rendering/update loop.
-    timer = CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer = CADisplayLink(target: self, selector: #selector(onFrame))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
   }
 
@@ -179,7 +179,7 @@ class AREnvironmentCaptureController
     alert.addAction(UIAlertAction(
         title: "Save",
         style: .Default)
-    { (UIAlertAction) in
+    { (_) in
       // Create a uniquely named folder in the environment directory.
       let directory = AREnvironment.getEnvironmentsDirectoryURL()
 
@@ -233,7 +233,7 @@ class AREnvironmentCaptureController
         withIntermediateDirectories: true,
         attributes: nil
     )
-    
+
     for i in 0...frame.count - 1 {
       let att = frame[i].1
       let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")

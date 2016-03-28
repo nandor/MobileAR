@@ -5,7 +5,7 @@
 import UIKit
 
 class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDelegate {
-  
+
   // UI Elements.
   private var imageView: UIImageView!
   private var spinnerView: UIActivityIndicatorView!
@@ -17,7 +17,7 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
 
   // Calibrator context.
   private var calibrator: ARCalibrator!
-  
+
   // Focus point for the camera.
   private var focusPoint: CGPoint?
 
@@ -54,7 +54,7 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
     navigationItem.rightBarButtonItem = UIBarButtonItem(
         barButtonSystemItem: .Action,
         target: self,
-        action: Selector("onViewParameters")
+        action: #selector(onViewParameters)
     )
     guard let _ = try? ARParameters.loadFromFile() else {
       navigationItem.rightBarButtonItem?.enabled = false
@@ -158,7 +158,7 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
       alert.addAction(UIAlertAction(
          title: "Use",
           style: .Default)
-      { (UIAlertAction) in
+      { (_) in
         self.navigationItem.rightBarButtonItem?.enabled = true
         ARParameters.saveToFile(params)
       })
@@ -166,7 +166,7 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
       alert.addAction(UIAlertAction(
           title: "Retry",
           style: .Destructive)
-      { (UIAlertAction) in
+      { (_) in
         self.calibrator = ARCalibrator(delegate: self)
       })
 
@@ -206,22 +206,22 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
       self.imageView.image = self.calibrator.findPattern(frame)
     }
   }
-  
+
   /**
    When the user taps on the screen, focus should be changed.
    */
   override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
-  
+
     // Get the other fingers of the screen!
     guard let touch = touches.first?.locationInView(view) else {
       return
     }
-    
+
     // Find the touch location.
     let x = Float(touch.x / view.frame.width)
     let y = Float(touch.y / view.frame.height)
-    
+
     // Focus the camera.
-    camera.focus(x: x, y: y) { (Float f) in self.calibrator.focus(f, x: x, y: y) }
+    camera.focus(x: x, y: y) { (f) in self.calibrator.focus(f, x: x, y: y) }
   }
 }

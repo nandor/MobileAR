@@ -76,7 +76,6 @@
 		7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
-		7A5B46AF1BCFBB83003F87BE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARFXAA.metal; sourceTree = "<group>"; };
 		7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARLighting.metal; sourceTree = "<group>"; };
 		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
@@ -163,7 +162,6 @@
 			isa = PBXGroup;
 			children = (
 				7A78BE471CA1C5BD000EBBAE /* opencv2.framework */,
-				7A5B46AF1BCFBB83003F87BE /* opencv2.framework */,
 				7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */,
 				7A5B46A91BCF2247003F87BE /* CoreMedia.framework */,
 				7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */,

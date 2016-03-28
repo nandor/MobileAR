@@ -109,7 +109,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
       device.setExposureModeCustomWithDuration(
           exposures[exposure],
           ISO: AVCaptureISOCurrent)
-      { (CMTime time) in
+      { (time) in
         self.device.unlockForConfiguration()
         self.isBeingConfigured = false
         self.canTakeFrame = true

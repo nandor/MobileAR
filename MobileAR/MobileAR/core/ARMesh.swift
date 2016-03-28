@@ -68,7 +68,7 @@ class ARMesh {
     // Build the vertex buffer.
     let indices = idx.count / 3
     var vbo = [Float](count: indices * 16, repeatedValue: 0.0)
-    for var i = 0; i < indices; i += 3 {
+    for i in 0.stride(to: indices, by: 3) {
       let v0 = vv[idx[(i + 0) * 3 + 0]]
       let v1 = vv[idx[(i + 1) * 3 + 0]]
       let v2 = vv[idx[(i + 2) * 3 + 0]]
@@ -101,7 +101,8 @@ class ARMesh {
       vbo[(i + 2) * 16 +  6] = t2.x
       vbo[(i + 2) * 16 +  7] = t2.y
       
-      for var j = 0, k = i; j < 3; j += 1, k += 1 {
+      for j in 0...2 {
+        let k = i + j
         let norm = vn[idx[k * 3 + 2]]
         
         vbo[k * 16 +  3] = norm.x

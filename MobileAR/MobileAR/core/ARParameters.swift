@@ -58,7 +58,7 @@ enum ARParametersError: ErrorType {
         options: NSJSONReadingOptions()
     ) as! [String: AnyObject]
 
-    let fetch: (String) throws -> Float = { (String key) throws in
+    let fetch: (String) throws -> Float = { (key) throws in
       guard let val = json[key] as? Float else {
         throw ARParametersError.MissingKey
       }

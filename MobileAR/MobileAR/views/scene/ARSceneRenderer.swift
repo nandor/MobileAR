@@ -200,7 +200,7 @@ class ARSceneRenderer : ARRenderer {
           geomEncoder.setFragmentTexture(mesh.texSpecular, atIndex: 1)
           geomEncoder.setFragmentTexture(mesh.texNormal, atIndex: 2)
 
-          for var batch = 0; batch < mats.count; batch += kInstanceBatch {
+          for batch in 0.stride(to: mats.count, by: kInstanceBatch) {
 
             // Create a temporary buffer to store object parameters.
             let modelBuffer = device.newBufferWithLength(
@@ -211,7 +211,7 @@ class ARSceneRenderer : ARRenderer {
             // Fill in the buffer with model matrices.
             var data = UnsafeMutablePointer<ARObjectParameters>(modelBuffer.contents())
             let size = min(kInstanceBatch, mats.count - batch)
-            for var i = 0; i < size; ++i {
+            for i in 0..<size {
               let model = mats[batch + i]
               data.memory.model = model
               data.memory.invModel = model.inverse
@@ -263,7 +263,7 @@ class ARSceneRenderer : ARRenderer {
     pedestalEncoder.setVertexBuffer(pedestalBuffer, offset: 0, atIndex: 0)
     pedestalEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
 
-    for var batch = 0; batch < objects.count; batch += kInstanceBatch {
+    for batch in 0.stride(to: objects.count, by: kInstanceBatch) {
 
       // Create a temporary buffer to store object parameters.
       let modelBuffer = device.newBufferWithLength(
@@ -274,7 +274,7 @@ class ARSceneRenderer : ARRenderer {
       // Fill in the buffer with model matrices.
       var data = UnsafeMutablePointer<ARObjectParameters>(modelBuffer.contents())
       let size = min(kInstanceBatch, objects.count - batch)
-      for var i = 0; i < size; ++i {
+      for i in 0..<size {
         let model = objects[batch + i].model
         data.memory.model = model
         data.memory.invModel = model.inverse
@@ -426,7 +426,7 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(fboSSAOBlurEnv, atIndex: 3)
     lightEncoder.setFragmentTexture(envMap, atIndex: 4)
 
-    for var batch = 0; batch < lights.count; batch += kLightBatch {
+    for batch in 0.stride(to: lights.count, by: kLightBatch) {
 
       // Create a buffer to hold light parameters.
       let lightBuffer = device.newBufferWithLength(
@@ -437,7 +437,7 @@ class ARSceneRenderer : ARRenderer {
       // Fill in the buffer with light parameters.
       var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
       let size = min(kLightBatch, lights.count - batch)
-      for var i = 0; i < size; ++i {
+      for i in 0..<size {
         let light = lights[batch + i]
         let n: float4 = viewMat.inverse.transpose * float4(
             light.direction.x,
@@ -474,8 +474,8 @@ class ARSceneRenderer : ARRenderer {
 
         data = data.successor()
       }
-
-      for var i = size; i < kLightBatch; ++i {
+      
+      for _ in size..<kLightBatch {
         data.memory.direction = float4(0, 0, 0, 1)
         data.memory.ambient = float4(0, 0, 0, 1)
         data.memory.diffuse = float4(0, 0, 0, 1)

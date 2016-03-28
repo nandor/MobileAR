@@ -80,12 +80,12 @@ extension CMDeviceMotion {
     navigationItem.rightBarButtonItem = UIBarButtonItem(
         barButtonSystemItem: .Camera,
         target: self,
-        action: Selector("onCalibrate")
+        action: #selector(onCalibrate)
     )
     navigationItem.leftBarButtonItem = UIBarButtonItem(
         barButtonSystemItem: .Search,
         target: self,
-        action: Selector("onSelect")
+        action: #selector(onSelect)
     )
 
     // Reset the title.
@@ -127,7 +127,7 @@ extension CMDeviceMotion {
 
 
     // Timer to run the rendering/update loop.
-    timer = QuartzCore.CADisplayLink(target: self, selector: Selector("onFrame"))
+    timer = QuartzCore.CADisplayLink(target: self, selector: #selector(onFrame))
     timer.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSDefaultRunLoopMode)
 
     // Start the camera.
@@ -164,7 +164,7 @@ extension CMDeviceMotion {
     alert.addAction(UIAlertAction(
         title: "Calibrate",
         style: .Default)
-    { (UIAlertAction) in self.onCalibrate() })
+    { (_) in self.onCalibrate() })
 
     presentViewController(alert, animated: true, completion: nil)
   }
@@ -196,12 +196,12 @@ extension CMDeviceMotion {
     alert.addAction(UIAlertAction(
         title: "Capture",
         style: .Default)
-    { (UIAlertAction) in self.onCapture() })
+    { (_) in self.onCapture() })
 
     alert.addAction(UIAlertAction(
         title: "Select",
         style: .Default)
-    { (UIAlertAction) in self.onSelect() })
+    { (_) in self.onSelect() })
 
     presentViewController(alert, animated: true, completion: nil)
   }
@@ -225,12 +225,12 @@ extension CMDeviceMotion {
     alert.addAction(UIAlertAction(
         title: "Okay",
         style: .Default)
-    { (UIAlertAction) in self.obtainCamera() })
+    { (_) in self.obtainCamera() })
 
     alert.addAction(UIAlertAction(
         title: "Back",
         style: .Cancel)
-    { (UIAlertAction) in self.navigationController?.popToRootViewControllerAnimated(true) })
+    { (_) in self.navigationController?.popToRootViewControllerAnimated(true) })
 
     presentViewController(alert, animated: true, completion: nil)
   }
