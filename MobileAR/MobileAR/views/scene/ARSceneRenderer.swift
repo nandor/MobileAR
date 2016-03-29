@@ -5,10 +5,50 @@
 import UIKit
 import Metal
 
+
+
+// Number of light sources to render in a batch.
+private let kLightBatch = 32
+// Number of objects to render in an instance batch.
+private let kInstanceBatch = 32
+
+
+/**
+ Funny dictionary that invokes a closure to create a missing element.
+ */
+class ARBatchBuffer {
+  private var buffers: [Int: MTLBuffer] = [:]
+  
+  func get(idx: Int, create: () -> MTLBuffer) -> MTLBuffer {
+    if let buffer = buffers[idx] {
+      return buffer
+    } else {
+      let buffer = create()
+      buffers[idx] = buffer
+      return buffer
+    }
+  }
+}
+
+
+/**
+ Render buffer for the scene.
+ 
+ Besides the camera pose, it also holds model matrices for objects, pedestals,
+ as well as parameters for the light sources. The data structures map the batch
+ index to a buffer holding enough elements to render a batch.
+ */
+class ARSceneRenderBuffer: ARRenderBuffer {
+  internal var models = ARBatchBuffer()
+  internal var lights = ARBatchBuffer()
+  internal var pedestals = ARBatchBuffer()
+}
+
+
 /**
  Renders the augmented scene.
  */
-class ARSceneRenderer : ARRenderer {
+class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
 
   // Render targets. Data is encoded as:
   //
@@ -80,11 +120,6 @@ class ARSceneRenderer : ARRenderer {
     var specular: float4
   }
 
-  // Number of light sources to render in a batch.
-  private let kLightBatch = 32
-  // Number of objects to render in an instance batch.
-  private let kInstanceBatch = 4
-
   // Objects to be rendered.
   internal var objects: [ARObject] = []
   // Light sources to be used.
@@ -95,7 +130,7 @@ class ARSceneRenderer : ARRenderer {
    Initializes the renderer.
    */
   init(view: UIView, environment: AREnvironment) throws {
-    try super.init(view: view)
+    try super.init(view: view, buffers: 3)
 
     self.lights = environment.lights
 
@@ -117,14 +152,17 @@ class ARSceneRenderer : ARRenderer {
   /**
    Renders a single frame.
    */
-  override func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
-    renderGeometry(target, buffer: buffer)
-    renderPedestals(target, buffer: buffer)
-    renderSSAO(target, buffer: buffer)
-    renderSSAOBlur(target, buffer: buffer)
-    renderBackground(target, buffer: buffer)
-    renderLights(target, buffer: buffer)
-    renderFXAA(target, buffer: buffer)
+  override func onRenderFrame(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
+    renderGeometry(buffer, params: params)
+    renderPedestals(buffer, params: params)
+    renderSSAO(buffer, params: params)
+    renderSSAOBlur(buffer, params: params)
+    renderBackground(buffer, params: params)
+    renderLights(buffer, params: params)
+    renderFXAA(buffer, params: params)
   }
 
   /**
@@ -135,8 +173,10 @@ class ARSceneRenderer : ARRenderer {
    exponent to the material buffer and saves the X and Y components of the
    normalized normal vectors into the normal buffer.
    */
-  private func renderGeometry(target: MTLTexture, buffer: MTLCommandBuffer) {
-
+  private func renderGeometry(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let geomPass = MTLRenderPassDescriptor()
     geomPass.colorAttachments[0].texture = fboNormal
     geomPass.colorAttachments[0].loadAction = .DontCare
@@ -195,18 +235,20 @@ class ARSceneRenderer : ARRenderer {
         case .Some(.Some(let mesh)):
           // Prepare common attributes.
           geomEncoder.setVertexBuffer(mesh.vbo, offset: 0, atIndex: 0)
-          geomEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
+          geomEncoder.setVertexBuffer(params.poseBuffer, offset: 0, atIndex: 1)
           geomEncoder.setFragmentTexture(mesh.texDiffuse, atIndex: 0)
           geomEncoder.setFragmentTexture(mesh.texSpecular, atIndex: 1)
           geomEncoder.setFragmentTexture(mesh.texNormal, atIndex: 2)
 
           for batch in 0.stride(to: mats.count, by: kInstanceBatch) {
 
-            // Create a temporary buffer to store object parameters.
-            let modelBuffer = device.newBufferWithLength(
-              sizeof(ARObjectParameters) * kInstanceBatch,
-              options: MTLResourceOptions()
-            )
+            // Create or fetch a temporary buffer to store object parameters.
+            let modelBuffer = params.models.get(batch, create: {
+              return self.device.newBufferWithLength(
+                  sizeof(ARObjectParameters) * kInstanceBatch,
+                  options: MTLResourceOptions()
+              )
+            })
 
             // Fill in the buffer with model matrices.
             var data = UnsafeMutablePointer<ARObjectParameters>(modelBuffer.contents())
@@ -242,7 +284,10 @@ class ARSceneRenderer : ARRenderer {
    in order to distinguish this plane from actual objects. The background
    image will be modulated using AO, however lighting should not be applied.
    */
-  private func renderPedestals(target: MTLTexture, buffer: MTLCommandBuffer) {
+  private func renderPedestals(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let pedestalPass = MTLRenderPassDescriptor()
     pedestalPass.colorAttachments[0].loadAction = .Load
     pedestalPass.colorAttachments[0].storeAction = .Store
@@ -261,15 +306,17 @@ class ARSceneRenderer : ARRenderer {
     pedestalEncoder.setDepthStencilState(pedestalDepthState)
     pedestalEncoder.setRenderPipelineState(pedestalRenderState)
     pedestalEncoder.setVertexBuffer(pedestalBuffer, offset: 0, atIndex: 0)
-    pedestalEncoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
+    pedestalEncoder.setVertexBuffer(params.poseBuffer, offset: 0, atIndex: 1)
 
     for batch in 0.stride(to: objects.count, by: kInstanceBatch) {
 
       // Create a temporary buffer to store object parameters.
-      let modelBuffer = device.newBufferWithLength(
-        sizeof(ARObjectParameters) * kInstanceBatch,
-        options: MTLResourceOptions()
-      )
+      let modelBuffer = params.pedestals.get(batch, create: {
+        return self.device.newBufferWithLength(
+            sizeof(ARObjectParameters) * kInstanceBatch,
+            options: MTLResourceOptions()
+        )
+      })
 
       // Fill in the buffer with model matrices.
       var data = UnsafeMutablePointer<ARObjectParameters>(modelBuffer.contents())
@@ -302,8 +349,10 @@ class ARSceneRenderer : ARRenderer {
    of data from textures and buffers from random locations. It requires a
    separate pass since it writes to the AO texture.
    */
-  private func renderSSAO(target: MTLTexture, buffer: MTLCommandBuffer) {
-
+  private func renderSSAO(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let ssaoPass = MTLRenderPassDescriptor()
     ssaoPass.colorAttachments[0].texture = fboSSAOEnv
     ssaoPass.colorAttachments[0].loadAction = .Load
@@ -321,7 +370,7 @@ class ARSceneRenderer : ARRenderer {
     ssaoEncoder.setDepthStencilState(quadLE)
     ssaoEncoder.setRenderPipelineState(ssaoRenderState)
     ssaoEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
-    ssaoEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
+    ssaoEncoder.setFragmentBuffer(params.poseBuffer, offset: 0, atIndex: 0)
     ssaoEncoder.setFragmentBuffer(ssaoSampleBuffer, offset: 0, atIndex: 1)
     ssaoEncoder.setFragmentBuffer(ssaoRandomBuffer, offset: 0, atIndex: 2)
     ssaoEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
@@ -333,8 +382,10 @@ class ARSceneRenderer : ARRenderer {
   /**
    Blur the SSAO texture using a 4x4 box blur.
    */
-  private func renderSSAOBlur(target: MTLTexture, buffer: MTLCommandBuffer) {
-
+  private func renderSSAOBlur(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let blurPass = MTLRenderPassDescriptor()
     blurPass.colorAttachments[0].texture = fboSSAOBlurEnv
     blurPass.colorAttachments[0].loadAction = .Clear
@@ -366,8 +417,10 @@ class ARSceneRenderer : ARRenderer {
    occluded by objects rendered on top of the scene. The background texture
    is combined with the AO map to occlude a planar region around objects.
    */
-  private func renderBackground(target: MTLTexture, buffer: MTLCommandBuffer) {
-
+  private func renderBackground(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let backgroundPass = MTLRenderPassDescriptor()
     backgroundPass.colorAttachments[0].texture = fboFXAA
     backgroundPass.colorAttachments[0].loadAction = .Clear
@@ -400,8 +453,10 @@ class ARSceneRenderer : ARRenderer {
    matrix is applied to the light direction in order to avoid a matrix
    multiplication and normalization in the fragment shader.
    */
-  private func renderLights(target: MTLTexture, buffer: MTLCommandBuffer) {
-
+  private func renderLights(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let lightPass = MTLRenderPassDescriptor()
     lightPass.colorAttachments[0].texture = fboFXAA
     lightPass.colorAttachments[0].loadAction = .Load
@@ -419,7 +474,7 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setDepthStencilState(quadLE)
     lightEncoder.setRenderPipelineState(lightingRenderState)
     lightEncoder.setVertexBuffer(quadVBO, offset: 0, atIndex: 0)
-    lightEncoder.setFragmentBuffer(paramBuffer, offset: 0, atIndex: 0)
+    lightEncoder.setFragmentBuffer(params.poseBuffer, offset: 0, atIndex: 0)
     lightEncoder.setFragmentTexture(fboDepthStencil, atIndex: 0)
     lightEncoder.setFragmentTexture(fboNormal, atIndex: 1)
     lightEncoder.setFragmentTexture(fboMaterial, atIndex: 2)
@@ -427,19 +482,21 @@ class ARSceneRenderer : ARRenderer {
     lightEncoder.setFragmentTexture(envMap, atIndex: 4)
 
     for batch in 0.stride(to: lights.count, by: kLightBatch) {
-
-      // Create a buffer to hold light parameters.
-      let lightBuffer = device.newBufferWithLength(
-        sizeof(Light) * kLightBatch,
-        options: MTLResourceOptions()
-      )
+      
+      // Create or fetch a buffer to hold light parameters.
+      let lightBuffer = params.lights.get(batch, create: {
+        return self.device.newBufferWithLength(
+            sizeof(Light) * kLightBatch,
+            options: MTLResourceOptions()
+        )
+      })
 
       // Fill in the buffer with light parameters.
       var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
       let size = min(kLightBatch, lights.count - batch)
       for i in 0..<size {
         let light = lights[batch + i]
-        let n: float4 = viewMat.inverse.transpose * float4(
+        let n: float4 = params.viewMat.inverse.transpose * float4(
             light.direction.x,
             light.direction.y,
             light.direction.z,
@@ -493,10 +550,12 @@ class ARSceneRenderer : ARRenderer {
   /**
    Runs the FXAA shader on the final, tone-mapped RGB colour output.
    */
-  private func renderFXAA(target: MTLTexture, buffer: MTLCommandBuffer) {
-    
+  private func renderFXAA(
+      buffer: MTLCommandBuffer,
+      params: ARSceneRenderBuffer)
+  {
     let fxaaPass = MTLRenderPassDescriptor()
-    fxaaPass.colorAttachments[0].texture = target
+    fxaaPass.colorAttachments[0].texture = drawable.texture
     fxaaPass.colorAttachments[0].loadAction = .DontCare
     fxaaPass.colorAttachments[0].storeAction = .Store
     

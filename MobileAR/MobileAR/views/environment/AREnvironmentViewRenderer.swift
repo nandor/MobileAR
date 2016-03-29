@@ -13,9 +13,15 @@ let kSphereSlices: Int = 16
 let kSphereStacks: Int = 16
 
 /**
+ Same as the normal buffer.
+ */
+class AREnvironmentRenderBuffer: ARRenderBuffer {
+}
+
+/**
  Renders an environment map over on a sphere around the origin.
  */
-class AREnvironmentViewRenderer : ARRenderer {
+class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
 
   // Spherical texture to be displayed.
   private var texture: MTLTexture!
@@ -36,8 +42,8 @@ class AREnvironmentViewRenderer : ARRenderer {
   /**
    Initializes the environment renderer using an existing environment.
    */
-  override required init(view: UIView) throws {
-    try super.init(view: view)
+  required init(view: UIView) throws {
+    try super.init(view: view, buffers: 1)
 
     // Set up the depth state.
     let depthDesc = MTLDepthStencilDescriptor()
@@ -158,11 +164,14 @@ class AREnvironmentViewRenderer : ARRenderer {
   /**
    Renders the environment.
    */
-  override func onRenderFrame(target: MTLTexture, buffer: MTLCommandBuffer) {
+  override func onRenderFrame(
+      buffer: MTLCommandBuffer,
+      params: AREnvironmentRenderBuffer)
+  {
 
     // Create the render command descriptor.
     let renderDesc = MTLRenderPassDescriptor()
-    renderDesc.colorAttachments[0].texture = target
+    renderDesc.colorAttachments[0].texture = drawable.texture
     renderDesc.colorAttachments[0].loadAction = .DontCare
     renderDesc.colorAttachments[0].storeAction = .Store
 
@@ -171,7 +180,7 @@ class AREnvironmentViewRenderer : ARRenderer {
     encoder.setDepthStencilState(depthState)
     encoder.setRenderPipelineState(renderState)
     encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 0)
-    encoder.setVertexBuffer(paramBuffer, offset: 0, atIndex: 1)
+    encoder.setVertexBuffer(params.poseBuffer, offset: 0, atIndex: 1)
     encoder.setFragmentTexture(texture, atIndex: 0)
     encoder.drawIndexedPrimitives(
         .Triangle,
