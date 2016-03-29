@@ -71,7 +71,7 @@ fragment half4 fxaa(
     texture2d<half, access::sample> texRGB [[ texture(0) ]])
 {
   constexpr sampler smpl(address::clamp_to_edge, filter::linear);
-
+  
   // Sample RGB values.
   const half3 rgbNW = texRGB.sample(smpl, in.uv + float2(-1,-1) / SCREEN_SIZE).xyz;
   const half3 rgbW  = texRGB.sample(smpl, in.uv + float2(-1, 0) / SCREEN_SIZE).xyz;

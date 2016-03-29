@@ -496,19 +496,11 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
       let size = min(kLightBatch, lights.count - batch)
       for i in 0..<size {
         let light = lights[batch + i]
-        let n: float4 = params.viewMat.inverse.transpose * float4(
+        data.memory.direction = -params.viewMat * float4(
             light.direction.x,
             light.direction.y,
             light.direction.z,
-            1
-        )
-        let l = -Float(sqrt(n.x * n.x + n.y * n.y + n.z * n.z))
-
-        data.memory.direction = float4(
-            n.x / l,
-            n.y / l,
-            n.z / l,
-            0.0
+            0
         )
         data.memory.ambient = float4(
             light.ambient.x,
