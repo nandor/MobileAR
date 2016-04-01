@@ -14,7 +14,7 @@ let kExposures = [
   CMTimeMake(1, 250),
   CMTimeMake(1, 100),
   CMTimeMake(1, 50),
-  CMTimeMake(1, 10),
+  CMTimeMake(1, 20),
 ]
 
 

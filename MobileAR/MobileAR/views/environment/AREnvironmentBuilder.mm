@@ -10,26 +10,44 @@
 #include <simd/simd.h>
 
 
-/// Minimum number of features required for tracking.
-static constexpr size_t kMinMatches = 20;
-
-/**
- Link between two frames.
- */
-struct Link {
-  
-};
+/// Minimum number of features and matches required for tracking.
+static constexpr size_t kMinFeatures = 50;
+static constexpr size_t kMinMatches = 15;
+static constexpr float kMaxHammingDistance = 75;
+static constexpr float kMaxReprojDistance = 200.0f;
 
 /**
  Information collected from a single frame.
  */
 struct Frame {
   // RGB version.
-  cv::Mat frame;
+  cv::Mat bgr;
   // Grayscale version.
   cv::Mat gray;
-  // List of ORB keypoints.
-  std::vector<cv::KeyPoint> kps;
+  // List of keypoints.
+  std::vector<cv::KeyPoint> keypoints;
+  // List of ORB descriptors.
+  cv::Mat descriptors;
+  // Intrinsic matrix.
+  simd::float4x4 P;
+  // Extrinsic matrix (Camera pose).
+  simd::float4x4 R;
+  
+  Frame(
+    const cv::Mat &bgr,
+    const cv::Mat &gray,
+    const std::vector<cv::KeyPoint> &keypoints,
+    const cv::Mat &descriptors,
+    const simd::float4x4 &P,
+    const simd::float4x4 &R)
+    : bgr(bgr)
+    , gray(gray)
+    , keypoints(keypoints)
+    , descriptors(descriptors)
+    , P(P)
+    , R(R)
+  {
+  }
 };
 
 
@@ -43,26 +61,12 @@ struct Frame {
   // OpenCV matrix holding the map.
   cv::Mat preview;
 
-  // OpenCV version of the current frame.
-  cv::Mat frame;
-  // Grayscale version of current frame.
-  cv::Mat gray;
-
-  // Number of frames processed.
-  size_t count;
+  // List of processed frames.
+  std::vector<Frame> frames;
 
   // Keypoint detctor & matcher.
   cv::Ptr<cv::ORB> detector;
   std::unique_ptr<cv::BFMatcher> matcher;
-
-  
-  // Features describing frames.
-  std::vector<cv::KeyPoint> kp[2];
-  cv::Mat desc[2];
-
-  // Pose of the previous frame.
-  simd::float4x4 M;
-  simd::float4x4 P;
 }
 
 
@@ -80,8 +84,6 @@ struct Frame {
       CV_8UC4
   );
 
-  count = 0;
-
   detector = cv::ORB::create();
   matcher = std::make_unique<cv::BFMatcher>(cv::NORM_HAMMING);
 
@@ -90,24 +92,140 @@ struct Frame {
 
 
 - (void)update:(UIImage*)image pose:(ARPose*)pose {
-  [image toCvMat: frame];
-
-  // Track the pose using feature mathching on a grayscale image.
-  cv::cvtColor(frame, gray, CV_BGR2GRAY);
-  if (![self trackPose: pose image: gray]) {
+  
+  // Fetch both the RGB and the grayscale versions of the frame.
+  cv::Mat bgr, gray;
+  [image toCvMat: bgr];
+  cv::cvtColor(bgr, gray, CV_BGR2GRAY);
+  
+  // Extract ORB features & descriptors and make sure we have enough of them.
+  std::vector<cv::KeyPoint> keypoints;
+  cv::Mat descriptors;
+  detector->detectAndCompute(gray, {}, keypoints, descriptors);
+  if (keypoints.size() < kMinFeatures) {
     return;
   }
-
-  // Increment the number of successfully tracked frames.
-  ++count;
+  
+  // Extract intrinsic & extrinsic matrices from pose.
+  const simd::float4x4 P = [pose proj];
+  const simd::float4x4 R = [pose view];
+  
+  // Ensure that the current image matches at least some other images.
+  size_t pairs = 0;
+  for (const auto &frame : frames) {
+    // Find ORB matches and make sure there are enough of them.
+    std::vector<cv::DMatch> matches;
+    matcher->match(descriptors, frame.descriptors, matches);
+    if (matches.size() < kMinMatches) {
+      continue;
+    }
+    
+    // Threshold by Hamming distance.
+    {
+      std::sort(
+          matches.begin(),
+          matches.end(),
+          [](const cv::DMatch &a, const cv::DMatch &b)
+          {
+            return a.distance < b.distance;
+          }
+      );
+      const auto maxHamming = std::min(kMaxHammingDistance, matches[0].distance * 5);
+      matches.erase(std::remove_if(
+          matches.begin(),
+          matches.end(),
+          [maxHamming](const cv::DMatch &m)
+          {
+            return m.distance > maxHamming;
+          }),
+          matches.end()
+      );
+      if (matches.size() < kMinMatches) {
+        return;
+      }
+    }
+    
+    // Threshold by reprojection error, removing unlikely matches.
+    {
+      const auto F = frame.P * frame.R * simd::inverse(R) * simd::inverse(P);
+      matches.erase(std::remove_if(
+          matches.begin(),
+          matches.end(),
+          [&keypoints, &frame, &F](const cv::DMatch &m)
+          {
+            const auto &p0 = keypoints[m.trainIdx].pt;
+            const auto &p1 = frame.keypoints[m.queryIdx].pt;
+      
+            // Project the feature point from the current image onto the other image
+            // using the rotation matrices obtained from gyroscope measurements.
+            const auto proj = F * simd::float4{ p0.x, p0.y, 1, 0 };
+            const auto px = proj.x / proj.z;
+            const auto py = proj.y / proj.z;
+       
+            // Measure the pixel distance between the points.
+            const float dist = std::sqrt(
+                (p1.x - px) * (p1.x - px) + (p1.y - py) * (p1.y - py)
+            );
+      
+            // Ensure the distance does not exceed a certain threshold.
+            return dist < kMaxReprojDistance;
+          }),
+          matches.end()
+      );
+      if (matches.size() < kMinMatches) {
+        return;
+      }
+    }
+    
+    // Find a homography between the two using RANSAC & LMeDS, removing
+    // all matches that are not included in the RANSAC estimation.
+    std::vector<cv::DMatch> finalMatches;
+    simd::float4x4 H;
+    {
+      std::vector<cv::Point2f> src, dst;
+      cv::Mat mask;
+      for (const auto &match : matches) {
+        src.push_back(keypoints[match.trainIdx].pt);
+        dst.push_back(keypoints[match.queryIdx].pt);
+      }
+      const cv::Mat h = cv::findHomography(src, dst, CV_LMEDS, 10.0f, mask);
+      if (matches.size() != mask.rows) {
+        return;
+      }
+      for (int i = 0; i < mask.rows; ++i) {
+        if (mask.at<bool>(i, 0)) {
+          finalMatches.push_back(matches[i]);
+        }
+      }
+      if (finalMatches.size() < kMinMatches) {
+        return;
+      }
+      
+      H = simd::float4x4(
+          simd::float4{ h.at<float>(0, 0), h.at<float>(1, 0), h.at<float>(2, 0), h.at<float>(3, 0) },
+          simd::float4{ h.at<float>(0, 1), h.at<float>(1, 1), h.at<float>(2, 1), h.at<float>(3, 1) },
+          simd::float4{ h.at<float>(0, 2), h.at<float>(1, 2), h.at<float>(2, 2), h.at<float>(3, 2) },
+          simd::float4{ h.at<float>(0, 3), h.at<float>(1, 3), h.at<float>(2, 3), h.at<float>(3, 3) }
+      );
+    }
+    
+    // If all the tests passed, count the pair as a match.
+    ++pairs;
+  }
+  if (pairs == 0 && frames.size() != 0) {
+    return;
+  }
+  
+  // Add the frame to the list.
+  frames.emplace_back(bgr, gray, keypoints, descriptors, P, R);
 
   // Project the image onto the environment map.
-  for (int r = 0; r < frame.rows; ++r) {
-    auto ptr = frame.ptr<cv::Vec4b>(r);
-    for (int c = 0; c < frame.cols; ++c) {
+  for (int r = 0; r < bgr.rows; ++r) {
+    auto ptr = bgr.ptr<cv::Vec4b>(r);
+    for (int c = 0; c < bgr.cols; ++c) {
       // Cast a ray through the pixel.
-      const auto pr = simd::inverse(P * M) * simd::float4{
-          static_cast<float>(frame.cols - c - 1),
+      const auto pr = simd::inverse(P * R) * simd::float4{
+          static_cast<float>(bgr.cols - c - 1),
           static_cast<float>(r),
           1.0f,
           1.0f,
@@ -127,48 +245,6 @@ struct Frame {
     }
   }
 }
-
-
-- (BOOL)trackPose:(ARPose*)pose image:(const cv::Mat&)image
-{
-  // Ping-pong between two sets of features.
-  size_t i0 = (count + 0) & 1;
-  size_t i1 = (count + 1) & 1;
-  auto &kp0 = kp[i0], &kp1 = kp[i1];
-  auto &ds0 = desc[i0], &ds1 = desc[i1];
-
-  // Detect features & keypoints in the current image.
-  detector->detectAndCompute(image, {}, kp1, ds1);
-  if (kp0.size() < kMinMatches || kp1.size() < kMinMatches) {
-    if (count != 0) {
-      return NO;
-    }
-
-    P = [pose proj];
-    M = [pose view];
-    return YES;
-  }
-
-  // Match the corresponding features.
-  std::vector<cv::DMatch> matches;
-  matcher->match(ds0, ds1, matches);
-  if (matches.size() <= kMinMatches || count == 0) {
-    return NO;
-  }
-
-  // Find a homography between the two sets of keypoints.
-  std::vector<cv::Point2f> xs0, xs1;
-  for (const auto &match: matches) {
-    xs0.push_back(kp0[match.queryIdx].pt);
-    xs1.push_back(kp1[match.trainIdx].pt);
-  }
-  
-  P = [pose proj];
-  M = [pose view];
-  
-  return YES;
-}
-
 
 - (UIImage*)getPreview {
   return [UIImage imageWithCvMat: preview];
