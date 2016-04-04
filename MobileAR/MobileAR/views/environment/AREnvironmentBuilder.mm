@@ -13,8 +13,8 @@
 /// Minimum number of features and matches required for tracking.
 static constexpr size_t kMinFeatures = 50;
 static constexpr size_t kMinMatches = 15;
-static constexpr float kMaxHammingDistance = 75;
-static constexpr float kMaxReprojDistance = 200.0f;
+static constexpr float kMaxHammingDistance = 50;
+static constexpr float kMaxReprojDistance = 100.0f;
 
 /**
  Information collected from a single frame.
@@ -201,11 +201,12 @@ struct Frame {
         return;
       }
       
+      // Convert the homography to a 'normal' format.
       H = simd::float4x4(
-          simd::float4{ h.at<float>(0, 0), h.at<float>(1, 0), h.at<float>(2, 0), h.at<float>(3, 0) },
-          simd::float4{ h.at<float>(0, 1), h.at<float>(1, 1), h.at<float>(2, 1), h.at<float>(3, 1) },
-          simd::float4{ h.at<float>(0, 2), h.at<float>(1, 2), h.at<float>(2, 2), h.at<float>(3, 2) },
-          simd::float4{ h.at<float>(0, 3), h.at<float>(1, 3), h.at<float>(2, 3), h.at<float>(3, 3) }
+          simd::float4{ h.at<float>(0, 0), h.at<float>(1, 0), h.at<float>(2, 0), 0 },
+          simd::float4{ h.at<float>(0, 1), h.at<float>(1, 1), h.at<float>(2, 1), 0 },
+          simd::float4{ h.at<float>(0, 2), h.at<float>(1, 2), h.at<float>(2, 2), 0 },
+          simd::float4{                 0,                 0,                 0, 1 }
       );
     }
     
