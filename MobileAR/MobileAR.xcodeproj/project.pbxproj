@@ -531,6 +531,7 @@
 					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
 				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = /Users/nandor/Projects/ofxiOSBoost/libs/boost/ios;
 				MTL_FAST_MATH = YES;
@@ -565,6 +566,7 @@
 					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
 				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = /Users/nandor/Projects/ofxiOSBoost/libs/boost/ios;
 				MTL_FAST_MATH = YES;

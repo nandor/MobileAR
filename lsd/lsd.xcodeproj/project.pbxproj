@@ -419,6 +419,8 @@
 					/usr/local/Frameworks,
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					./lsd/,
 					../g2o/,
@@ -446,6 +448,8 @@
 					/usr/local/Frameworks,
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					./lsd/,
 					../g2o/,
