@@ -12,6 +12,45 @@
 #include "lsd/SlamSystem.h"
 
 
+template<typename T>
+Eigen::Matrix<T, 7, 1> StateUpdate(
+    const Eigen::Matrix<T, 7, 1> &x,
+    const Eigen::Matrix<T, 7, 1> &w,
+    const float dt)
+{
+  Eigen::Quaternion<T> q;
+  q.x() = x(0, 0);
+  q.y() = x(1, 0);
+  q.z() = x(2, 0);
+  q.w() = x(3, 0);
+  
+  Eigen::Quaternion<T> r;
+  r.w() = 0.0f;
+  r.x() = x(4, 0);
+  r.y() = x(5, 0);
+  r.z() = x(6, 0);
+  
+  q = ((r * dt) * q).normalized();
+  
+  Eigen::Matrix<T, 7, 1> m;
+  m(0, 0) = q.x();
+  m(1, 0) = q.y();
+  m(2, 0) = q.z();
+  m(3, 0) = q.w();
+  m(4, 0) = r.x();
+  m(5, 0) = r.y();
+  m(6, 0) = r.z();
+  return m + w;
+}
+
+template<typename T>
+Eigen::Matrix<T, 7, 1> MesurementUpdate(
+    const Eigen::Matrix<T, 7, 1> &x,
+    const Eigen::Matrix<T, 7, 1> &w)
+{
+  return x + w;
+}
+
 
 @implementation ARSlamPoseTracker
 {

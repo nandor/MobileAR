@@ -77,6 +77,8 @@
 		7A49DFE01C60FBB600C47B8A /* cube_norm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cube_norm.png; path = MobileAR/models/cube_norm.png; sourceTree = "<group>"; };
 		7A49DFE11C60FBB600C47B8A /* cube_spec.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = cube_spec.png; path = MobileAR/models/cube_spec.png; sourceTree = "<group>"; };
 		7A49DFE21C60FBB600C47B8A /* cube.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cube.obj; path = MobileAR/models/cube.obj; sourceTree = "<group>"; };
+		7A57C5441CB51E77008F7F35 /* KalmanFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KalmanFilter.h; path = ar/KalmanFilter.h; sourceTree = "<group>"; };
+		7A57C5471CB524ED008F7F35 /* Jet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Jet.h; path = ar/Jet.h; sourceTree = "<group>"; };
 		7A5B46A71BCF1A58003F87BE /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		7A5B46A91BCF2247003F87BE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -242,6 +244,8 @@
 		C13F8A2642DCE930150DD8E9 /* ar */ = {
 			isa = PBXGroup;
 			children = (
+				7A57C5471CB524ED008F7F35 /* Jet.h */,
+				7A57C5441CB51E77008F7F35 /* KalmanFilter.h */,
 				7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */,
 				7A48122E1C8DB0AC00521E35 /* HDRBuilder.h */,
 				7A2FE8FA1C77C00F009BECCC /* Moments.h */,

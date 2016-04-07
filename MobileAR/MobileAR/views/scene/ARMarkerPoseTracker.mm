@@ -9,9 +9,58 @@
 #include <opencv2/opencv.hpp>
 #include <Eigen/Eigen>
 
+#include "ar/KalmanFilter.h"
+
 
 /// Size of the tracked pattern.
 static const cv::Size kPatternSize(4, 11);
+
+
+struct EKFSensorUpdate {
+  template<typename S>
+  static Eigen::Matrix<S, 7, 1> Update(
+      const Eigen::Matrix<S, 7, 1> &x,
+      const Eigen::Matrix<S, 7, 1> &w,
+      S dt)
+  {
+    Eigen::Quaternion<S> q(x(3), x(0), x(1), x(2));
+    Eigen::Quaternion<S> r(S(0), x(4) * dt, x(5) * dt, x(6) * dt);
+    
+    q = q * r;
+    
+    Eigen::Matrix<S, 7, 1> y;
+    y(0) = q.x();
+    y(1) = q.y();
+    y(2) = q.z();
+    y(3) = q.w();
+    y(4) = x(4);
+    y(5) = x(5);
+    y(6) = x(6);
+    return y + w;
+  }
+  
+  template<typename S>
+  static Eigen::Matrix<S, 7, 1> Measure(
+      const Eigen::Matrix<S, 7, 1> &x,
+      const Eigen::Matrix<S, 7, 1> &w)
+  {
+    Eigen::Quaternion<S> q(x(3), x(0), x(1), x(2));
+    
+    if (q.norm() > S(1e-7)) {
+      q.normalize();
+    }
+    
+    Eigen::Matrix<S, 7, 1> y;
+    y(0) = q.x();
+    y(1) = q.y();
+    y(2) = q.z();
+    y(3) = q.w();
+    y(4) = x(4);
+    y(5) = x(5);
+    y(6) = x(6);
+    return x + w;
+  }
+};
 
 
 @implementation ARMarkerPoseTracker
@@ -33,6 +82,9 @@ static const cv::Size kPatternSize(4, 11);
   Eigen::Quaternion<float> R;
   // Translation vector.
   Eigen::Matrix<float, 3, 1> T;
+  
+  // Kalman filter state.
+  std::shared_ptr<ar::KalmanFilter<float, 7, 7>> kf_;
 
   // Timestamp to compute frame times.
   double prevTime;
@@ -75,7 +127,32 @@ static const cv::Size kPatternSize(4, 11);
   // Initialize the pose.
   R = Eigen::Quaternion<float>(0.0f, 0.0f, 1.0f, 0.0f);
   T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, 0.0f);
-
+  
+  Eigen::Matrix<float, 7, 7> q;
+  q <<
+    0.01, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.01, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.01, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.01, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.10, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10;
+  
+  Eigen::Matrix<float, 7, 7> p;
+  p <<
+    1, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0,
+    0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 0, 1;
+  
+  Eigen::Matrix<float, 7, 1> x;
+  x << 0, 0, 1, 0, 0.1, 0.1, 0.1;
+  
+  kf_ = std::make_shared<ar::KalmanFilter<float, 7, 7>>(q, x, p);
+  
   return self;
 }
 
@@ -103,27 +180,45 @@ static const cv::Size kPatternSize(4, 11);
   
   // Pass to Eigen.
   Eigen::Matrix<float, 3, 1> t;
-  t(0, 0) = tvec.at<double>(0, 0);
+  t(0, 0) =  tvec.at<double>(0, 0);
   t(1, 0) = -tvec.at<double>(1, 0);
   t(2, 0) = -tvec.at<double>(2, 0);
   Eigen::Matrix<float, 3, 1> r;
-  r(0, 0) = rvec.at<double>(0, 0);
+  r(0, 0) =  rvec.at<double>(0, 0);
   r(1, 0) = -rvec.at<double>(1, 0);
   r(2, 0) = -rvec.at<double>(2, 0);
   
-  R = { r.norm(), r.normalized() };
-  T = t;
+  //R = { r.norm(), r.normalized() };
+  //T = t;
 }
 
 - (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w
 {
   // Compute the delta time since the last update.
-  //const double time = CACurrentMediaTime();
-  //const double dt = time - prevTime;
-  //prevTime = time;
+  const double time = CACurrentMediaTime();
+  const double dt = time - prevTime;
+  prevTime = time;
   
   auto qq = [x quaternion];
   R = Eigen::Quaternion<float>(-qq.w, -qq.y, qq.x, qq.z);
+  
+  Eigen::Matrix<float, 7, 7> r;
+  r <<
+    0.01, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.01, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.01, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.01, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.10, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10;
+  
+  Eigen::Matrix<float, 7, 1> z;
+  z << -qq.y, qq.x, qq.z, -qq.w, w.x, w.y, w.z;
+  kf_->Update<EKFSensorUpdate, 7, 7>(dt, z, r);
+  
+  const auto xx = kf_->GetState();
+  Eigen::Quaternion<float> q(xx(3), xx(0), xx(1), xx(2));
+  R = q.normalized();
   T(2, 0) = -50.0f;
 }
 
@@ -149,10 +244,10 @@ static const cv::Size kPatternSize(4, 11);
   const float n = 0.1f;
   
   NSArray<NSNumber*> *projMat = @[
-      @(fx / cx),    @(0.0f),                 @(0.0f),  @(0.0f),
-         @(0.0f), @(fy / cy),                 @(0.0f),  @(0.0f),
+      @(fx / cx),    @(0.0f),                 @(0.0f), @( 0.0f),
+         @(0.0f), @(fy / cy),                 @(0.0f), @( 0.0f),
          @(0.0f),    @(0.0f),   @(-(f + n) / (f - n)), @(-1.0f),
-         @(0.0f),    @(0.0f), @(-2 * f * n / (f - n)),  @(0.0f)
+         @(0.0f),    @(0.0f), @(-2 * f * n / (f - n)), @( 0.0f)
   ];
   
   // Create the pose out of the view + projection matrix.
