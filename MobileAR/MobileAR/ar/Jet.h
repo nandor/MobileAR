@@ -35,6 +35,11 @@ class Jet {
     , e(e_)
   {
   }
+  
+  inline Jet<T, N> operator += (const Jet<T, N> &y) {
+    *this = *this + y;
+    return *this;
+  }
 
   // Scalar part.
   T s;
@@ -44,13 +49,13 @@ class Jet {
 
   
 template<typename T, size_t N>
-Jet<T, N> operator * (const Jet<T, N> &x, const Jet<T, N> &y) {
+inline Jet<T, N> operator * (const Jet<T, N> &x, const Jet<T, N> &y) {
   return { x.s * y.s, x.s * y.e + y.s * x.e };
 }
   
 
 template<typename T, size_t N>
-Jet<T, N> operator / (const Jet<T, N> &x, const Jet<T, N> &y) {
+inline Jet<T, N> operator / (const Jet<T, N> &x, const Jet<T, N> &y) {
   const T s = x.s / y.s;
   return {
     s,
@@ -60,37 +65,47 @@ Jet<T, N> operator / (const Jet<T, N> &x, const Jet<T, N> &y) {
 
   
 template<typename T, size_t N>
-Jet<T, N> operator + (const Jet<T, N> &x, const Jet<T, N> &y) {
+inline Jet<T, N> operator + (const Jet<T, N> &x, const Jet<T, N> &y) {
   return { x.s + y.s, x.e + y.e };
 }
 
   
 template<typename T, size_t N>
-Jet<T, N> operator - (const Jet<T, N> &x, const Jet<T, N> &y) {
+inline Jet<T, N> operator - (const Jet<T, N> &x, const Jet<T, N> &y) {
   return { x.s - y.s, x.e - y.e };
 }
   
   
 template<typename T, size_t N>
-bool operator < (const Jet<T, N> &x, const Jet<T, N> &y) {
+inline bool operator < (const Jet<T, N> &x, const Jet<T, N> &y) {
   return x.s < y.s;
 }
   
 template<typename T, size_t N>
-bool operator > (const Jet<T, N> &x, const Jet<T, N> &y) {
+inline bool operator > (const Jet<T, N> &x, const Jet<T, N> &y) {
   return x.s > y.s;
+}
+
+template<typename T, size_t N>
+inline Jet<T, N> operator * (const Jet<T, N> &x, const T &s) {
+  return { x.s * s, x.e * s };
+}
+  
+template<typename T, size_t N>
+inline Jet<T, N> operator * (const T &s, const Jet<T, N> &x) {
+  return { x.s * s, x.e * s };
 }
 
 
   
 template<typename T, size_t N>
-Jet<T, N> operator - (const Jet<T, N> &x) {
+inline Jet<T, N> operator - (const Jet<T, N> &x) {
   return { -x.s, -x.e };
 }
 
   
 template<typename T, size_t N>
-Jet<T, N> sqrt(const Jet<T, N> &x) {
+inline Jet<T, N> sqrt(const Jet<T, N> &x) {
   const T ss = std::sqrt(x.s);
   return {
     ss,

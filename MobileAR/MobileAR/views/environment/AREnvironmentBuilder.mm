@@ -168,7 +168,7 @@ struct Frame {
             );
       
             // Ensure the distance does not exceed a certain threshold.
-            return dist < kMaxReprojDistance;
+            return dist > kMaxReprojDistance;
           }),
           matches.end()
       );

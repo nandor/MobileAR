@@ -50,6 +50,14 @@ class KalmanFilter {
   }
   
   /**
+   Reads the state of the Kalman Filter.
+   */
+  template<typename Reader>
+  void Read() {
+    
+  }
+  
+  /**
    Performs an update on the Kalman Filter.
    */
   template<typename Updater, size_t M, size_t WM>

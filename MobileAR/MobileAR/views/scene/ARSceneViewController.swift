@@ -264,7 +264,7 @@ extension CMDeviceMotion {
       return
     }
     let x = motion.attitude
-    let a = motion.userAcceleration//worldAcceleration
+    let a = motion.userAcceleration
     let w = motion.rotationRate
     
     // Update the tracker.
