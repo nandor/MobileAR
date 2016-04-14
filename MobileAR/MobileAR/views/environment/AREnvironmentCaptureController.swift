@@ -10,11 +10,11 @@ import QuartzCore
  List of exposure times to capture.
  */
 let kExposures = [
-  CMTimeMake(1, 1000),
-  CMTimeMake(1, 250),
-  CMTimeMake(1, 100),
+  //CMTimeMake(1, 1000),
+  //CMTimeMake(1, 250),
+  //CMTimeMake(1, 100),
   CMTimeMake(1, 50),
-  CMTimeMake(1, 20),
+  CMTimeMake(1, 25),
 ]
 
 
@@ -215,40 +215,48 @@ class AREnvironmentCaptureController
     presentViewController(alert, animated: true, completion: nil)
   }
 
-  //var count = 0
+  var count = 0
   /**
    Processes a frame from the device's camera.
    */
   func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
     let display = frame.last!
-    /*
-    let dir = NSFileManager.defaultManager().URLsForDirectory(
-        .DocumentDirectory,
-        inDomains: .UserDomainMask
-    )[0].URLByAppendingPathComponent("Temp").URLByAppendingPathComponent("\(count)")
-    count += 1
-
-    try! NSFileManager.defaultManager().createDirectoryAtURL(
-        dir,
-        withIntermediateDirectories: true,
-        attributes: nil
-    )
-
-    for i in 0...frame.count - 1 {
-      let att = frame[i].1
-      let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
-      UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
-    }
-    */
-    builder?.update(display.2, pose: ARPose(
+    
+    let merge = builder?.update(display.2, pose: ARPose(
         params: params,
-        rx:  Float(display.1.roll),
+        rx: Float(display.1.roll),
         ry: -Float(display.1.pitch),
         rz: -Float(display.1.yaw),
         tx: 0.0,
         ty: 0.0,
         tz: 0.0
     ))
+    
+    let temp = NSFileManager.defaultManager().URLsForDirectory(
+      .DocumentDirectory,
+      inDomains: .UserDomainMask
+    )[0].URLByAppendingPathComponent("Temp")
+    
+    if merge == true {
+      let dir = temp.URLByAppendingPathComponent("\(count)")
+      
+      if count == 0 {
+        try! NSFileManager.defaultManager().removeItemAtURL(temp)
+      }
+      try! NSFileManager.defaultManager().createDirectoryAtURL(
+        dir,
+        withIntermediateDirectories: true,
+        attributes: nil
+      )
+      
+      count += 1
+      
+      for i in 0...frame.count - 1 {
+        let att = frame[i].1
+        let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
+        UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
+      }
+    }
   }
 
   /**
@@ -270,7 +278,7 @@ class AREnvironmentCaptureController
             n: 0.1,
             f: 100.0
         ),
-        rx:  Float(attitude.roll),
+        rx: Float(attitude.roll),
         ry: -Float(attitude.pitch),
         rz: -Float(attitude.yaw),
         tx: 0.0,

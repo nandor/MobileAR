@@ -24,7 +24,7 @@
 /**
  Updates the preview with a frame.
 */
-- (void)update:(UIImage*)image pose:(ARPose*)pose;
+- (BOOL)update:(UIImage*)image pose:(ARPose*)pose;
 
 /**
  Returns the preview image.

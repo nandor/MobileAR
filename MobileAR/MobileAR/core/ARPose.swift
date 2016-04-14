@@ -109,8 +109,8 @@ extension float4x4 {
     self.init(
         viewMat: (
             float4x4(t: float3(tx, ty, tz)) *
-            float4x4(ry: ry) *
             float4x4(rx: rx) *
+            float4x4(ry: ry) *
             float4x4(rz: rz)
         ),
         projMat: projMat
