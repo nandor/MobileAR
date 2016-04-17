@@ -140,8 +140,8 @@ extension CMDeviceMotion {
    */
   override func viewWillDisappear(animated: Bool) {
     super.viewWillDisappear(animated)
-    timer.invalidate()
-    camera.stop()
+    timer?.invalidate()
+    camera?.stop()
   }
 
   /**

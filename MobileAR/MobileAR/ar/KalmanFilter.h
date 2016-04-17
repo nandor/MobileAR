@@ -6,157 +6,210 @@
 
 #include <Eigen/Eigen>
 
-#include "ar/Jet.h"
-
 
 namespace ar {
   
+  
 /**
- Wrapper around Extended Kalman Filters.
+ Kalman filter fusing orientation measurements.
  
- @tparam T Type of the data (usually float/double).
- @tparam N Number of elements in the state vector.
- @tparam WN Number of elements in the process noise covariance.
+ @tparam T Datatype used by the filter.
  */
-template<typename T, size_t N, size_t WN>
-class KalmanFilter {
+template<typename T>
+class EKFOrientation {
  public:
   
   /**
    Creates the Kalman filter.
    */
-  KalmanFilter(const Eigen::Matrix<T, WN, WN> &q)
-    : q_(q)
-  {
+  EKFOrientation() {
+    // Initialise the state - all zero.
+    x_ << 0, 1, 0, 0, 0, 0, 0, 0, 0, 0;
+    
+    // State noise - very high variance.
+    Eigen::Matrix<T, 10, 1> p;
+    p << 10, 10, 10, 10, 10, 10, 10, 10, 10, 10;
+    p_ = p.asDiagonal();
+    
+    // Process noise covariance - quite low.
+    Eigen::Matrix<T, 10, 1> q;
+    q << 5e-2, 5e-2, 5e-2, 5e-2, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4;
+    q_ = q.asDiagonal();
+    
+    // Marker measurement noise.
+    Eigen::Matrix<T, 4, 1> rM;
+    rM << 1e-2, 1e-2, 1e-2, 1e-2;
+    rM_ = rM.asDiagonal();
+    
+    // IMU measurement noise.
+    Eigen::Matrix<T, 7, 1> rI;
+    rI << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
+    rI_ = rI.asDiagonal();
   }
   
   /**
-   Creates the Kalman filter with an initial state and covariance.
+   Updates the filter with a measurement from the tracker.
    */
-  KalmanFilter(
-      const Eigen::Matrix<T, WN, WN> &q,
-      const Eigen::Matrix<T, N, 1> &x,
-      const Eigen::Matrix<T, N, N> &p)
-    : q_(q)
-    , x_(x)
-    , p_(p)
+  void UpdateMarker(
+      const Eigen::Quaternion<T> &q,
+      const T &dt)
   {
-  }
-
-  /**
-   Destroys the Kalman filter.
-   */
-  virtual ~KalmanFilter() {
-  }
-  
-  /**
-   Reads the state of the Kalman Filter.
-   */
-  template<typename Reader>
-  void Read() {
+    // Prediction step.
+    Eigen::Matrix<T, 10, 1> x;
+    Eigen::Matrix<T, 10, 10> p;
+    std::tie(x, p) = Predict(dt);
     
-  }
-  
-  /**
-   Performs an update on the Kalman Filter.
-   */
-  template<typename Updater, size_t M, size_t WM>
-  void Update(
-      const T &dt,
-      const Eigen::Matrix<T, M, 1> zm,
-      const Eigen::Matrix<T, WM, WM> &r)
-  {
-    
-    // Convert the state to jet form, compute both the projected state and the Jacobian.
-    // Extract the new state & the Jacobian matrix.
-    Eigen::Matrix<T, N, 1> x;
-    Eigen::Matrix<T, N, N> F;
-    Eigen::Matrix<T, N, WN> WF;
-    {
-      Eigen::Matrix<Jet<T, N + WN>, N, 1> xjet;
-      Eigen::Matrix<Jet<T, N + WN>, WN, 1> wjet;
-      
-      for (size_t i = 0; i < N; ++i) {
-        xjet(i).s = x_(i);
-        xjet(i).e(i) = 1;
-      }
-      for (size_t i = 0; i < WN; ++i) {
-        wjet(i).s = 0;
-        wjet(i).e(i + N) = 1;
-      }
-    
-      const auto xj = Updater::Update(xjet, wjet, Jet<T, N + WN>(dt));
-    
-      for (size_t i = 0; i < N; ++i) {
-        x(i) = xj(i).s;
-        for (size_t j = 0; j < N; ++j) {
-          F(i, j) = xj(i).e(j);
-        }
-        for (size_t j = 0; j < WN; ++j) {
-          WF(i, j) = xj(i).e(j + N);
-        }
-      }
+    // Compute the residual and normalize it.
+    Eigen::Quaternion<T> qy(x(0), x(1), x(2), x(3));
+    if (qy.norm() > 1e-6) {
+      qy.normalize();
     }
+    Eigen::Matrix<T, 4, 1> y;
+    y <<
+      q.w() - qy.w(),
+      q.x() - qy.x(),
+      q.y() - qy.y(),
+      q.z() - qy.z();
     
-    // Project ahead the covariance matrix.
-    Eigen::Matrix<T, N, N> p = F * p_ * F.transpose() + WF * q_ * WF.transpose();
-    
-    // Extract the measurement vector and Jacobian.
-    Eigen::Matrix<T, M, 1> z;
-    Eigen::Matrix<T, M, N> H;
-    Eigen::Matrix<T, M, WM> WH;
-    {
-      Eigen::Matrix<Jet<T, N + WM>, N, 1> zjet;
-      Eigen::Matrix<Jet<T, N + WM>, WM, 1> wjet;
-      for (size_t i = 0; i < N; ++i) {
-        zjet(i).s = x(i);
-        zjet(i).e(i) = 1;
-      }
-      for (size_t i = 0; i < WM; ++i) {
-        wjet(i).s = 0;
-        wjet(i).e(i + N) = 1;
-      }
-      
-      const auto zj = Updater::Measure(zjet, wjet);
-    
-      for (size_t i = 0; i < M; ++i) {
-        z(i) = zj(i).s;
-        for (size_t j = 0; j < N; ++j) {
-          H(i, j) = zj(i).e(j);
-        }
-        for (size_t j = 0; j < WM; ++j) {
-          WH(i, j) = zj(i).e(j + N);
-        }
-      }
-    }
+    // Compute the residual in matrix form & build the Jacobian withou
+    // taking into account the normalization since that yields a hihgly
+    // non-linear and unstable derivative.
+    Eigen::Matrix<T, 4, 10> H;
+    H <<
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
     
     // Compute the Kalman gain.
-    const auto k = p * H.transpose() * (
-        H * p * H.transpose() + WH * r * WH.transpose()
-    ).inverse();
+    const Eigen::Matrix<T, 4, 4> S = H * p * H.transpose() + rM_;
+    const Eigen::Matrix<T, 10, 4> K = p * H.transpose() * S.inverse();
     
-    // Update the state estimate.
-    x_ = x + k * (zm - z);
-    
-    // Update the covariance.
-    p_ = (Eigen::Matrix<T, N, N>::Identity() - k * H) * p;
+    // Update the state.
+    x_ = x + K * y;
+    p_ = (Eigen::Matrix<T, 10, 10>::Identity() - K * H) * p;
   }
   
   /**
-   Returns the state.
+   Updates the filter with a measurement from the IMU.
    */
-  Eigen::Matrix<T, N, 1> GetState() {
-    return x_;
+  void UpdateIMU(
+      const Eigen::Quaternion<T> &q,
+      const Eigen::Matrix<T, 3, 1> &w,
+      const T &dt)
+  {
+    // Prediction step.
+    Eigen::Matrix<T, 10, 1> x;
+    Eigen::Matrix<T, 10, 10> p;
+    std::tie(x, p) = Predict(dt);
+    
+    // Compute the residual using the normalized vector.
+    Eigen::Quaternion<T> qy(x(0), x(1), x(2), x(3));
+    if (qy.norm() > 1e-6) {
+      qy.normalize();
+    }
+    Eigen::Matrix<T, 7, 1> y;
+    y <<
+        q.w() - qy.w(),
+        q.x() - qy.x(),
+        q.y() - qy.y(),
+        q.z() - qy.z(),
+        w(0) - x(4),
+        w(1) - x(5),
+        w(2) - x(6);
+    
+    // Jacobian, returning quaternion and angular velocity.
+    Eigen::Matrix<T, 7, 10> H;
+    H <<
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
+    
+    const Eigen::Matrix<T, 7, 7> S = H * p * H.transpose() + rI_;
+    const Eigen::Matrix<T, 10, 7> K = p * H.transpose() * S.inverse();
+    
+    // Update the state.
+    x_ = x + K * y;
+    p_ = (Eigen::Matrix<T, 10, 10>::Identity() - K * H) * p;
+  }
+  
+  /**
+   Returns the orientation.
+   */
+  Eigen::Quaternion<T> GetOrientation() const {
+    return Eigen::Quaternion<T>(x_(0), x_(1), x_(2), x_(3)).normalized();
   }
   
  private:
-  /// Covariance matrix.
-  const Eigen::Matrix<T, WN, WN> q_;
+  /**
+   Performs the prediction step of the filter.
+   */
+  std::pair<Eigen::Matrix<T, 10, 1>, Eigen::Matrix<T, 10, 10>> Predict(const T &dt) {
+    
+    // Decompose the state matrix.
+    Eigen::Quaternion<T> rq(x_(0), x_(1), x_(2), x_(3));
+    Eigen::Matrix<T, 3, 1> rv(x_(4), x_(5), x_(6));
+    Eigen::Matrix<T, 3, 1> ra(x_(7), x_(8), x_(9));
+    
+    // Update the rotation, x1 = x0 + v0 * t + a * t * t / 2
+    Eigen::Matrix<T, 3, 1> rr = T(0.5) * (rv * dt + ra * dt * dt * T(0.5));
+    rq = Eigen::Quaternion<T>(T(0), rr(0), rr(1), rr(2)) * rq.normalized();
+    rv = rv + dt * ra;
+    
+    // Compute the jacobian F = df(x)/dx.
+    Eigen::Matrix<T, 10, 10> F;
+    F <<
+          1,   rr(0),  rr(1),  rr(2), 0, 0, 0,  0,  0,  0,
+      -rr(0),      1, -rr(2),  rr(1), 0, 0, 0,  0,  0,  0,
+      -rr(1),  rr(2),      1, -rr(0), 0, 0, 0,  0,  0,  0,
+      -rr(2), -rr(1),  rr(0),      1, 0, 0, 0,  0,  0,  0,
+           0,      0,      0,      0, 1, 0, 0, dt,  0,  0,
+           0,      0,      0,      0, 0, 1, 0,  0, dt,  0,
+           0,      0,      0,      0, 0, 0, 1,  0,  0, dt,
+           0,      0,      0,      0, 0, 0, 0,  1,  0,  0,
+           0,      0,      0,      0, 0, 0, 0,  0,  1,  0,
+           0,      0,      0,      0, 0, 0, 0,  0,  0,  1;
+    
+    // Propagate the state. Addition done here since Eigen does not have it.
+    Eigen::Matrix<T, 10, 1> x;
+    x(0) = x_(0) + rq.w();
+    x(1) = x_(1) + rq.x();
+    x(2) = x_(2) + rq.y();
+    x(3) = x_(3) + rq.z();
+    x(4) = rv(0);  x(5) = rv(1);  x(6) = rv(2);
+    x(7) = ra(0);  x(8) = ra(1);  x(9) = ra(2);
+    
+    // Propagate the noise.
+    Eigen::Matrix<T, 10, 10> p = F * p_ * F.transpose() + q_;
+    
+    return { x, p };
+  }
   
-  /// State vector.
-  Eigen::Matrix<T, N, 1> x_;
-  /// Process noise.
-  Eigen::Matrix<T, N, N> p_;
+ private:
+  /**
+   The state of the EKF.
+   
+   0..3: quaternion orientation
+   4..6: angular velocity
+   7..9: angular acceleration.
+   */
+  Eigen::Matrix<T, 10, 1> x_;
+  
+  /// The process noise.
+  Eigen::Matrix<T, 10, 10> p_;
+  
+  /// Process noise covariance.
+  Eigen::Matrix<T, 10, 10> q_;
+  
+  /// Measurement noise for tracker.
+  Eigen::Matrix<T, 4, 4> rM_;
+  
+  /// Measurement noise for IMU.
+  Eigen::Matrix<T, 7, 7> rI_;
 };
 
 }

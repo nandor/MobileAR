@@ -16,9 +16,7 @@
 /// Size of the tracked pattern.
 static const cv::Size kPatternSize(4, 11);
 /// Number of measurements to consider for the computation of the relative pose.
-static const size_t kRelativePoses = 25;
-/// Gravitational acceleration, in cm/s^2.
-static const float kGravity = 9.806 * 100;
+static const size_t kRelativePoses = 50;
 
 
 /**
@@ -30,8 +28,7 @@ Eigen::Quaternion<T> average(const std::vector<Eigen::Quaternion<T>> &qis) {
   // Much math leads here.
   Eigen::Matrix<T, 4, 4> M = Eigen::Matrix<T, 4, 4>::Zero();
   for (const auto &qi : qis) {
-    Eigen::Matrix<T, 4, 1> qv;
-    qv << qi.x(), qi.y(), qi.z(), qi.w();
+    Eigen::Matrix<T, 4, 1> qv(qi.x(), qi.y(), qi.z(), qi.w());
     M += qv * qv.transpose();
   }
   
@@ -40,75 +37,6 @@ Eigen::Quaternion<T> average(const std::vector<Eigen::Quaternion<T>> &qis) {
   const auto q = svd.matrixU().col(0);
   return Eigen::Quaternion<T>(q(3), q(0), q(1), q(2));
 }
-
-
-struct EKFUpdate {
-  template<typename S>
-  static Eigen::Matrix<S, 19, 1> Update(
-      const Eigen::Matrix<S, 19, 1> &x,
-      const Eigen::Matrix<S, 19, 1> &w,
-      S dt)
-  {
-    // Extract rotation data from the state.
-    Eigen::Quaternion<S> rq(x(3), x(0), x(1), x(2));
-    Eigen::Matrix<S, 3, 1> rv(x(4), x(5), x(6));
-    Eigen::Matrix<S, 3, 1> ra(x(7), x(8), x(9));
-    
-    // Extract position data from the state.
-    Eigen::Matrix<S, 3, 1> xx(x(10), x(11), x(12));
-    Eigen::Matrix<S, 3, 1> xv(x(13), x(14), x(15));
-    Eigen::Matrix<S, 3, 1> xa(x(16), x(17), x(18));
-    
-    // Transform the acceleration vector to the body frame.
-    const auto a = rq.normalized().inverse().toRotationMatrix() * xa * S(kGravity);
-    
-    // Update position and velocity.
-    xx = xx + xv * dt + a * dt * dt / S(2.0);
-    xv = xv + a * dt / S(2.0);
-    
-    // Update the angular velocity and the rotation.
-    Eigen::Matrix<S, 3, 1> r = S(0.5) * (rv * dt + ra * dt * dt / S(2));
-    rv = rv + ra * dt;
-    rq = rq * Eigen::Quaternion<S>(S(0), r(0), r(1), r(2));
-    
-    // Repack data into the state vector.
-    Eigen::Matrix<S, 19, 1> y;
-    y( 0) = rq.x(); y( 1) = rq.y(); y( 2) = rq.z(); y( 3) = rq.w();
-    y( 4) = rv(0); y( 5) = rv(1); y( 6) = rv(2);
-    y( 7) = ra(0); y( 8) = ra(1); y( 9) = ra(2);
-    y(10) = xx(0); y(11) = xx(1); y(12) = xx(2);
-    y(13) = xv(0); y(14) = xv(1); y(15) = xv(2);
-    y(16) = xa(0); y(17) = xa(1); y(18) = xa(2);
-    return y + w;
-  }
-};
-
-struct EKFSensorUpdate : public EKFUpdate {
-  template<typename S>
-  static Eigen::Matrix<S, 10, 1> Measure(
-      const Eigen::Matrix<S, 19, 1> &x,
-      const Eigen::Matrix<S, 10, 1> &w)
-  {
-    Eigen::Matrix<S, 10, 1> y;
-    y(0) = x( 0); y(1) = x( 1); y(2) = x( 2); y(3) = x(3);
-    y(4) = x( 4); y(5) = x( 5); y(6) = x( 6);
-    y(7) = x(16); y(8) = x(17); y(9) = x(18);
-    return y + w;
-  }
-};
-
-struct EKFMarkerUpdate : public EKFUpdate {
-  template<typename S>
-  static Eigen::Matrix<S, 7, 1> Measure(
-      const Eigen::Matrix<S, 19, 1> &x,
-      const Eigen::Matrix<S, 7, 1> &w)
-  {
-    Eigen::Matrix<S, 7, 1> y;
-    y(0) = x( 0); y(1) = x( 1); y(2) = x( 2); y(3) = x(3);
-    y(4) = x(10); y(5) = x(11); y(6) = x(12);
-    return y + w;
-  }
-};
 
 
 @implementation ARMarkerPoseTracker
@@ -132,13 +60,13 @@ struct EKFMarkerUpdate : public EKFUpdate {
   Eigen::Matrix<float, 3, 1> T;
   
   // Kalman filter state.
-  std::shared_ptr<ar::KalmanFilter<float, 19, 19>> kf_;
+  std::shared_ptr<ar::EKFOrientation<double>> kf_;
 
   // Timestamp to compute frame times.
   double prevTime;
   
   // List of relative orientations, measured between the world and marker frame.
-  std::vector<Eigen::Quaternion<float>> relativePoses;
+  std::vector<Eigen::Quaternion<double>> relativePoses;
 }
 
 - (instancetype)initWithParameters:(ARParameters *)params
@@ -178,41 +106,9 @@ struct EKFMarkerUpdate : public EKFUpdate {
   // Initialize the pose.
   R = Eigen::Quaternion<float>(0.0f, 0.0f, 1.0f, 0.0f);
   T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, 0.0f);
-  
-  {
-    // Process noise covariance.
-    Eigen::Matrix<float, 19, 1> q;
-    q <<
-      0.01, 0.01, 0.01, 0.01,
-      0.10, 0.10, 0.10,
-      0.20, 0.20, 0.20,
-      1.00, 1.00, 1.00,
-      1.00, 1.00, 1.00,
-      1.00, 1.00, 1.00;
-  
-    // Initial process noise.
-    Eigen::Matrix<float, 19, 1> p;
-    p <<
-      10, 10, 10, 10,
-      10, 10, 10,
-      10, 10, 10,
-      10, 10, 10,
-      10, 10, 10,
-      10, 10, 10;
     
-    // Initial state.
-    Eigen::Matrix<float, 19, 1> x;
-    x <<
-      0, 0, 1, 0,
-      0, 0, 0,
-      0, 0, 0,
-      0, 0, 0,
-      0, 0, 0,
-      0, 0, 0;
-    
-    // Initialize the Kalman filter.
-    kf_ = std::make_shared<ar::KalmanFilter<float, 19, 19>>(q.asDiagonal(), x, p.asDiagonal());
-  }
+  // Initialize the Kalman filter.
+  kf_ = std::make_shared<ar::EKFOrientation<double>>();
   
   return self;
 }
@@ -262,46 +158,30 @@ struct EKFMarkerUpdate : public EKFUpdate {
   if (relativePoses.size() > 0) {
     
     // Find the world rotation, as provided by the marker.
-    Eigen::Quaternion<float> relativePose = average<float>(relativePoses);
-    Eigen::Quaternion<float> wq = q * relativePose;
+    Eigen::Quaternion<double> relativePose = average(relativePoses);
     
-    // Measurement noise matrix.
-    Eigen::Matrix<float, 7, 1> r;
-    r << 0.01, 0.01, 0.01, 0.01, 3.0, 3.0, 3.0;
-    
-    // Update the Kalman filter with position.
-    Eigen::Matrix<float, 7, 1> z;
-    z << wq.x(), wq.y(), wq.z(), wq.w(), t(0), t(1), t(2);
-    kf_->Update<EKFMarkerUpdate, 7, 7>([self deltaTime], z, r.asDiagonal());
-  
-    // Read out the quaternion & update the pose.
-    const auto xx = kf_->GetState();
-    Eigen::Quaternion<float> q(xx(3), xx(0), xx(1), xx(2));
-    R = q.normalized();
-    T = { xx(10), xx(11), xx(12) };
+    // Update the filter.
+    kf_->UpdateMarker(q.cast<double>() * relativePose, [self deltaTime]);
+    R = kf_->GetOrientation().cast<float>();
+    T = t;
   }
   
-  relativePoses.push_back(q.inverse() * R);
+  relativePoses.push_back((q.inverse() * R).cast<double>());
 }
 
 
 - (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w
 {
-  // Measurement noise matrix.
-  Eigen::Matrix<float, 10, 1> r;
-  r << 0.01, 0.01, 0.01, 0.01, 0.10, 0.10, 0.10, 2.00, 2.00, 2.00;
-  
-  // Update with the quaternion & angular velocity.
+  // Update the filter.
   const auto qq = [x quaternion];
-  Eigen::Matrix<float, 10, 1> z;
-  z << -qq.y, qq.x, qq.z, -qq.w, w.x, w.y, w.z, a.x, a.y, a.z;
-  kf_->Update<EKFSensorUpdate, 10, 10>([self deltaTime], z, r.asDiagonal());
+  kf_->UpdateIMU(
+      Eigen::Quaternion<double>(-qq.w, -qq.y, qq.x, qq.z),
+      Eigen::Matrix<double, 3, 1>(w.x, w.y, w.z),
+      [self deltaTime]
+  );
   
-  // Read out the quaternion & update the pose.
-  const auto xx = kf_->GetState();
-  Eigen::Quaternion<float> q(xx(3), xx(0), xx(1), xx(2));
-  R = q.normalized();
-  T = { xx(10), xx(11), xx(12) };
+  // Update object pose.
+  R = kf_->GetOrientation().cast<float>();
 }
 
 
