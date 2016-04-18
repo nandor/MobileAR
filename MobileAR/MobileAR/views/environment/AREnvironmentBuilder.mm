@@ -58,11 +58,6 @@ struct Frame {
   // Height of the environment map.
   size_t height;
 
-  // OpenCV matrix holding the map.
-  cv::Mat preview;
-  // OpenCV matrix holding a composited preview.
-  cv::Mat composited;
-
   // List of processed frames.
   std::vector<Frame> frames;
 
@@ -80,16 +75,6 @@ struct Frame {
 
   width = width_;
   height = height_;
-  preview = cv::Mat::zeros(
-      static_cast<int>(height),
-      static_cast<int>(width),
-      CV_8UC4
-  );
-  composited = cv::Mat::zeros(
-      static_cast<int>(height),
-      static_cast<int>(width),
-      CV_8UC4
-  );
 
   detector = cv::ORB::create();
   matcher = std::make_unique<cv::BFMatcher>(cv::NORM_HAMMING, true);
@@ -97,7 +82,7 @@ struct Frame {
   return self;
 }
 
-- (BOOL)update:(UIImage*)image pose:(ARPose*)pose {
+- (ARPose*)update:(UIImage*)image pose:(ARPose*)pose {
   
   // Fetch both the RGB and the grayscale versions of the frame.
   cv::Mat bgr, gray;
@@ -109,7 +94,7 @@ struct Frame {
   cv::Mat descriptors;
   detector->detectAndCompute(gray, {}, keypoints, descriptors);
   if (keypoints.size() < kMinFeatures) {
-    return NO;
+    return nil;
   }
   
   // Extract intrinsic & extrinsic matrices from pose.
@@ -225,56 +210,14 @@ struct Frame {
   // Decide whether the new image is to be merged into the panorama.
   // A frame is good if it matches at least 3 other frames (or at least one other
   // if less than 5 frames are available to ensure that the start frames are good).
-  bool merge = frames.size() == 0 || ((frames.size() < 5) ? (pairs > 0) : (pairs > 2));
-  
-  // Add the frame to the list.
-  if (merge) {
-    frames.emplace_back(bgr, gray, keypoints, descriptors, P, R);
+  if (frames.size() != 0 && ((frames.size() < 5) ? (pairs <= 0) : (pairs <= 2))) {
+    return nil;
   }
   
-  // Project the image onto the environment map.
-  preview.copyTo(composited);
-  for (int r = 0; r < bgr.rows; ++r) {
-    auto ptr = bgr.ptr<cv::Vec4b>(r);
-    for (int c = 0; c < bgr.cols; ++c) {
-      // Cast a ray through the pixel.
-      const auto pr = simd::inverse(P * R) * simd::float4{
-          static_cast<float>(bgr.cols - c - 1),
-          static_cast<float>(r),
-          1.0f,
-          1.0f,
-      };
-      const auto wr = simd::normalize(-simd::float3{pr.x, pr.y, pr.z} / pr.w);
-
-      // Project it onto the unit sphere & compute UV.
-      const auto u = static_cast<float>(atan2(wr.x, wr.y) / (2 * M_PI));
-      const auto v = static_cast<float>(acos(wr.z) / M_PI);
-
-      // Compute texture coordinate, wrap around.
-      const auto fx = (static_cast<int>(preview.cols * u) + preview.cols) % preview.cols;
-      const auto fy = (static_cast<int>(preview.rows * v) + preview.rows) % preview.rows;
-      
-      const cv::Vec4b pix(ptr[c][2], ptr[c][1], ptr[c][0], 0xFF);
-      
-      // If image not to be merge, do not add it to preview.
-      if (merge) {
-        preview.at<cv::Vec4b>(fy, fx) = pix;
-      }
-      
-      // Otherwise, show a red border and add a red tint to the image on the composite.
-      if (c < 5 || r < 5 || c > bgr.cols - 5 || r > bgr.rows - 5) {
-        composited.at<cv::Vec4b>(fy, fx) = cv::Vec4b(0, 0, 0xFF, 0xFF);
-      } else {
-        composited.at<cv::Vec4b>(fy, fx) = pix + cv::Vec4b(0, 0, merge ? 0 : 50, 0xFF);
-      }
-    }
-  }
-  
-  return merge;
+  // Add the frame to the frame list.
+  frames.emplace_back(bgr, gray, keypoints, descriptors, P, R);
+  return pose;
 }
 
-- (UIImage*)getPreview {
-  return [UIImage imageWithCvMat: composited];
-}
 
 @end

@@ -222,7 +222,9 @@ class AREnvironmentCaptureController
   func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
     let display = frame.last!
     
-    let merge = builder?.update(display.2, pose: ARPose(
+    // Update the enviroment builder & bail out if the image does not 
+    // fit into the composited photo sphere.
+    guard let pose = builder?.update(display.2, pose: ARPose(
         params: params,
         rx: Float(display.1.roll),
         ry: -Float(display.1.pitch),
@@ -230,8 +232,14 @@ class AREnvironmentCaptureController
         tx: 0.0,
         ty: 0.0,
         tz: 0.0
-    ))
+    )) else {
+      return
+    }
     
+    // Queue the image for compositing.
+    renderer.update(display.2, pose: pose)
+    
+    /*
     let temp = NSFileManager.defaultManager().URLsForDirectory(
       .DocumentDirectory,
       inDomains: .UserDomainMask
@@ -257,18 +265,16 @@ class AREnvironmentCaptureController
         UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
       }
     }
+ */
   }
 
   /**
    Called when attitude is refreshed. Renders feedback to the user.
    */
   func onFrame() {
+    
     guard let attitude = motionManager.deviceMotion?.attitude else {
       return
-    }
-
-    if let preview = builder?.getPreview() {
-      renderer.update(preview)
     }
 
     renderer.updatePose(ARPose(

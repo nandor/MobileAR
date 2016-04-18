@@ -53,6 +53,15 @@ struct ARDirectionalLight {
 
 
 /**
+ Image composition parameters.
+ */
+struct ARCompositeParams {
+  /// Inverse MVP matrix.
+  float4x4 projView;
+};
+
+
+/**
  Vertex shader to fragment shader.
  */
 struct ARQuadInOut {

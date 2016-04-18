@@ -8,14 +8,38 @@ import Metal
 
 // Number of slices in the sphere.
 let kSphereSlices: Int = 16
-
 // Number of stacks in the sphere.
 let kSphereStacks: Int = 16
 
 /**
- Same as the normal buffer.
+ Stores the compositing state.
  */
 class AREnvironmentRenderBuffer: ARRenderBuffer {
+  // Pose of image to be composited.
+  private var compositeParam: MTLBuffer!
+  // Image to be composited.
+  private var compositeTexture: MTLTexture!
+  
+  required init(device: MTLDevice) {
+    super.init(device: device)
+    
+    // Buffer to hold the projection matrix.
+    compositeParam = device.newBufferWithLength(
+        sizeof(float4x4),
+        options: MTLResourceOptions()
+    )
+    compositeParam.label = "VBOComposite"
+    
+    // Source texture.
+    let compositeTextureDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
+        .BGRA8Unorm,
+        width: Int(640),
+        height: Int(360),
+        mipmapped: false
+    )
+    compositeTexture = device.newTextureWithDescriptor(compositeTextureDesc)
+    compositeTexture.label = "TEXComposite"
+  }
 }
 
 /**
@@ -23,27 +47,35 @@ class AREnvironmentRenderBuffer: ARRenderBuffer {
  */
 class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
 
-  // Spherical texture to be displayed.
-  private var texture: MTLTexture!
-
   // Depth buffer state.
   private var depthState: MTLDepthStencilState!
-
   // Renderer state.
   private var renderState: MTLRenderPipelineState!
-
   // Vertex buffer for the spherical mesh.
   private var sphereVBO: MTLBuffer!
-
   // Index buffer for the spherical mesh.
   private var sphereIBO: MTLBuffer!
+  
+  // Spherical texture to be displayed.
+  private var texture: MTLTexture!
+  
+  // Compositing state.
+  private var compositeState: MTLComputePipelineState!
+  // Flag to ensure that a single image is being uploaded at a time.
+  private var compositing: Bool = false
+  // Queue of images to be composited.
+  private var compositeQueue: [(UIImage, ARPose)] = []
+  
+  // Width & height of the environment map.
+  private var envWidth: Int = 0
+  private var envHeight: Int = 0
 
 
   /**
    Initializes the environment renderer using an existing environment.
    */
   required init(view: UIView) throws {
-    try super.init(view: view, buffers: 1)
+    try super.init(view: view, buffers: 3)
 
     // Set up the depth state.
     let depthDesc = MTLDepthStencilDescriptor()
@@ -113,6 +145,12 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
         options: MTLResourceOptions()
     )
     sphereIBO.label = "IBOSphere"
+    
+    // Initialize the state for compositing.
+    guard let compositeFunc = library.newFunctionWithName("composite") else {
+      throw ARRendererError.MissingFunction
+    }
+    compositeState = try device.newComputePipelineStateWithFunction(compositeFunc)
   }
 
   /**
@@ -122,12 +160,15 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
 
     // Initialize the rest of the stuff.
     try self.init(view: view)
+    
+    envWidth = Int(environment.map.size.width)
+    envHeight = Int(environment.map.size.height)
 
     // Initialize the environment map texture.
     let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
         .BGRA8Unorm,
-        width: Int(environment.map.size.width),
-        height: Int(environment.map.size.height),
+        width: envWidth,
+        height: envHeight,
         mipmapped: false
     )
     texture = device.newTextureWithDescriptor(texDesc)
@@ -143,6 +184,9 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
     // Initialize the rest.
     try self.init(view: view)
 
+    envWidth = width
+    envHeight = height
+    
     // Initialize the environment map texture.
     let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
         .BGRA8Unorm,
@@ -160,6 +204,13 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
   func update(image: UIImage) {
     image.toMTLTexture(texture)
   }
+  
+  /**
+   Updates the underlying texture, compositing an image onto the panorama.
+   */
+  func update(image: UIImage, pose: ARPose) {
+    compositeQueue.append((image, pose))
+  }
 
   /**
    Renders the environment.
@@ -168,7 +219,32 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
       buffer: MTLCommandBuffer,
       params: AREnvironmentRenderBuffer)
   {
-
+    if !compositeQueue.isEmpty {
+      let (image, pose) = compositeQueue.removeFirst()
+      
+      // Upload the image & pose.
+      image.toMTLTexture(params.compositeTexture)
+      let data = UnsafeMutablePointer<float4x4>(params.compositeParam.contents())
+      data.memory = pose.projMat * pose.viewMat
+      
+      // Compute the thread group size.
+      let groupSize  = MTLSizeMake(16, 16, 1);
+      let groupCount = MTLSizeMake(
+          envWidth / groupSize.width,
+          envHeight / groupSize.height,
+          1 / groupSize.depth
+      )
+      
+      // Create the composite command descriptor.
+      let encoder = buffer.computeCommandEncoder()
+      encoder.setComputePipelineState(compositeState)
+      encoder.setTexture(params.compositeTexture, atIndex: 0)
+      encoder.setTexture(texture, atIndex: 1)
+      encoder.setBuffer(params.compositeParam, offset: 0, atIndex: 0)
+      encoder.dispatchThreadgroups(groupCount, threadsPerThreadgroup: groupSize)
+      encoder.endEncoding()
+    }
+    
     // Create the render command descriptor.
     let renderDesc = MTLRenderPassDescriptor()
     renderDesc.colorAttachments[0].texture = drawable.texture

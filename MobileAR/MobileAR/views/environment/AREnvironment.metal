@@ -98,3 +98,39 @@ fragment float4 sphereFrag(
   colour = mix({1.0, 0.0, 0.0, 1}, colour, grenwich);
   return colour;
 }
+
+
+/**
+ Compute shader to project an image onto a panorama.
+ */
+kernel void composite(
+    texture2d<half, access::sample> src    [[ texture(0) ]],
+    texture2d<half, access::write>  dst    [[ texture(1) ]],
+    uint2                           pix    [[ thread_position_in_grid ]],
+    constant ARCompositeParams     *params [[ buffer(0) ]])
+{
+  constexpr sampler texSampler(address::repeat, filter::linear);
+  
+  // Convert the point to polar coordinates.
+  const float phi = PI / 2.0f - (float(pix.y) / float(dst.get_height())) * PI;
+  const float theta = (float(pix.x) / float(dst.get_width())) * PI * 2;
+  const float4 vert = float4(
+      cos(phi) * sin(theta),
+      cos(phi) * cos(theta),
+      sin(phi),
+      1
+  );
+  
+  // Project the point onto the texture.
+  const float4 proj = params->projView * vert;
+  const float u = 1.0f - proj.x / proj.z / src.get_width();
+  const float v = proj.y / proj.z / src.get_height();
+  
+  // Ensure it is within bounds.
+  if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
+    return;
+  }
+  
+  // Sample the source image & write output.
+  dst.write(src.sample(texSampler, {u, v}), pix, 0);
+}
