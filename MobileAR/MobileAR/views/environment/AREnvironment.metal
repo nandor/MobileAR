@@ -34,7 +34,7 @@ struct ARSphereInOut {
  */
 template<typename T>
 static inline T alpha(T d, T w) {
-  return min(max(smoothstep(w - fwidth(d), w + fwidth(d), d), T(0)), T(1));
+  return saturate(smoothstep(w - fwidth(d), w + fwidth(d), d));
 }
 
 
