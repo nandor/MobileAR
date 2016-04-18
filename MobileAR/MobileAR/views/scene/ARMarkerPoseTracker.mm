@@ -105,7 +105,7 @@ Eigen::Quaternion<T> average(const std::vector<Eigen::Quaternion<T>> &qis) {
   
   // Initialize the pose.
   R = Eigen::Quaternion<float>(0.0f, 0.0f, 1.0f, 0.0f);
-  T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, 0.0f);
+  T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, -50.0f);
     
   // Initialize the Kalman filter.
   kf_ = std::make_shared<ar::EKFOrientation<double>>();
