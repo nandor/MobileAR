@@ -16,6 +16,8 @@
 static const cv::Size kPatternSize(4, 11);
 /// Number of measurements to consider for the computation of the relative pose.
 static const size_t kRelativePoses = 50;
+/// Gravitational acceleration, in cm/s^2.
+static const float G = 9.80665 * 100;
 
 
 @implementation ARMarkerPoseTracker
@@ -39,13 +41,14 @@ static const size_t kRelativePoses = 50;
   Eigen::Matrix<float, 3, 1> T;
   
   // Kalman filter state.
-  std::shared_ptr<ar::EKFOrientation<double>> kf_;
+  std::shared_ptr<ar::EKFOrientation<float>> kfr_;
+  std::shared_ptr<ar::EKFPosition<float>> kfp_;
 
   // Timestamp to compute frame times.
   double prevTime;
   
   // List of relative orientations, measured between the world and marker frame.
-  std::vector<Eigen::Quaternion<double>> relativePoses;
+  std::vector<Eigen::Quaternion<float>> relativePoses;
 }
 
 - (instancetype)initWithParameters:(ARParameters *)params
@@ -84,10 +87,11 @@ static const size_t kRelativePoses = 50;
   
   // Initialize the pose.
   R = Eigen::Quaternion<float>(0.0f, 0.0f, 1.0f, 0.0f);
-  T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, -50.0f);
+  T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, 0.0f);
     
   // Initialize the Kalman filter.
-  kf_ = std::make_shared<ar::EKFOrientation<double>>();
+  kfr_ = std::make_shared<ar::EKFOrientation<float>>();
+  kfp_ = std::make_shared<ar::EKFPosition<float>>();
   
   return self;
 }
@@ -137,30 +141,41 @@ static const size_t kRelativePoses = 50;
   if (relativePoses.size() > 0) {
     
     // Find the world rotation, as provided by the marker.
-    Eigen::Quaternion<double> relativePose = ar::QuaternionAverage(relativePoses);
+    Eigen::Quaternion<float> relativePose = ar::QuaternionAverage(relativePoses);
     
     // Update the filter.
-    kf_->UpdateMarker(q.cast<double>() * relativePose, [self deltaTime]);
-    R = kf_->GetOrientation().cast<float>();
-    T = t;
+    const float dt = [self deltaTime];
+    kfr_->UpdateMarker(q * relativePose, dt);
+    kfp_->UpdateMarker(t, dt);
+    
+    // Fetch the new state.
+    R = kfr_->GetOrientation();
+    T = kfp_->GetPosition();
   }
   
-  relativePoses.push_back((q.inverse() * R).cast<double>());
+  relativePoses.push_back(q.inverse() * R);
 }
 
 
 - (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w
 {
-  // Update the filter.
-  const auto qq = [x quaternion];
-  kf_->UpdateIMU(
-      Eigen::Quaternion<double>(-qq.w, -qq.y, qq.x, qq.z),
-      Eigen::Matrix<double, 3, 1>(w.x, w.y, w.z),
-      [self deltaTime]
-  );
+  const float dt = [self deltaTime];
   
-  // Update object pose.
-  R = kf_->GetOrientation().cast<float>();
+  // Update orientation.
+  const auto qq = [x quaternion];
+  kfr_->UpdateIMU(
+      Eigen::Quaternion<float>(-qq.w, -qq.y, qq.x, qq.z),
+      Eigen::Matrix<float, 3, 1>(w.x, w.y, w.z),
+      dt
+  );
+  R = kfr_->GetOrientation();
+  
+  // Update position.
+  kfp_->UpdateIMU(
+      R.inverse().toRotationMatrix() * Eigen::Matrix<float, 3, 1>(a.x, a.y, a.z) * G,
+      dt
+  );
+  T = kfp_->GetPosition();
 }
 
 

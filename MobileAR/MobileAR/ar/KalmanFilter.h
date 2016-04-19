@@ -151,6 +151,7 @@ public:
   Eigen::Matrix<T, N, N> p_;
 };
 
+  
 
 /**
  Kalman filter fusing orientation measurements.
@@ -303,5 +304,121 @@ class EKFOrientation : public KalmanFilter<T, 10, 10> {
   /// Measurement noise for IMU.
   Eigen::Matrix<T, 7, 7> rI_;
 };
+  
+  
+  
+/**
+ Kalman filter for position measurements
+ */
+template<typename T>
+class EKFPosition : public KalmanFilter<T, 9, 9> {
+ private:
+  /**
+   Shared state update function.
+   */
+  struct EKFUpdate {
+    template<typename S>
+    static Eigen::Matrix<S, 9, 1> Update(
+        const Eigen::Matrix<S, 9, 1> &x,
+        const Eigen::Matrix<S, 9, 1> &w,
+        const S &dt)
+    {
+      // Extract position data from the state.
+      Eigen::Matrix<S, 3, 1> px(x(0), x(1), x(2));
+      Eigen::Matrix<S, 3, 1> pv(x(3), x(4), x(5));
+      Eigen::Matrix<S, 3, 1> pa(x(6), x(7), x(8));
+      
+      // Update the position and velocity.
+      px = px + pv * dt + pa * dt * dt * S(0.5);
+      pv = pv + pa * dt;
+      
+      // Repack data into the state vector.
+      return (Eigen::Matrix<S, 9, 1>() << px, pv, pa).finished() + w;
+    }
+  };
+  
+  /**
+   State update & measurement function for a sensor measurement.
+   */
+  struct EKFSensorUpdate : public EKFUpdate {
+    template<typename S>
+    static Eigen::Matrix<S, 3, 1> Measure(
+        const Eigen::Matrix<S, 9, 1> &x,
+        const Eigen::Matrix<S, 3, 1> &w)
+    {
+      Eigen::Matrix<S, 3, 1> px(x(6), x(7), x(8));
+      return px + w;
+    }
+  };
+  
+  /**
+   State update & measurement function for a marker measurement.
+   */
+  struct EKFMarkerUpdate : public EKFUpdate {
+    template<typename S>
+    static Eigen::Matrix<S, 3, 1> Measure(
+        const Eigen::Matrix<S, 9, 1> &x,
+        const Eigen::Matrix<S, 3, 1> &w)
+    {
+      Eigen::Matrix<S, 3, 1> px(x(0), x(1), x(2));
+      return px + w;
+    }
+  };
 
+ public:
+  /**
+   Creates the Kalman filter.
+   */
+  EKFPosition()
+    : KalmanFilter<T, 9, 9>(
+        (Eigen::Matrix<T, 9, 1>() <<
+           5e-2, 5e-2, 5e-2, 2e-1, 2e-1, 2e-1, 5e-2, 5e-2, 5e-2
+        ).finished().asDiagonal(),
+        (Eigen::Matrix<T, 9, 1>() <<
+           0, 0, 0, 0, 0, 0, 0, 0, 0
+        ).finished(),
+        (Eigen::Matrix<T, 9, 1>() <<
+          10, 10, 10, 10, 10, 10, 10, 10, 10
+        ).finished().asDiagonal()
+      )
+  {
+    rM_ <<
+      5e-2,    0,    0,
+         0, 5e-2,    0,
+         0,    0, 5e-2;
+    rI_ <<
+      5e-2,    0,    0,
+         0, 5e-2,    0,
+         0,    0, 5e-2;
+  }
+
+  /**
+   Updates the filter with a marker pose estimate.
+   */
+  void UpdateMarker(const Eigen::Matrix<T, 3, 1> &x, const T& dt) {
+    KalmanFilter<T, 9, 9>::template Update<EKFMarkerUpdate, 3, 3>(dt, x, rM_);
+  }
+  
+  /**
+   Updates the filter with an IMU pose estimate.
+   */
+  void UpdateIMU(const Eigen::Matrix<T, 3, 1> &a, const T& dt) {
+    KalmanFilter<T, 9, 9>::template Update<EKFSensorUpdate, 3, 3>(dt, a, rI_);
+  }
+  
+  /**
+   Returns the position.
+   */
+  Eigen::Matrix<T, 3, 1> GetPosition() const {
+    const auto &x = KalmanFilter<T, 9, 9>::x_;
+    return Eigen::Matrix<T, 3, 1>(x(0), x(1), x(2));
+  }
+  
+ private:
+  /// Measurement noise for tracker.
+  Eigen::Matrix<T, 3, 3> rM_;
+  /// Measurement noise for IMU.
+  Eigen::Matrix<T, 3, 3> rI_;
+};
+  
 }
