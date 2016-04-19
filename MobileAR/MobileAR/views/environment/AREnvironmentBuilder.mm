@@ -104,6 +104,7 @@ struct Frame {
   // Ensure that the current image matches at least some other images.
   size_t pairs = 0;
   for (const auto &frame : frames) {
+    
     // Find ORB matches and make sure there are enough of them.
     std::vector<cv::DMatch> matches;
     matcher->match(frame.descriptors, descriptors, matches);

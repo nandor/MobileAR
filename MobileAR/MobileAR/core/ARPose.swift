@@ -85,7 +85,7 @@ extension float4x4 {
   
   /// Projection matrix.
   let projMat: float4x4
-
+  
   /**
    Initializes the pose.
    */

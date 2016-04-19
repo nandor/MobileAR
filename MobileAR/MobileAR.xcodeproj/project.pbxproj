@@ -25,6 +25,7 @@
 		7A62D67D1C9B887C00BE42C8 /* ARLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */; };
 		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
 		7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A6B81F51CA29B9700D339AE /* libboost.a */; };
+		7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7093021CC639BE003D6742 /* ARQuaternion.swift */; };
 		7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A78BE471CA1C5BD000EBBAE /* opencv2.framework */; };
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
@@ -86,6 +87,7 @@
 		7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARLighting.metal; sourceTree = "<group>"; };
 		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
 		7A6B81F51CA29B9700D339AE /* libboost.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost.a; path = ../../ofxiOSBoost/libs/boost/ios/libboost.a; sourceTree = "<group>"; };
+		7A7093021CC639BE003D6742 /* ARQuaternion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARQuaternion.swift; sourceTree = "<group>"; };
 		7A78BE471CA1C5BD000EBBAE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
@@ -226,6 +228,7 @@
 				7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */,
 				C13F89E4952DA243444FDE06 /* ARLightProbeSampler.mm */,
 				C13F8671F134CD5EC313C960 /* ARLightProbeSampler.h */,
+				7A7093021CC639BE003D6742 /* ARQuaternion.swift */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -383,6 +386,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */,
 				C13F845C0484D71FD4CEC8C8 /* MedianCutSampler.cpp in Sources */,
 				7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
