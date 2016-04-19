@@ -18,7 +18,7 @@ static constexpr size_t kMinFeatures = 100;
 static constexpr size_t kMinMatches = 25;
 static constexpr float kMaxHammingDistance = 30;
 static constexpr float kMaxReprojDistance = 75.0f;
-static constexpr float kMaxRotation = 20.0f * M_PI / 180.0f;
+static constexpr float kMaxRotation = 30.0f * M_PI / 180.0f;
 
 /**
  Information collected from a single frame.
@@ -111,7 +111,7 @@ struct Frame {
   for (const auto &frame : frames) {
     
     // Threshold by relative orientation. Orientation is extracted from the
-    // rotation matrix in axis-angle format and must be less than 20 degrees.
+    // rotation matrix in axis-angle format and must be less than 30 degrees.
     {
       const simd::float4x4 r = iR * frame.R;
       Eigen::Matrix<float, 3, 3> er;
@@ -202,7 +202,7 @@ struct Frame {
         src.push_back(keypoints[match.trainIdx].pt);
         dst.push_back(frame.keypoints[match.queryIdx].pt);
       }
-      const cv::Mat h = cv::findHomography(src, dst, CV_LMEDS, 2.0f, mask);
+      cv::findHomography(src, dst, CV_LMEDS, 2.0f, mask);
       if (matches.size() != mask.rows) {
         continue;
       }
@@ -214,14 +214,6 @@ struct Frame {
       if (finalMatches.size() < kMinMatches) {
         continue;
       }
-      
-      // Convert the homography to a 'normal' format.
-      H = simd::float4x4(
-          simd::float4{ h.at<float>(0, 0), h.at<float>(1, 0), h.at<float>(2, 0), 0 },
-          simd::float4{ h.at<float>(0, 1), h.at<float>(1, 1), h.at<float>(2, 1), 0 },
-          simd::float4{ h.at<float>(0, 2), h.at<float>(1, 2), h.at<float>(2, 2), 0 },
-          simd::float4{                 0,                 0,                 0, 1 }
-      );
     }
      
     // If all the tests passed, count the pair as a match.
