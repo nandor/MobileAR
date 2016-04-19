@@ -8,35 +8,14 @@
 
 #include <opencv2/opencv.hpp>
 #include <Eigen/Eigen>
-#include <Eigen/SVD>
 
 #include "ar/KalmanFilter.h"
-
+#include "ar/Quaternion.h"
 
 /// Size of the tracked pattern.
 static const cv::Size kPatternSize(4, 11);
 /// Number of measurements to consider for the computation of the relative pose.
 static const size_t kRelativePoses = 50;
-
-
-/**
- Computes the average quaternion.
- */
-template<typename T>
-Eigen::Quaternion<T> average(const std::vector<Eigen::Quaternion<T>> &qis) {
-  
-  // Much math leads here.
-  Eigen::Matrix<T, 4, 4> M = Eigen::Matrix<T, 4, 4>::Zero();
-  for (const auto &qi : qis) {
-    Eigen::Matrix<T, 4, 1> qv(qi.x(), qi.y(), qi.z(), qi.w());
-    M += qv * qv.transpose();
-  }
-  
-  // Compute the SVD of the matrix.
-  Eigen::JacobiSVD<Eigen::Matrix<T, 4, 4>> svd(M, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  const auto q = svd.matrixU().col(0);
-  return Eigen::Quaternion<T>(q(3), q(0), q(1), q(2));
-}
 
 
 @implementation ARMarkerPoseTracker
@@ -158,7 +137,7 @@ Eigen::Quaternion<T> average(const std::vector<Eigen::Quaternion<T>> &qis) {
   if (relativePoses.size() > 0) {
     
     // Find the world rotation, as provided by the marker.
-    Eigen::Quaternion<double> relativePose = average(relativePoses);
+    Eigen::Quaternion<double> relativePose = ar::quaternionAverage(relativePoses);
     
     // Update the filter.
     kf_->UpdateMarker(q.cast<double>() * relativePose, [self deltaTime]);
