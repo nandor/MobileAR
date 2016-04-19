@@ -10,7 +10,7 @@
 #include <Eigen/Eigen>
 
 #include "ar/KalmanFilter.h"
-#include "ar/Quaternion.h"
+#include "ar/Rotation.h"
 
 /// Size of the tracked pattern.
 static const cv::Size kPatternSize(4, 11);
@@ -137,7 +137,7 @@ static const size_t kRelativePoses = 50;
   if (relativePoses.size() > 0) {
     
     // Find the world rotation, as provided by the marker.
-    Eigen::Quaternion<double> relativePose = ar::quaternionAverage(relativePoses);
+    Eigen::Quaternion<double> relativePose = ar::QuaternionAverage(relativePoses);
     
     // Update the filter.
     kf_->UpdateMarker(q.cast<double>() * relativePose, [self deltaTime]);

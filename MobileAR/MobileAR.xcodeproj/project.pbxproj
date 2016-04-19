@@ -88,7 +88,7 @@
 		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
 		7A6B81F51CA29B9700D339AE /* libboost.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost.a; path = ../../ofxiOSBoost/libs/boost/ios/libboost.a; sourceTree = "<group>"; };
 		7A7093021CC639BE003D6742 /* ARQuaternion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARQuaternion.swift; sourceTree = "<group>"; };
-		7A7093041CC63EC4003D6742 /* Quaternion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Quaternion.h; path = ar/Quaternion.h; sourceTree = "<group>"; };
+		7A7093041CC63EC4003D6742 /* Rotation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Rotation.h; path = ar/Rotation.h; sourceTree = "<group>"; };
 		7A78BE471CA1C5BD000EBBAE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
@@ -261,7 +261,7 @@
 				C13F8FA8928E90CB2384D35B /* PhotoSphereBuilder.h */,
 				C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */,
 				C13F8E7AB65F2B19C88A7050 /* VarianceCutSampler.h */,
-				7A7093041CC63EC4003D6742 /* Quaternion.h */,
+				7A7093041CC63EC4003D6742 /* Rotation.h */,
 			);
 			name = ar;
 			sourceTree = "<group>";

@@ -10,11 +10,15 @@
 #include <simd/simd.h>
 
 
+#include "ar/Rotation.h"
+
+
 /// Minimum number of features and matches required for tracking.
 static constexpr size_t kMinFeatures = 100;
 static constexpr size_t kMinMatches = 25;
 static constexpr float kMaxHammingDistance = 30;
 static constexpr float kMaxReprojDistance = 75.0f;
+static constexpr float kMaxRotation = 20.0f * M_PI / 180.0f;
 
 /**
  Information collected from a single frame.
@@ -98,12 +102,28 @@ struct Frame {
   }
   
   // Extract intrinsic & extrinsic matrices from pose.
-  const simd::float4x4 P = [pose proj];
-  const simd::float4x4 R = [pose view];
+  const simd::float4x4 P  = [pose proj];
+  const simd::float4x4 R  = [pose view];
+  const simd::float4x4 iR = simd::inverse(R);
   
   // Ensure that the current image matches at least some other images.
   size_t pairs = 0;
   for (const auto &frame : frames) {
+    
+    // Threshold by relative orientation. Orientation is extracted from the
+    // rotation matrix in axis-angle format and must be less than 20 degrees.
+    {
+      const simd::float4x4 r = iR * frame.R;
+      Eigen::Matrix<float, 3, 3> er;
+      er <<
+        r.columns[0].x, r.columns[1].x, r.columns[2].x,
+        r.columns[0].y, r.columns[1].y, r.columns[2].y,
+        r.columns[0].z, r.columns[1].z, r.columns[2].z;
+      const float angle = 2.0f * std::acos(Eigen::Quaternionf(er).w());
+      if (angle > kMaxRotation) {
+        continue;
+      }
+    }
     
     // Find ORB matches and make sure there are enough of them.
     std::vector<cv::DMatch> matches;

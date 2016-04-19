@@ -104,14 +104,15 @@ fragment float4 sphereFrag(
 /**
  Texture projection from a sphere.
  */
-static float2 unproject(
+static float3 unproject(
     const float4x4 P,
     const uint2 uv,
-    const uint2 size)
+    const uint2 dsSize,
+    const uint2 imSize)
 {
   // Convert the point to polar coordinates.
-  const float phi = PI / 2.0f - (float(uv.y) / float(size.x)) * PI;
-  const float theta = (float(uv.x) / float(size.y)) * PI * 2;
+  const float phi = PI / 2.0f - (float(uv.y) / float(dsSize.y)) * PI;
+  const float theta = (float(uv.x) / float(dsSize.x)) * PI * 2;
   const float4 vert = float4(
       cos(phi) * sin(theta),
       cos(phi) * cos(theta),
@@ -123,9 +124,10 @@ static float2 unproject(
   const float4 proj = P * vert;
   
   // Perspective division & scale to [0, 1]
-  return float2(
-      1.0f - proj.x / proj.z / uv.x,
-      proj.y / proj.z / uv.y
+  return float3(
+      1.0f - proj.x / proj.z / imSize.x,
+      proj.y / proj.z / imSize.y,
+      proj.z
   );
 }
 
@@ -142,13 +144,18 @@ kernel void composite(
   constexpr sampler texSampler(address::repeat, filter::linear);
   
   // Ensure it is within bounds.
-  const float2 uv = unproject(params->projView, pix, {dst.get_width(), dst.get_height()});
-  if (uv.x < 0.0f || uv.x > 1.0f || uv.y < 0.0f || uv.y > 1.0f) {
+  const float3 uv = unproject(
+      params->projView,
+      pix,
+      {dst.get_width(), dst.get_height()},
+      {src.get_width(), src.get_height()}
+  );
+  if (uv.x < 0.0f || uv.x > 1.0f || uv.y < 0.0f || uv.y > 1.0f || uv.z > 0.0) {
     return;
   }
   
   // Sample the source image & write output.
-  dst.write(src.sample(texSampler, uv), pix, 0);
+  dst.write(src.sample(texSampler, uv.xy), pix, 0);
 }
 
 
@@ -167,11 +174,13 @@ kernel void compositeWeighted(
   constexpr sampler texSampler(address::repeat, filter::linear);
   
   // Ensure it is within bounds.
-  const float2 uv = unproject(params->projView, pix, {
-      dstColour0.get_width(),
-      dstColour0.get_height()
-  });
-  if (uv.x < 0.0f || uv.x > 1.0f || uv.y < 0.0f || uv.y > 1.0f) {
+  const float3 uv = unproject(
+      params->projView,
+      pix,
+      {dstColour0.get_width(), dstColour0.get_height()},
+      {src.get_width(), src.get_height()}
+  );
+  if (uv.x < 0.0f || uv.x > 1.0f || uv.y < 0.0f || uv.y > 1.0f || uv.z > 0.0) {
     return;
   }
   
@@ -179,7 +188,7 @@ kernel void compositeWeighted(
   const float w = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
   
   // Sample the source image & write output.
-  const float4 colour = (float4)src.sample(texSampler, uv);
+  const float4 colour = (float4)src.sample(texSampler, uv.xy);
   dstColour1.write(dstColour0.read(pix, 0) + w * colour, pix, 0);
   dstWeight1.write(dstWeight0.read(pix, 0) + w, pix, 0);
 }

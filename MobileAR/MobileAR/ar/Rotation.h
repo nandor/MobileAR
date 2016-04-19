@@ -14,7 +14,7 @@ namespace ar {
  Computes the average of quaternions, minimizing the Froebnius norm of the poses.
  */
 template<typename T>
-Eigen::Quaternion<T> quaternionAverage(const std::vector<Eigen::Quaternion<T>> &qis) {
+Eigen::Quaternion<T> QuaternionAverage(const std::vector<Eigen::Quaternion<T>> &qis) {
   
   // Much math leads here.
   Eigen::Matrix<T, 4, 4> M = Eigen::Matrix<T, 4, 4>::Zero();
