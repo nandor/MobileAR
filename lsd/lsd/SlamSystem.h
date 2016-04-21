@@ -118,7 +118,7 @@ public:
 	struct timeval lastHzUpdate;
 
 
-private:
+public:
 
 
 	// ============= EXCLUSIVELY TRACKING THREAD (+ init) ===============

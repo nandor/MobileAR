@@ -26,7 +26,7 @@
 /**
  Updates the pose by tracking the new frame.
  */
-- (void)trackFrame:(UIImage *)image;
+- (UIImage *)trackFrame:(UIImage *)image;
 
 /**
  Updates the tracker using sensor measurements.

@@ -9,8 +9,8 @@
 
 @protocol ARPoseTracker <NSObject>
 
-- (void)trackFrame:(UIImage *)image;
-- (ARPose*)getPose;
+- (UIImage *)trackFrame:(UIImage *)image;
 - (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w;
+- (ARPose *)getPose;
 
 @end

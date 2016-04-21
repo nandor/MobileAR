@@ -97,7 +97,7 @@ static const float G = 9.80665 * 100;
 }
 
 
-- (void)trackFrame:(UIImage *)image
+- (UIImage *)trackFrame:(UIImage *)image
 {
   [image toCvMat:rgba];
   cv::cvtColor(rgba, gray, CV_BGRA2GRAY);
@@ -112,7 +112,7 @@ static const float G = 9.80665 * 100;
       cv::CALIB_CB_ASYMMETRIC_GRID | cv::CALIB_CB_CLUSTERING
   );
   if (!found) {
-    return;
+    return image;
   }
 
   // If pattern found, use solvePnP to compute pose.
@@ -154,6 +154,7 @@ static const float G = 9.80665 * 100;
   }
   
   relativePoses.push_back(q.inverse() * R);
+  return image;
 }
 
 

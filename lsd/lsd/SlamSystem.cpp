@@ -681,8 +681,8 @@ void SlamSystem::debugDisplayDepthMap()
 			1e-6 * (float)keyFrameGraph->totalPoints);
 
 
-	if(onSceenInfoDisplay)
-		printMessageOnCVImage(map->debugImageDepth, buf1, buf2);
+	//if(onSceenInfoDisplay)
+	//	printMessageOnCVImage(map->debugImageDepth, buf1, buf2);
 	//if (displayDepthMap)
 	//	Util::displayImage( "DebugWindow DEPTH", map->debugImageDepth, false );
 
@@ -1032,6 +1032,9 @@ void SlamSystem::trackFrame(uchar* image, unsigned int frameID, bool blockUntilM
 		}
 		lock.unlock();
 	}
+  
+  // nand
+  debugDisplayDepthMap();
 }
 
 
