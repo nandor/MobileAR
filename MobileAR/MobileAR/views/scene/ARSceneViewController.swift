@@ -104,23 +104,29 @@ extension CMDeviceMotion {
     if camera == nil || params == nil || environment == nil {
       return
     }
-
-
+    
     // Start tracking orientation.
     motionManager = CMMotionManager()
     motionManager.deviceMotionUpdateInterval = 1 / 30.0
     motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
         CMAttitudeReferenceFrame.XMagneticNorthZVertical
     )
+    
+    // Aspect ratio of screen.
+    let aspect = Float(view.frame.width / view.frame.height)
 
     // Initialize the scene tracker.
-    //tracker = ARMarkerPoseTracker(parameters: params)
-    //tracker = ARDemoPoseTracker(aspect: Float(view.frame.width / view.frame.height));
-    tracker = ARSlamPoseTracker(parameters: params)
+    switch NSUserDefaults().stringForKey("tracker") {
+      case .Some("marker"):  tracker = ARMarkerPoseTracker(parameters: params)
+      case .Some("demo"):    tracker = ARDemoPoseTracker(aspect: aspect)
+      case .Some("tracker"): tracker = ARSlamPoseTracker(parameters: params)
+      default:               tracker = ARMarkerPoseTracker(parameters: params)
+    }
 
     // Initialize the renderer.
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
 
+    // Add a single test cube.
     renderer.objects.append(ARObject(
       mesh: "cube",
       model: float4x4(t: float3(0, 0, 0))
