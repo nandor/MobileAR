@@ -9,6 +9,7 @@
 
 @class AREnvironment;
 @class ARPose;
+@class ARParameters;
 
 
 /**
@@ -19,11 +20,11 @@
 /**
  Creates a new spherical image builder.
  */
-- (instancetype)initWithWidth:(size_t)width height:(size_t)height;
+- (instancetype)initWithParams:(ARParameters*)params width:(size_t)width height:(size_t)height;
 
 /**
  Updates the preview with a frame.
 */
-- (ARPose*)update:(UIImage*)image pose:(ARPose*)pose;
+- (BOOL)update:(UIImage*)image pose:(ARPose*)pose;
 
 @end

@@ -67,7 +67,7 @@ fragment float4 sphereFrag(
   // Get the UV coordinate by converting cartesian to spherical.
   float r = length(in.vert);
   float u = atan2(in.vert.x, in.vert.y) / (2 * PI);
-  float v = acos(in.vert.z / r) / PI;
+  float v = 0.5 - asin(in.vert.z / r) / PI;
   float2 uv = { u, v };
   
   // Compute contributions from guidelines.

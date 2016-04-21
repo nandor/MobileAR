@@ -93,7 +93,14 @@ extension float4x4 {
     self.viewMat = viewMat
     self.projMat = projMat
   }
-
+  
+  /**
+   Creates a pose from Objc matrices.
+   */
+  convenience init(r: matrix_float4x4, p: matrix_float4x4) {
+    self.init(viewMat: float4x4(r), projMat: float4x4(p))
+  }
+  
   /**
    Creates a pose using a user-defined projection matrix.
    */
@@ -148,7 +155,7 @@ extension float4x4 {
   /**
    Creates a pose from matrices stored in column-major order.
    */
- convenience init(viewMat: [Float], projMat: [Float]) {
+ @objc convenience init(viewMat: [Float], projMat: [Float]) {
     self.init(
       viewMat: float4x4([
             float4(viewMat[ 0], viewMat[ 1], viewMat[ 2],  viewMat[ 3]),

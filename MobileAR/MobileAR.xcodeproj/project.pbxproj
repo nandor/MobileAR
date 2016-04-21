@@ -26,6 +26,7 @@
 		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
 		7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A6B81F51CA29B9700D339AE /* libboost.a */; };
 		7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7093021CC639BE003D6742 /* ARQuaternion.swift */; };
+		7A7093091CC78FCB003D6742 /* libceres.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A7093071CC78F89003D6742 /* libceres.a */; };
 		7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A78BE471CA1C5BD000EBBAE /* opencv2.framework */; };
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
@@ -89,6 +90,7 @@
 		7A6B81F51CA29B9700D339AE /* libboost.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost.a; path = ../../ofxiOSBoost/libs/boost/ios/libboost.a; sourceTree = "<group>"; };
 		7A7093021CC639BE003D6742 /* ARQuaternion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARQuaternion.swift; sourceTree = "<group>"; };
 		7A7093041CC63EC4003D6742 /* Rotation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Rotation.h; path = ar/Rotation.h; sourceTree = "<group>"; };
+		7A7093071CC78F89003D6742 /* libceres.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libceres.a; path = ../../../../../usr/local/lib/libceres.a; sourceTree = "<group>"; };
 		7A78BE471CA1C5BD000EBBAE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A7093091CC78FCB003D6742 /* libceres.a in Frameworks */,
 				7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */,
 				7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */,
 				7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */,
@@ -175,6 +178,7 @@
 		7AFCF82F1BCE40CB00A108F9 = {
 			isa = PBXGroup;
 			children = (
+				7A7093071CC78F89003D6742 /* libceres.a */,
 				7A6B81F51CA29B9700D339AE /* libboost.a */,
 				7A255CBC1CA1F277005D120A /* liblsd.a */,
 				7A78BE471CA1C5BD000EBBAE /* opencv2.framework */,
@@ -530,16 +534,22 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
 				HEADER_SEARCH_PATHS = (
-					./MobileAR/,
 					/usr/local/include/eigen3,
+					"/Users/nandor/Projects/ceres-solver/build/config",
+					"/Users/nandor/Projects/ceres-solver/include",
+					"/Users/nandor/Projects/ceres-solver/internal/ceres/miniglog",
+					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
+					./MobileAR/,
 					../lsd/,
 					../lsd/lsd,
-					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
 				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = /Users/nandor/Projects/ofxiOSBoost/libs/boost/ios;
+				LIBRARY_SEARCH_PATHS = (
+					"/Users/nandor/Projects/ceres-solver/build/lib",
+					/Users/nandor/Projects/ofxiOSBoost/libs/boost/ios,
+				);
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
@@ -547,6 +557,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -565,22 +576,29 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
 				HEADER_SEARCH_PATHS = (
-					./MobileAR/,
 					/usr/local/include/eigen3,
+					"/Users/nandor/Projects/ceres-solver/build/config",
+					"/Users/nandor/Projects/ceres-solver/include",
+					"/Users/nandor/Projects/ceres-solver/internal/ceres/miniglog",
+					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
+					./MobileAR/,
 					../lsd/,
 					../lsd/lsd,
-					/Users/nandor/Projects/ofxiOSBoost/libs/boost/include,
 				);
 				INFOPLIST_FILE = MobileAR/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = /Users/nandor/Projects/ofxiOSBoost/libs/boost/ios;
+				LIBRARY_SEARCH_PATHS = (
+					"/Users/nandor/Projects/ceres-solver/build/lib",
+					/Users/nandor/Projects/ofxiOSBoost/libs/boost/ios,
+				);
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

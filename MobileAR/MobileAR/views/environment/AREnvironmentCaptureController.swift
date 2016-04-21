@@ -132,6 +132,7 @@ class AREnvironmentCaptureController
     camera.start()
     camera.expose(x: 0.5, y: 0.5) { (_) in
       self.builder = AREnvironmentBuilder(
+          params: self.params,
           width: AREnvironmentCaptureController.kWidth,
           height: AREnvironmentCaptureController.kHeight
       )
@@ -222,9 +223,8 @@ class AREnvironmentCaptureController
   func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
     let display = frame.last!
     
-    // Update the enviroment builder & bail out if the image does not 
-    // fit into the composited photo sphere.
-    guard let pose = builder?.update(display.2, pose: ARPose(
+    // Create the pose from gyro data.
+    let pose = ARPose(
         params: params,
         rx: Float(display.1.roll),
         ry: -Float(display.1.pitch),
@@ -232,40 +232,40 @@ class AREnvironmentCaptureController
         tx: 0.0,
         ty: 0.0,
         tz: 0.0
-    )) else {
+    )
+    
+    // Update the enviroment builder & bail out if the image does not
+    // fit into the composited photo sphere.
+    guard builder?.update(display.2, pose: pose) == true else {
       return
     }
     
     // Queue the image for compositing.
     renderer.update(display.2, pose: pose)
     
-    /*
     let temp = NSFileManager.defaultManager().URLsForDirectory(
       .DocumentDirectory,
       inDomains: .UserDomainMask
     )[0].URLByAppendingPathComponent("Temp")
     
-    if merge == true {
-      let dir = temp.URLByAppendingPathComponent("\(count)")
-      
-      if count == 0 {
-        try! NSFileManager.defaultManager().removeItemAtURL(temp)
-      }
-      try! NSFileManager.defaultManager().createDirectoryAtURL(
-        dir,
-        withIntermediateDirectories: true,
-        attributes: nil
-      )
-      
-      count += 1
-      
-      for i in 0...frame.count - 1 {
-        let att = frame[i].1
-        let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
-        UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
-      }
+    let dir = temp.URLByAppendingPathComponent("\(count)")
+    
+    if count == 0 {
+      try! NSFileManager.defaultManager().removeItemAtURL(temp)
     }
- */
+    try! NSFileManager.defaultManager().createDirectoryAtURL(
+      dir,
+      withIntermediateDirectories: true,
+      attributes: nil
+    )
+    
+    count += 1
+    
+    for i in 0...frame.count - 1 {
+      let att = frame[i].1
+      let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
+      UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
+    }
   }
 
   /**

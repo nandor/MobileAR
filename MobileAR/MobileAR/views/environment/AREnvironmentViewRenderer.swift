@@ -114,8 +114,8 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
         let idx = (st * (kSphereSlices + 1) + sl) * 3
 
         vbo[idx + 0] = Float(cos(phi) * cos(theta))
-        vbo[idx + 1] = Float(sin(phi))
-        vbo[idx + 2] = Float(cos(phi) * sin(theta))
+        vbo[idx + 1] = Float(cos(phi) * sin(theta))
+        vbo[idx + 2] = Float(sin(phi))
       }
     }
     sphereVBO = device.newBufferWithBytes(
