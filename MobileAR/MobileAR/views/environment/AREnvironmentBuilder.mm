@@ -13,6 +13,7 @@
 #include <simd/simd.h>
 
 
+#include "ar/BlurDetector.h"
 #include "ar/Rotation.h"
 
 
@@ -22,6 +23,7 @@ static constexpr size_t kMinMatches = 25;
 static constexpr float kMaxHammingDistance = 30;
 static constexpr float kMaxReprojDistance = 75.0f;
 static constexpr float kMaxRotation = 25.0f * M_PI / 180.0f;
+static constexpr float kMinBlurThreshold = 0.01f;
 
 
 /**
@@ -101,6 +103,10 @@ struct Frame {
   // Keypoint detctor & matcher.
   cv::Ptr<cv::ORB> detector;
   std::unique_ptr<cv::BFMatcher> matcher;
+  
+  // Blur detector.
+  std::unique_ptr<ar::BlurDetector> blur_;
+  
 }
 
 
@@ -116,6 +122,11 @@ struct Frame {
     height = height_;
     detector = cv::ORB::create();
     matcher = std::make_unique<cv::BFMatcher>(cv::NORM_HAMMING, true);
+  }
+  
+  // Initialize the blur detector.
+  {
+    blur_ = std::make_unique<ar::BlurDetector>(360, 640);
   }
   
   // Initialize the undistort maps.
@@ -145,6 +156,16 @@ struct Frame {
   [image toCvMat: bgr];
   cv::remap(bgr, bgr, map1, map2, cv::INTER_LINEAR);
   cv::cvtColor(bgr, gray, CV_BGR2GRAY);
+  
+  // Check if the image is blurry.
+  {
+    float per, blur;
+    std::tie(per, blur) = (*blur_)(gray);
+    NSLog(@"%f", per);
+    if (per < kMinBlurThreshold) {
+      return NO;
+    }
+  }
   
   // Extract ORB features & descriptors and make sure we have enough of them.
   std::vector<cv::KeyPoint> keypoints;

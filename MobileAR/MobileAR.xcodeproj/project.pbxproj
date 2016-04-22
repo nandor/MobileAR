@@ -10,6 +10,7 @@
 		7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARMesh.metal */; };
 		7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A255CBC1CA1F277005D120A /* liblsd.a */; };
 		7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */; };
+		7A37CDE91CCA8A25007FA3CF /* BlurDetector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A37CDE71CCA8A25007FA3CF /* BlurDetector.cpp */; };
 		7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */; };
 		7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */; };
 		7A49DFDC1C604F9E00C47B8A /* cup_diff.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A49DFD91C604F9E00C47B8A /* cup_diff.png */; };
@@ -70,6 +71,8 @@
 		7A2FE8FA1C77C00F009BECCC /* Moments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Moments.h; path = ar/Moments.h; sourceTree = "<group>"; };
 		7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LightProbeSampler.cpp; path = ar/LightProbeSampler.cpp; sourceTree = "<group>"; };
 		7A2FE8FC1C77DF5A009BECCC /* LightProbeSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LightProbeSampler.h; path = ar/LightProbeSampler.h; sourceTree = "<group>"; };
+		7A37CDE71CCA8A25007FA3CF /* BlurDetector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BlurDetector.cpp; path = ar/BlurDetector.cpp; sourceTree = "<group>"; };
+		7A37CDE81CCA8A25007FA3CF /* BlurDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BlurDetector.h; path = ar/BlurDetector.h; sourceTree = "<group>"; };
 		7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARFileReader.swift; sourceTree = "<group>"; };
 		7A48122D1C8DB0AC00521E35 /* HDRBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HDRBuilder.cpp; path = ar/HDRBuilder.cpp; sourceTree = "<group>"; };
 		7A48122E1C8DB0AC00521E35 /* HDRBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HDRBuilder.h; path = ar/HDRBuilder.h; sourceTree = "<group>"; };
@@ -266,6 +269,8 @@
 				C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */,
 				C13F8E7AB65F2B19C88A7050 /* VarianceCutSampler.h */,
 				7A7093041CC63EC4003D6742 /* Rotation.h */,
+				7A37CDE71CCA8A25007FA3CF /* BlurDetector.cpp */,
+				7A37CDE81CCA8A25007FA3CF /* BlurDetector.h */,
 			);
 			name = ar;
 			sourceTree = "<group>";
@@ -424,6 +429,7 @@
 				7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */,
 				C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */,
 				7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */,
+				7A37CDE91CCA8A25007FA3CF /* BlurDetector.cpp in Sources */,
 				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 				C13F8C886918E43EBB1E4A6F /* ARObject.swift in Sources */,
 				C13F87C7A162442BE302226F /* AREnvironmentBuilder.mm in Sources */,
