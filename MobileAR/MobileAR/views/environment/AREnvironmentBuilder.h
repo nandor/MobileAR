@@ -25,6 +25,6 @@
 /**
  Updates the preview with a frame.
 */
-- (BOOL)update:(UIImage*)image pose:(ARPose*)pose;
+- (BOOL)update:(UIImage*)image pose:(ARPose*)pose error:(NSError**)error;
 
 @end

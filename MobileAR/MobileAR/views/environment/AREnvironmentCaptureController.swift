@@ -19,6 +19,16 @@ let kExposures = [
 
 
 /**
+ Enumeration of capture errors.
+ */
+@objc enum ARCaptureError : Int, ErrorType {
+  case Blurry
+  case NotEnoughFeatures
+  case NoMatches
+}
+
+
+/**
  Controller responsible for HDR panoramic reconstruction.
  */
 class AREnvironmentCaptureController
@@ -236,9 +246,31 @@ class AREnvironmentCaptureController
     
     // Update the enviroment builder & bail out if the image does not
     // fit into the composited photo sphere.
-    guard builder?.update(display.2, pose: pose) == true else {
+    do {
+      try builder?.update(display.2, pose: pose)
+    } catch {
+      switch (ARCaptureError(rawValue: (error as NSError).code)!) {
+        case .Blurry: print("Blurry")
+        case .NotEnoughFeatures: print("NotEnoughFeatures")
+        case .NoMatches: print("NoMatches")
+      }
       return
     }
+    
+    /*catch (ARCaptureError.Blurry) {
+      print("blurry")
+      return
+    } catch (ARCaptureError.NotEnoughFeatures) {
+      print("NotEnoughFeatures")
+      return
+    } catch(ARCaptureError.NoMatches) {
+      print("NoMatches")
+      return
+    } catch {
+      print("\(error) \(ARCaptureError.Blurry)")
+      return
+    }*/
+
     
     // Queue the image for compositing.
     renderer.update(display.2, pose: pose)

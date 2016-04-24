@@ -149,7 +149,12 @@ struct Frame {
   return self;
 }
 
-- (BOOL)update:(UIImage*)image pose:(ARPose*)pose {
+- (BOOL)update:(UIImage*)image pose:(ARPose*)pose error:(NSError**)error {
+  
+  // Shorthand for throw.
+  auto fail = [&error](int code) {
+    *error = [NSError errorWithDomain:ARCaptureErrorDomain code:code userInfo:nil];
+  };
   
   // Fetch both the RGB and the grayscale versions of the frame.
   cv::Mat bgr, gray;
@@ -161,8 +166,8 @@ struct Frame {
   {
     float per, blur;
     std::tie(per, blur) = (*blur_)(gray);
-    NSLog(@"%f", per);
     if (per < kMinBlurThreshold) {
+      fail(ARCaptureErrorBlurry);
       return NO;
     }
   }
@@ -172,6 +177,7 @@ struct Frame {
   cv::Mat descriptors;
   detector->detectAndCompute(gray, {}, keypoints, descriptors);
   if (keypoints.size() < kMinFeatures) {
+    fail(ARCaptureErrorNotEnoughFeatures);
     return NO;
   }
   
@@ -188,14 +194,8 @@ struct Frame {
   // Extract the rotation component and store it in a quaternion.
   Eigen::Quaternionf q(ToEigen<float>(R));
   
-  // Graph mapping indices of features in the current frame
-  // with a list of frames and features in those frames.
-  typedef std::unordered_map<int, std::vector<std::pair<int, Eigen::Vector3d>>> MatchGraph;
-  MatchGraph G;
-  
   // Number of different images this frame is matched to & number of matches.
   size_t pairs = 0;
-  int residuals = 0;
   
   for (size_t j = 0; j < frames.size(); ++j) {
     const auto &frame = frames[j];
@@ -299,16 +299,6 @@ struct Frame {
         continue;
       }
     }
-    
-    // Add points to the graph. Note that Y is inverted since the rotation matrix
-    // is in world frame where Y points...somewhere
-    if (pairs == 0) {
-    for (const auto &m : finalMatches) {
-      const auto &pt = frame.keypoints[m.queryIdx].pt;
-      G[m.trainIdx].emplace_back(j, Eigen::Vector3d(pt.x, pt.y, 1));
-    }
-      residuals += finalMatches.size();
-    }
      
     // If all the tests passed, count the pair as a match.
     pairs += 1;
@@ -318,6 +308,7 @@ struct Frame {
   // A frame is good if it matches at least 3 other frames (or at least one other
   // if less than 5 frames are available to ensure that the start frames are good).
   if (frames.size() != 0 && ((frames.size() < 5) ? (pairs <= 0) : (pairs <= 2))) {
+    fail(ARCaptureErrorNoMatches);
     return NO;
   }
   
