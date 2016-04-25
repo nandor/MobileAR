@@ -13,8 +13,9 @@ let kExposures = [
   //CMTimeMake(1, 1000),
   //CMTimeMake(1, 250),
   //CMTimeMake(1, 100),
-  CMTimeMake(1, 50),
-  CMTimeMake(1, 25),
+  CMTimeMake(1, 120),
+  CMTimeMake(1, 60),
+  CMTimeMake(1, 30),
 ]
 
 
@@ -296,7 +297,7 @@ class AREnvironmentCaptureController
     for i in 0...frame.count - 1 {
       let att = frame[i].1
       let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
-      UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: true)
+      UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: false)
     }
   }
 

@@ -84,18 +84,18 @@ fragment half4 fxaa(
   const half3 rgbSE = texRGB.sample(smpl, in.uv + float2( 1, 1) / SCREEN_SIZE).xyz;
 
   // Convert RGB to luminance.
-  float lumaN  = luma(rgbN);
+  const float lumaN  = luma(rgbN);
   const float lumaW  = luma(rgbW);
   const float lumaM  = luma(rgbM);
   const float lumaE  = luma(rgbE);
-  float lumaS  = luma(rgbS);
+  const float lumaS  = luma(rgbS);
   const float lumaNW = luma(rgbNW);
   const float lumaNE = luma(rgbNE);
   const float lumaSW = luma(rgbSW);
   const float lumaSE = luma(rgbSE);
 
   // Find the min & max luminance in the 3x3 neighbourhood.
-  // If the diference between min and max exceeds an adaptive thredhold,
+  // If the diference between min and max exceeds an adaptive threshold,
   // discard the pixel from being smoothed.
   const float rangeMin = min(lumaM, min(min(lumaN, lumaW), min(lumaS, lumaE)));
   const float rangeMax = max(lumaM, max(max(lumaN, lumaW), max(lumaS, lumaE)));

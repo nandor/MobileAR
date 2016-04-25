@@ -87,7 +87,7 @@ static const float G = 9.80665 * 100;
   
   // Initialize the pose.
   R = Eigen::Quaternion<float>(0.0f, 0.0f, 1.0f, 0.0f);
-  T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, 0.0f);
+  T = Eigen::Matrix<float, 3, 1>(0.0f, 0.0f, -50.0f);
     
   // Initialize the Kalman filter.
   kfr_ = std::make_shared<ar::EKFOrientation<float>>();

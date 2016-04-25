@@ -64,9 +64,9 @@ fragment float4 lighting(
   const float3 e = normalize(v);
   
   // Sample the environment map.
-  const float3 ed = normalize(reflect(e, n));
-  const float eu = atan2(ed.x, ed.z) / (2 * PI);
-  const float ev = acos(ed.y) / PI;
+  const float3 ed = normalize((params.invView * float4(reflect(e, n), 0.0)).xyz);
+  const float eu = atan2(ed.x, ed.y) / (2 * PI);
+  const float ev = acos(ed.z) / PI;
   const float3 envAlbedo = float4(envMap.sample(envSampler, {eu, ev})).xyz;
   
   // Abedo is a mix between object color the sampled environment map.
