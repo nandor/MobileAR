@@ -14,24 +14,6 @@ private let kInstanceBatch = 32
 
 
 /**
- Funny dictionary that invokes a closure to create a missing element.
- */
-class ARBatchBuffer {
-  private var buffers: [Int: MTLBuffer] = [:]
-  
-  func get(idx: Int, create: () -> MTLBuffer) -> MTLBuffer {
-    if let buffer = buffers[idx] {
-      return buffer
-    } else {
-      let buffer = create()
-      buffers[idx] = buffer
-      return buffer
-    }
-  }
-}
-
-
-/**
  Render buffer for the scene.
  
  Besides the camera pose, it also holds model matrices for objects, pedestals,

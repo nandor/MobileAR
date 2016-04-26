@@ -25,6 +25,23 @@ struct ARSphereInOut {
   float4 position [[ position ]];
 };
 
+/**
+ Light input data.
+ */
+struct ARLightIn {
+  float4 direction;
+  float4 diffuse;
+};
+
+/**
+ Vertex shader to fragment shader.
+ */
+struct ARLightInOut {
+  float3 direction [[ user(direction) ]];
+  float3 vert      [[ user(world) ]];
+  float4 diffuse   [[ user(diffuse) ]];
+  float4 position  [[ position ]];
+};
 
 
 /**
@@ -42,7 +59,7 @@ static inline T alpha(T d, T w) {
 /**
  Vertex shader for the sphere
  */
-vertex ARSphereInOut sphereVert(
+vertex ARSphereInOut envSphereVert(
     constant packed_float3*  in     [[ buffer(0) ]],
     constant ARCameraParams& params [[ buffer(1) ]],
     uint                     id     [[ vertex_id ]])
@@ -58,7 +75,7 @@ vertex ARSphereInOut sphereVert(
 /**
  Fragment shader for the video background.
  */
-fragment float4 sphereFrag(
+fragment float4 envSphereFrag(
     ARSphereInOut   in  [[ stage_in ]],
     texture2d<half> map [[ texture(0) ]])
 {
@@ -66,7 +83,7 @@ fragment float4 sphereFrag(
   
   // Get the UV coordinate by converting cartesian to spherical.
   float r = length(in.vert);
-  float u = atan2(in.vert.x, in.vert.y) / (2 * PI);
+  float u = atan2(in.vert.y, in.vert.x) / (2 * PI);
   float v = acos(in.vert.z / r) / PI;
   float2 uv = { u, v };
   
@@ -100,6 +117,53 @@ fragment float4 sphereFrag(
 }
 
 
+/**
+ Light source quad.
+ */
+vertex ARLightInOut envLightVert(
+    constant packed_float2*  in     [[ buffer(0) ]],
+    constant ARCameraParams& params [[ buffer(1) ]],
+    constant ARLightIn*      lights [[ buffer(2) ]],
+    uint                     vid    [[ vertex_id ]],
+    uint                     iid    [[ instance_id ]])
+{
+  // Unpack the vertex.
+  const float3 v = float3(in[vid], 0.0);
+
+  // View matrix from origin towards point.
+  const float3 z = normalize(-lights[iid].direction.xyz);
+  const float3 x = normalize(cross(z, float3(0, 0, 1)));
+  const float3 y = cross(z, x);
+  const float3x3 M = float3x3(x, y, z);
+
+  // Compute the quads's corner.
+  const float3 p = z + M * v;
+
+  return {
+    z,
+    p,
+    lights[iid].diffuse,
+    params.proj * params.view * float4(p, 1)
+  };
+}
+
+
+fragment float4 envLightFrag(
+    ARLightInOut   in  [[ stage_in ]])
+{
+  const float angle = acos(dot(in.direction, normalize(in.vert)));
+  if (angle < 0.05) {
+    // Diffuse colour.
+    return float4(in.diffuse.xyz, 1);
+  } else if (angle < 0.052) {
+    // Border.
+    return float4(0, 0, 0, 1);
+  } else {
+    // Outside circle, transparent.
+    return float4(0);
+  }
+}
+
 
 /**
  Texture projection from a sphere.
@@ -114,8 +178,8 @@ static float3 unproject(
   const float phi = PI / 2.0f - (float(uv.y) / float(dsSize.y)) * PI;
   const float theta = (float(uv.x) / float(dsSize.x)) * PI * 2;
   const float4 vert = float4(
-      cos(phi) * sin(theta),
       cos(phi) * cos(theta),
+      cos(phi) * sin(theta),
       sin(phi),
       1
   );

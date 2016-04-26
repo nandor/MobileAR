@@ -10,6 +10,8 @@ import Metal
 let kSphereSlices: Int = 16
 // Number of stacks in the sphere.
 let kSphereStacks: Int = 16
+// Number of lights to render in a pass.
+let kEnvLightBatch = 32
 
 /**
  Stores the compositing state.
@@ -19,6 +21,8 @@ class AREnvironmentRenderBuffer: ARRenderBuffer {
   private var compositeParam: MTLBuffer!
   // Image to be composited.
   private var compositeTexture: MTLTexture!
+  // Light sources to be displayed.
+  private var lights = ARBatchBuffer()
   
   required init(device: MTLDevice) {
     super.init(device: device)
@@ -46,18 +50,30 @@ class AREnvironmentRenderBuffer: ARRenderBuffer {
  Renders an environment map over on a sphere around the origin.
  */
 class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
-
+  
+  // Light information.
+  private struct Light {
+    var direction: float4
+    var diffuse: float4
+  }
+  
   // Depth buffer state.
   private var depthState: MTLDepthStencilState!
   // Renderer state.
-  private var renderState: MTLRenderPipelineState!
+  private var envSphereState: MTLRenderPipelineState!
+  // Renderer state for lights.
+  private var envLightState: MTLRenderPipelineState!
   // Vertex buffer for the spherical mesh.
   private var sphereVBO: MTLBuffer!
   // Index buffer for the spherical mesh.
   private var sphereIBO: MTLBuffer!
+  // Vertex buffer for a quad.
+  private var quadVBO: MTLBuffer!
   
   // Spherical texture to be displayed.
   private var texture: MTLTexture!
+  // List of lights to be rendered
+  private var lights: [ARLight] = []
   
   // Compositing state.
   private var compositeState: MTLComputePipelineState!
@@ -70,7 +86,6 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
   private var envWidth: Int = 0
   private var envHeight: Int = 0
 
-
   /**
    Initializes the environment renderer using an existing environment.
    */
@@ -79,25 +94,44 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
 
     // Set up the depth state.
     let depthDesc = MTLDepthStencilDescriptor()
-    depthDesc.depthCompareFunction = .LessEqual
-    depthDesc.depthWriteEnabled = true
+    depthDesc.depthCompareFunction = .Always
+    depthDesc.depthWriteEnabled = false
     depthState = device.newDepthStencilStateWithDescriptor(depthDesc)
 
-    // Set up the shaders.
-    guard let vert = library.newFunctionWithName("sphereVert") else {
+    // Pipeline state for scene rendering.
+    guard let envSphereVert = library.newFunctionWithName("envSphereVert") else {
       throw ARRendererError.MissingFunction
     }
-    guard let frag = library.newFunctionWithName("sphereFrag") else {
+    guard let envSphereFrag = library.newFunctionWithName("envSphereFrag") else {
       throw ARRendererError.MissingFunction
     }
-
-    // Create the pipeline descriptor.
-    let renderDesc = MTLRenderPipelineDescriptor()
-    renderDesc.sampleCount = 1
-    renderDesc.vertexFunction = vert
-    renderDesc.fragmentFunction = frag
-    renderDesc.colorAttachments[0].pixelFormat = .BGRA8Unorm
-    renderState = try device.newRenderPipelineStateWithDescriptor(renderDesc)
+    let envSphereDesc = MTLRenderPipelineDescriptor()
+    envSphereDesc.sampleCount = 1
+    envSphereDesc.vertexFunction = envSphereVert
+    envSphereDesc.fragmentFunction = envSphereFrag
+    envSphereDesc.colorAttachments[0].pixelFormat = .BGRA8Unorm
+    envSphereState = try device.newRenderPipelineStateWithDescriptor(envSphereDesc)
+    
+    // Pipeline state for light rendering.
+    guard let envLightVert = library.newFunctionWithName("envLightVert") else {
+      throw ARRendererError.MissingFunction
+    }
+    guard let envLightFrag = library.newFunctionWithName("envLightFrag") else {
+      throw ARRendererError.MissingFunction
+    }
+    let envLightDesc = MTLRenderPipelineDescriptor()
+    envLightDesc.sampleCount = 1
+    envLightDesc.vertexFunction = envLightVert
+    envLightDesc.fragmentFunction = envLightFrag
+    envLightDesc.colorAttachments[0].rgbBlendOperation = .Add
+    envLightDesc.colorAttachments[0].alphaBlendOperation = .Add
+    envLightDesc.colorAttachments[0].sourceRGBBlendFactor = .SourceAlpha
+    envLightDesc.colorAttachments[0].sourceAlphaBlendFactor = .SourceAlpha
+    envLightDesc.colorAttachments[0].destinationRGBBlendFactor = .OneMinusSourceAlpha
+    envLightDesc.colorAttachments[0].destinationAlphaBlendFactor = .OneMinusSourceAlpha
+    envLightDesc.colorAttachments[0].pixelFormat = .BGRA8Unorm
+    envLightDesc.colorAttachments[0].blendingEnabled = true
+    envLightState = try device.newRenderPipelineStateWithDescriptor(envLightDesc)
 
     // Initialize the VBO of the sphere.
     // The coordinate system is a bit funny since CoreMotion uses a coordinate
@@ -151,6 +185,18 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
       throw ARRendererError.MissingFunction
     }
     compositeState = try device.newComputePipelineStateWithFunction(compositeFunc)
+    
+    // Initialize the quad VBO.
+    let quad : [Float] = [
+      -0.1, -0.1, -0.1,  0.1,  0.1,  0.1,
+      -0.1, -0.1,  0.1,  0.1,  0.1, -0.1,
+    ]
+    quadVBO = device.newBufferWithBytes(
+      quad,
+      length: sizeofValue(quad) * quad.count,
+      options: MTLResourceOptions()
+    )
+    quadVBO.label = "VBOQuad"
   }
 
   /**
@@ -174,6 +220,9 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
     texture = device.newTextureWithDescriptor(texDesc)
     texture.label = "TEXEnvironment"
     environment.map.toMTLTexture(texture)
+    
+    // Fill in the lights.
+    lights = environment.lights
   }
 
   /**
@@ -246,15 +295,16 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
     }
     
     // Create the render command descriptor.
-    let renderDesc = MTLRenderPassDescriptor()
-    renderDesc.colorAttachments[0].texture = drawable.texture
-    renderDesc.colorAttachments[0].loadAction = .DontCare
-    renderDesc.colorAttachments[0].storeAction = .Store
+    let sphereDesc = MTLRenderPassDescriptor()
+    sphereDesc.colorAttachments[0].texture = drawable.texture
+    sphereDesc.colorAttachments[0].loadAction = .DontCare
+    sphereDesc.colorAttachments[0].storeAction = .Store
 
     // Render the sphere.
-    let encoder = buffer.renderCommandEncoderWithDescriptor(renderDesc)
+    let encoder = buffer.renderCommandEncoderWithDescriptor(sphereDesc)
+    encoder.label = "Environment"
     encoder.setDepthStencilState(depthState)
-    encoder.setRenderPipelineState(renderState)
+    encoder.setRenderPipelineState(envSphereState)
     encoder.setVertexBuffer(sphereVBO, offset: 0, atIndex: 0)
     encoder.setVertexBuffer(params.poseBuffer, offset: 0, atIndex: 1)
     encoder.setFragmentTexture(texture, atIndex: 0)
@@ -265,6 +315,54 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
         indexBuffer: sphereIBO,
         indexBufferOffset: 0
     )
+    
+    // Render lights.
+    encoder.setDepthStencilState(depthState)
+    encoder.setRenderPipelineState(envLightState)
+    encoder.setVertexBuffer(quadVBO, offset: 0, atIndex:  0)
+    encoder.setVertexBuffer(params.poseBuffer, offset: 0, atIndex: 1)
+
+    for batch in 0.stride(to: lights.count, by: kEnvLightBatch) {
+
+      // Create or fetch a buffer to hold light parameters.
+      let lightBuffer = params.lights.get(batch, create: {
+        return self.device.newBufferWithLength(
+          sizeof(Light) * kEnvLightBatch,
+          options: MTLResourceOptions()
+        )
+      })
+
+      // Fill in the buffer with light parameters.
+      var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
+      let size = min(kEnvLightBatch, lights.count - batch)
+      let s = Float(lights.count) / 4.0
+      for i in 0..<size {
+        let light = lights[batch + i]
+        data.memory.direction = float4(
+          light.direction.x,
+          light.direction.y,
+          light.direction.z,
+          0
+        )
+        data.memory.diffuse = float4(
+          s * light.diffuse.x,
+          s * light.diffuse.y,
+          s * light.diffuse.z,
+          1.0
+        )
+
+        data = data.successor()
+      }
+
+      // Draw a batch of lights.
+      encoder.setVertexBuffer(lightBuffer, offset: 0, atIndex: 2)
+      encoder.drawPrimitives(
+          .Triangle,
+          vertexStart: 0,
+          vertexCount: 6,
+          instanceCount: size
+      )
+    }
     encoder.endEncoding()
   }
 }

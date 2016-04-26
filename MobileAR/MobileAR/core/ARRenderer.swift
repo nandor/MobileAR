@@ -19,6 +19,24 @@ enum ARRendererError : ErrorType {
 
 
 /**
+ Funny dictionary that invokes a closure to create a missing element.
+ */
+class ARBatchBuffer {
+  private var buffers: [Int: MTLBuffer] = [:]
+  
+  func get(idx: Int, create: () -> MTLBuffer) -> MTLBuffer {
+    if let buffer = buffers[idx] {
+      return buffer
+    } else {
+      let buffer = create()
+      buffers[idx] = buffer
+      return buffer
+    }
+  }
+}
+
+
+/**
  Parameters passed to shaders.
  */
 struct ARCameraParameters {

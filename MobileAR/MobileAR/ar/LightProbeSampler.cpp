@@ -49,9 +49,9 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
     for (int c = region.x0; c <= region.x1; ++c) {
       const auto &pix = row[c];
 
-      sumB += pix[0];
+      sumB += pix[2];
       sumG += pix[1];
-      sumR += pix[2];
+      sumR += pix[0];
     }
   }
   
@@ -64,13 +64,12 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
   const float r = sumR / scale;
 
   // Find the direction of the light source.
-
   const auto phi = static_cast<float>(M_PI / 2.0 - M_PI * y / image_.rows);
   const auto theta = static_cast<float>(2 * M_PI * x / image_.cols);
 
-  const auto vx = static_cast<float>(cos(phi) * sin(theta));
-  const auto vy = static_cast<float>(sin(phi));
-  const auto vz = static_cast<float>(cos(phi) * cos(theta));
+  const auto vx = static_cast<float>(cos(phi) * cos(theta));
+  const auto vy = static_cast<float>(cos(phi) * sin(theta));
+  const auto vz = static_cast<float>(sin(phi));
 
   // Create the light source.
   return {

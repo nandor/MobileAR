@@ -42,6 +42,8 @@
         ambient: light.ambient
         diffuse: light.diffuse
         specular: light.specular
+        x: light.centroidX
+        y: light.centroidY
     ]);
   }
 

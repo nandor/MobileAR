@@ -258,21 +258,6 @@ class AREnvironmentCaptureController
       return
     }
     
-    /*catch (ARCaptureError.Blurry) {
-      print("blurry")
-      return
-    } catch (ARCaptureError.NotEnoughFeatures) {
-      print("NotEnoughFeatures")
-      return
-    } catch(ARCaptureError.NoMatches) {
-      print("NoMatches")
-      return
-    } catch {
-      print("\(error) \(ARCaptureError.Blurry)")
-      return
-    }*/
-
-    
     // Queue the image for compositing.
     renderer.update(display.2, pose: pose)
     
