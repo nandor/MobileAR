@@ -44,6 +44,7 @@
         specular: light.specular
         x: light.centroidX
         y: light.centroidY
+        area: light.area
     ]);
   }
 

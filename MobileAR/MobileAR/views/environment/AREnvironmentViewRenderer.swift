@@ -337,6 +337,9 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
       let size = min(kEnvLightBatch, lights.count - batch)
       for i in 0..<size {
         let light = lights[batch + i]
+
+        // Scale up since diffuse is too dim.
+        let s = Float(envWidth) * Float(M_PI) / Float(light.area * 2)
         data.memory.direction = float4(
           light.direction.x,
           light.direction.y,
@@ -344,9 +347,9 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
           0
         )
         data.memory.diffuse = float4(
-          light.diffuse.x,
-          light.diffuse.y,
-          light.diffuse.z,
+          s * light.diffuse.x,
+          s * light.diffuse.y,
+          s * light.diffuse.z,
           1.0
         )
 

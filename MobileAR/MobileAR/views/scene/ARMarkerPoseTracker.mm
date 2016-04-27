@@ -160,7 +160,6 @@ static const float G = 9.80665 * 100;
 
 - (void)trackSensor:(CMAttitude *)x a:(CMAcceleration)a w:(CMRotationRate)w
 {
-  NSLog(@"%f", w.z);
   const float dt = [self deltaTime];
   
   // Update orientation.

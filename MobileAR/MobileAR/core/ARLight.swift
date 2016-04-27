@@ -20,6 +20,8 @@ import simd
   /// Position in the envmap.
   let x: Int
   let y: Int
+  /// Area in the envmap.
+  let area: Float
 
   init(
       direction: float3,
@@ -27,7 +29,8 @@ import simd
       diffuse: float3,
       specular: float3,
       x: Int,
-      y: Int)
+      y: Int,
+      area: Float)
   {
     self.direction = direction
     self.ambient = ambient
@@ -35,5 +38,6 @@ import simd
     self.specular = specular
     self.x = x
     self.y = y
+    self.area = area
   }
 }

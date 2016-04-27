@@ -33,6 +33,8 @@ struct LightSource {
   const int centroidY;
   /// X coordinate of centroid.
   const int centroidX;
+  /// Area of the light.
+  const float area;
 };
 
 /**
