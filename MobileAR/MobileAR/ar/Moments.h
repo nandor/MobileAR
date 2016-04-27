@@ -29,15 +29,15 @@ struct Region {
     assert(0 <= y0 && y0 <= y1);
   }
   
-  int area() const {
-    return (y1 - y0 + 1) * (x1 - x0 + 1);
+  inline int area() const {
+    return width() * height();
   }
   
-  int width() const {
+  inline int width() const {
     return x1 - x0 + 1;
   }
   
-  int height() const {
+  inline int height() const {
     return y1 - y0 + 1;
   }
 };

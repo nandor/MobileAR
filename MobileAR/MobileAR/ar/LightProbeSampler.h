@@ -65,14 +65,26 @@ protected:
    Creates a light source out of a region.
    */
   LightSource sample(const Region &region, int y, int x) const;
-    
+
+  /**
+   Computes the width of a region.
+   */
+  float width(const Region &region) const;
+
+  /**
+   Computes the height of a region.
+   */
+  float height(const Region &region) const;
+
  protected:
-  /// Image to be sampled.
-  const cv::Mat image_;
   /// Max depth for the algorithm.
   const size_t depth_;
   /// Number of light sources.
   const size_t count_;
+  /// Height of the image.
+  const float height_;
+  /// Image to be sampled.
+  cv::Mat image_;
   /// Luminance map.
   cv::Mat illum_;
   /// Output light sources.

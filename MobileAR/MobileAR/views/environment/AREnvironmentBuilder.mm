@@ -23,7 +23,7 @@ static constexpr size_t kMinMatches = 25;
 static constexpr float kMaxHammingDistance = 30;
 static constexpr float kMaxReprojDistance = 75.0f;
 static constexpr float kMaxRotation = 25.0f * M_PI / 180.0f;
-static constexpr float kMinBlurThreshold = 0.01f;
+static constexpr float kMinBlurThreshold = 0.02f;
 
 
 /**

@@ -28,44 +28,42 @@ void VarianceCutSampler::split(const Region &region, int depth) {
     ));
     return;
   }
-  
-  // Try a cut along Y.
-  auto bestY = region.y0;
-  auto bestVarY = std::numeric_limits<int64_t>::max();
-  {
-    for (int y = region.y0; y < region.y1; ++y) {
-      const Region r0(region.y0, region.x0, y + 0, region.x1);
-      const Region r1(y + 1, region.x0, region.y1, region.x1);
-      const auto var = std::max(variance(r0), variance(r1));
-      
-      if (bestVarY > var) {
-        bestY = y;
-        bestVarY = var;
+
+  if (width(region) < height(region)) {
+    // Try a cut along Y.
+    auto bestY = region.y0;
+    auto bestVarY = std::numeric_limits<int64_t>::max();
+    {
+      for (int y = region.y0; y < region.y1; ++y) {
+        const Region r0(region.y0, region.x0, y + 0, region.x1);
+        const Region r1(y + 1, region.x0, region.y1, region.x1);
+        const auto var = std::max(variance(r0), variance(r1));
+        
+        if (bestVarY > var) {
+          bestY = y;
+          bestVarY = var;
+        }
       }
     }
-  }
-  
-  // Try a cut along X.
-  auto bestX = region.x0;
-  auto bestVarX = std::numeric_limits<int64_t>::max();
-  {
-    for (int x = region.x0; x < region.x1; ++x) {
-      const Region r0(region.y0, region.x0, region.y1, x + 0);
-      const Region r1(region.y0, x + 1, region.y1, region.x1);
-      const auto var = std::max(variance(r0), variance(r1));
-      
-      if (bestVarX > var) {
-        bestX = x;
-        bestVarX = var;
-      }
-    }
-  }
-  
-  // Cut along the axis with lower variance.
-  if (bestVarY < bestVarX) {
     split({ region.y0, region.x0, bestY + 0, region.x1 }, depth + 1);
     split({ bestY + 1, region.x0, region.y1, region.x1 }, depth + 1);
   } else {
+    // Try a cut along X.
+    auto bestX = region.x0;
+    auto bestVarX = std::numeric_limits<int64_t>::max();
+    {
+      for (int x = region.x0; x < region.x1; ++x) {
+        const Region r0(region.y0, region.x0, region.y1, x + 0);
+        const Region r1(region.y0, x + 1, region.y1, region.x1);
+        const auto var = std::max(variance(r0), variance(r1));
+        
+        if (bestVarX > var) {
+          bestX = x;
+          bestVarX = var;
+        }
+      }
+    }
+
     split({ region.y0, region.x0, region.y1, bestX + 0 }, depth + 1);
     split({ region.y0, bestX + 1, region.y1, region.x1 }, depth + 1);
   }

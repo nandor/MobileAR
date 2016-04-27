@@ -335,7 +335,6 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
       // Fill in the buffer with light parameters.
       var data = UnsafeMutablePointer<Light>(lightBuffer.contents())
       let size = min(kEnvLightBatch, lights.count - batch)
-      let s = Float(lights.count) / 4.0
       for i in 0..<size {
         let light = lights[batch + i]
         data.memory.direction = float4(
@@ -345,9 +344,9 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
           0
         )
         data.memory.diffuse = float4(
-          s * light.diffuse.x,
-          s * light.diffuse.y,
-          s * light.diffuse.z,
+          light.diffuse.x,
+          light.diffuse.y,
+          light.diffuse.z,
           1.0
         )
 
