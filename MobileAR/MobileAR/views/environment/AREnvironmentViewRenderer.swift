@@ -339,7 +339,7 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
         let light = lights[batch + i]
 
         // Scale up since diffuse is too dim.
-        let s = Float(envWidth) * Float(M_PI) / Float(light.area * 2)
+        let s = Float(envWidth * envWidth) / Float(M_PI) / Float(light.area * 2)
         data.memory.direction = float4(
           light.direction.x,
           light.direction.y,

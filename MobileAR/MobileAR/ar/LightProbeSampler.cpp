@@ -84,13 +84,13 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
   }
 
   // Compute the area occupied by the light.
-  const float area = (region.x1 - region.x0) * (
-      std::cos(region.y0 / height_ * M_PI - M_PI / 2.0f) +
-      std::cos(region.y1 / height_ * M_PI - M_PI / 2.0f)
-  );
+  const float area = (region.y1 - region.y0) * (region.x1 - region.x0) * (
+      std::cos(M_PI / 2.0f - region.y0 / height_ * M_PI) +
+      std::cos(M_PI / 2.0f - region.y1 / height_ * M_PI)
+  ) / 2.0f;
 
-  sumW *= (M_PI * image_.cols) / (area * 2);
-  
+  sumW *= (image_.cols * image_.cols / M_PI) / (area * 2);
+
   // Compute average intensity.
   const float b = sumB / (sumW * 255.0f);
   const float g = sumG / (sumW * 255.0f);
