@@ -32,6 +32,7 @@
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
 		7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */; };
+		7AFBC3B11CD274CB007D3127 /* EnvironmentBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBC3AF1CD274CB007D3127 /* EnvironmentBuilder.cpp */; };
 		7AFCF8481BCE40CB00A108F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */; };
 		C13F80202E2E4BB0701AA1BB /* ARParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F850743FA3DD255216D0A /* ARParameters.swift */; };
 		C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C13F8AF063046F657FBA2F41 /* VarianceCutSampler.cpp */; };
@@ -99,6 +100,8 @@
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
 		7AC9F6111C5E7BF100AF86BC /* cup.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cup.obj; path = MobileAR/models/cup.obj; sourceTree = "<group>"; };
 		7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARLight.swift; sourceTree = "<group>"; };
+		7AFBC3AF1CD274CB007D3127 /* EnvironmentBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnvironmentBuilder.cpp; path = ar/EnvironmentBuilder.cpp; sourceTree = "<group>"; };
+		7AFBC3B01CD274CB007D3127 /* EnvironmentBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnvironmentBuilder.h; path = ar/EnvironmentBuilder.h; sourceTree = "<group>"; };
 		7AFCF8381BCE40CB00A108F9 /* MobileAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MobileAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFCF8471BCE40CB00A108F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7AFCF84C1BCE40CB00A108F9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -271,6 +274,8 @@
 				7A7093041CC63EC4003D6742 /* Rotation.h */,
 				7A37CDE71CCA8A25007FA3CF /* BlurDetector.cpp */,
 				7A37CDE81CCA8A25007FA3CF /* BlurDetector.h */,
+				7AFBC3AF1CD274CB007D3127 /* EnvironmentBuilder.cpp */,
+				7AFBC3B01CD274CB007D3127 /* EnvironmentBuilder.h */,
 			);
 			name = ar;
 			sourceTree = "<group>";
@@ -432,6 +437,7 @@
 				7A37CDE91CCA8A25007FA3CF /* BlurDetector.cpp in Sources */,
 				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 				C13F8C886918E43EBB1E4A6F /* ARObject.swift in Sources */,
+				7AFBC3B11CD274CB007D3127 /* EnvironmentBuilder.cpp in Sources */,
 				C13F87C7A162442BE302226F /* AREnvironmentBuilder.mm in Sources */,
 				7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */,
 				C13F84FB9F32C57887CC6362 /* ARLightProbeSampler.mm in Sources */,
