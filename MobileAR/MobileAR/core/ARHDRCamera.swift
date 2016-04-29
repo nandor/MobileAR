@@ -49,7 +49,8 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
       delegate: ARHDRCameraDelegate?,
       motion: CMMotionManager,
       exposures: [CMTime],
-      f: Float) throws
+      f: Float,
+      resolution: ARCameraResolution) throws
   {
     // Save config.
     self.hdrDelegate = delegate
@@ -57,7 +58,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
     self.exposures = exposures.sort() { return CMTimeCompare($0, $1) < 0 }
     
     // Initialize superclass, registering this class as a handler.
-    try super.init(delegate: nil, f: f)
+    try super.init(delegate: nil, f: f, resolution: resolution)
     super.delegate = self
   }
   

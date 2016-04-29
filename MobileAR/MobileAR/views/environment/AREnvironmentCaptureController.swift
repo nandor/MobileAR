@@ -138,7 +138,8 @@ class AREnvironmentCaptureController
         delegate: self,
         motion: motionManager,
         exposures: kExposures,
-        f: params.f
+        f: params.f,
+        resolution: .Mid
     )
     camera.start()
     camera.expose(x: 0.5, y: 0.5) { (_) in
@@ -227,7 +228,6 @@ class AREnvironmentCaptureController
     presentViewController(alert, animated: true, completion: nil)
   }
 
-  var count = 0
   /**
    Processes a frame from the device's camera.
    */
@@ -249,7 +249,6 @@ class AREnvironmentCaptureController
           exposure: $2
       )
     }
-    let display = frame.last!
     
     // Update the enviroment builder & bail out if the image does not
     // fit into the composited photo sphere.

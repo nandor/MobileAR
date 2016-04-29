@@ -219,7 +219,7 @@ extension CMDeviceMotion {
    */
   func obtainCamera() {
 
-    if let cam = try? ARCamera(delegate: self, f: params?.f ?? 0.5) {
+    if let cam = try? ARCamera(delegate: self, f: params?.f ?? 0.5, resolution: .Low) {
       camera = cam
       return
     }

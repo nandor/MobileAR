@@ -71,7 +71,7 @@ class ARCalibrateController: UIViewController, ARCameraDelegate, ARCalibratorDel
     // Camera creation should always succeed since this view
     // only appears after the scene view controller is shown
     // which very kindly asks the user to enable the camera.
-    camera = try! ARCamera(delegate: self, f: 0.5)
+    camera = try! ARCamera(delegate: self, f: 0.5, resolution: .Low)
     camera?.start()
   }
 

@@ -22,6 +22,12 @@ protocol ARCameraDelegate {
   func onCameraFrame(frame: UIImage)
 }
 
+enum ARCameraResolution {
+  case Low  // 640x360
+  case Mid  // 1280x720
+  case High // 1920x1080
+}
+
 
 /**
  Wrapper around AVFoundation camera.
@@ -58,7 +64,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
   /**
    Iniitalizes the camera wrapper.
    */
-  init(delegate: ARCameraDelegate?, f: Float) throws {
+  init(delegate: ARCameraDelegate?, f: Float, resolution: ARCameraResolution) throws {
     self.delegate = delegate
 
     super.init()
@@ -87,7 +93,11 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     ]
 
     // Create a new capture session.
-    captureSession.sessionPreset = AVCaptureSessionPreset640x480;
+    switch resolution {
+      case .Low: captureSession.sessionPreset = AVCaptureSessionPreset640x480;
+      case .Mid: captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
+      case .High: captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
+    }
     captureSession.addInput(videoInput)
     captureSession.addOutput(videoOutput)
 
