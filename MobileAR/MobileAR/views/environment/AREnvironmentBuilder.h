@@ -3,6 +3,7 @@
 // (C) 2015 Nandor Licker. All rights reserved.
 
 
+#import <CoreMedia/CoreMedia.h>
 #import <CoreMotion/CoreMotion.h>
 #import <UIKit/UIKit.h>
 
@@ -10,6 +11,23 @@
 @class AREnvironment;
 @class ARPose;
 @class ARParameters;
+
+
+/**
+ Frame taken at multiple exposures.
+ */
+@interface ARHDRFrame : NSObject
+
+@property (nonatomic) UIImage *frame;
+@property (nonatomic) ARPose *pose;
+@property (nonatomic) CMTime exposure;
+
+/**
+ Initializes the frame.
+ */
+- (instancetype)initWithFrame:(UIImage*)frame pose:(ARPose*)pose exposure:(CMTime)exposure;
+
+@end
 
 
 /**
@@ -25,6 +43,6 @@
 /**
  Updates the preview with a frame.
 */
-- (BOOL)update:(UIImage*)image pose:(ARPose*)pose error:(NSError**)error;
+- (BOOL)update:(NSArray<ARHDRFrame*>*)frames error:(NSError**)error;
 
 @end

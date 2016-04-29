@@ -231,24 +231,30 @@ class AREnvironmentCaptureController
   /**
    Processes a frame from the device's camera.
    */
-  func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)]) {
+  func onCameraFrame(frame: [(UIImage, CMAttitude, CMTime)]) {
+
+    // Convert the frames to a nicer format.
+    let frames : [ARHDRFrame] = frame.sort() { return CMTimeCompare($0.2, $1.2) < 0 }.map() {
+      return ARHDRFrame(
+          frame: $0,
+          pose: ARPose(
+              params: params,
+              rx: +Float($1.roll),
+              ry: -Float($1.pitch),
+              rz: -Float($1.yaw),
+              tx: 0.0,
+              ty: 0.0,
+              tz: 0.0
+          ),
+          exposure: $2
+      )
+    }
     let display = frame.last!
-    
-    // Create the pose from gyro data.
-    let pose = ARPose(
-        params: params,
-        rx: Float(display.1.roll),
-        ry: -Float(display.1.pitch),
-        rz: -Float(display.1.yaw),
-        tx: 0.0,
-        ty: 0.0,
-        tz: 0.0
-    )
     
     // Update the enviroment builder & bail out if the image does not
     // fit into the composited photo sphere.
     do {
-      try builder?.update(display.2, pose: pose)
+      try builder?.update(frames)
     } catch {
       switch (ARCaptureError(rawValue: (error as NSError).code)!) {
         case .Blurry: print("Blurry")
@@ -259,31 +265,7 @@ class AREnvironmentCaptureController
     }
     
     // Queue the image for compositing.
-    renderer.update(display.2, pose: pose)
-    
-    let temp = NSFileManager.defaultManager().URLsForDirectory(
-      .DocumentDirectory,
-      inDomains: .UserDomainMask
-    )[0].URLByAppendingPathComponent("Temp")
-    
-    let dir = temp.URLByAppendingPathComponent("\(count)")
-    
-    if count == 0 {
-      try! NSFileManager.defaultManager().removeItemAtURL(temp)
-    }
-    try! NSFileManager.defaultManager().createDirectoryAtURL(
-      dir,
-      withIntermediateDirectories: true,
-      attributes: nil
-    )
-    
-    count += 1
-    
-    for i in 0...frame.count - 1 {
-      let att = frame[i].1
-      let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
-      UIImagePNGRepresentation(frame[i].2)!.writeToFile(path.path!, atomically: false)
-    }
+    renderer.update(frames.last!.frame, pose: frames.last!.pose)
   }
 
   /**

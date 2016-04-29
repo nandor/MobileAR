@@ -42,6 +42,25 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 }
 
 
+@implementation ARHDRFrame
+{
+}
+
+- (instancetype)initWithFrame:(UIImage*)frame pose:(ARPose*)pose exposure:(CMTime)exposure
+{
+  if (!(self = [super init])) {
+    return nil;
+  }
+
+  self.frame = frame;
+  self.pose = pose;
+  self.exposure = exposure;
+  return self;
+}
+
+@end
+
+
 @implementation AREnvironmentBuilder
 {
   // Panoramic stitcher.
@@ -77,17 +96,25 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
   return self;
 }
 
-- (BOOL)update:(UIImage*)image pose:(ARPose*)pose error:(NSError**)error {
-  cv::Mat bgr;
-  [image toCvMat: bgr];
-
-  // Extract the rotation component and store it in a quaternion.
-  const Eigen::Matrix<float, 3, 3> P(ToEigen<float>([pose proj]));
-  const Eigen::Matrix<float, 3, 3> R(ToEigen<float>([pose view]));
+- (BOOL)update:(NSArray<ARHDRFrame*>*)frames error:(NSError**)error
+{
 
   try {
+    // Convert the Obj-C frames to C++ structures.
+    std::vector<ar::HDRFrame> cframes;
+    for (ARHDRFrame* frame in frames) {
+      cv::Mat bgr;
+      [[frame frame] toCvMat: bgr];
+      cframes.emplace_back(
+          bgr,
+          ToEigen<float>([frame.pose proj]),
+          ToEigen<float>([frame.pose view]),
+          CMTimeGetSeconds(frame.exposure)
+      );
+    }
+
     // Add the image to the panorama & handle errors.
-    builder_->AddFrame(bgr, P, R);
+    builder_->AddFrames(cframes);
     return YES;
   } catch (const ar::EnvironmentBuilderException &ex) {
     // Extract the error from C++ land.

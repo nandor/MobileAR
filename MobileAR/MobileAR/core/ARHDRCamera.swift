@@ -9,7 +9,7 @@ import Foundation
  Protocol to handle a set of frames.
  */
 protocol ARHDRCameraDelegate {
-  func onCameraFrame(frame: [(CMTime, CMAttitude, UIImage)])
+  func onCameraFrame(frame: [(UIImage, CMAttitude, CMTime)])
 }
 
 /**
@@ -34,7 +34,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
   private var exposure: Int = 0
   
   // Buffer of saved frames.
-  private var buffer: [(CMTime, CMAttitude, UIImage)] = []
+  private var buffer: [(UIImage, CMAttitude, CMTime)] = []
   
   // True if device is being configured.
   private var isBeingConfigured = false
@@ -54,7 +54,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
     // Save config.
     self.hdrDelegate = delegate
     self.motion = motion
-    self.exposures = exposures
+    self.exposures = exposures.sort() { return CMTimeCompare($0, $1) < 0 }
     
     // Initialize superclass, registering this class as a handler.
     try super.init(delegate: nil, f: f)
@@ -84,7 +84,7 @@ class ARHDRCamera : ARCamera, ARCameraDelegate {
     if (canTakeFrame) {
       
       // If exposure is right, add image to buffer.
-      buffer.append((exposures[exposure], attitude, frame))
+      buffer.append((frame, attitude, exposures[exposure]))
       exposure += 1
       
       // If buffer full, start new frame.

@@ -41,7 +41,30 @@ class EnvironmentBuilderException {
   const Error error_;
 };
 
-  
+
+/**
+ HDR frame.
+ */
+struct HDRFrame {
+  const cv::Mat bgr;
+  const Eigen::Matrix<float, 3, 3> P;
+  const Eigen::Matrix<float, 3, 3> R;
+  const float time;
+
+  HDRFrame(
+      const cv::Mat &bgr,
+      const Eigen::Matrix<float, 3, 3> &P,
+      const Eigen::Matrix<float, 3, 3> &R,
+      const float time)
+    : bgr(bgr)
+    , P(P)
+    , R(R)
+    , time(time)
+  {
+  }
+};
+
+
 /**
  Encapsulates panoramic reconstruction logic.
  */
@@ -51,6 +74,8 @@ class EnvironmentBuilder {
    Information collected from a single frame.
    */
   struct Frame {
+    // Exposure level.
+    const size_t level;
     // RGB version.
     const cv::Mat bgr;
     // List of keypoints.
@@ -65,13 +90,15 @@ class EnvironmentBuilder {
     const Eigen::Quaternion<float> q;
 
     Frame(
+        size_t level,
         const cv::Mat &bgr,
         const std::vector<cv::KeyPoint> &keypoints,
         const cv::Mat &descriptors,
         const Eigen::Matrix<float, 3, 3> &P,
         const Eigen::Matrix<float, 3, 3> &R,
         const Eigen::Quaternion<float> &q)
-    : bgr(bgr)
+    : level(level)
+    , bgr(bgr)
     , keypoints(keypoints)
     , descriptors(descriptors)
     , P(P)
@@ -97,10 +124,11 @@ class EnvironmentBuilder {
    
    @throws EnvironmentBuilderException
    */
-  void AddFrame(
-      const cv::Mat &bgr,
-      const Eigen::Matrix<float, 3, 3> &P,
-      const Eigen::Matrix<float, 3, 3> &R);
+  void AddFrames(const std::vector<HDRFrame> &frames);
+
+ private:
+  /**
+   */
 
  private:
   // Width of the environment map.
@@ -122,7 +150,7 @@ class EnvironmentBuilder {
   cv::Mat mapY_;
 
   // Keypoint detctor & matcher.
-  cv::Ptr<cv::ORB> detector_;
+  cv::ORB orbDetector_;
   std::unique_ptr<cv::BFMatcher> matcher_;
   
 };

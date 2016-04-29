@@ -8,12 +8,12 @@ namespace ar {
 
 namespace {
 
+constexpr float kMinBlurThreshold = 0.01f;
 constexpr size_t kMinFeatures = 100;
 constexpr size_t kMinMatches = 25;
 constexpr float kMaxHammingDistance = 30;
 constexpr float kMaxReprojDistance = 75.0f;
 constexpr float kMaxRotation = 25.0f * M_PI / 180.0f;
-constexpr float kMinBlurThreshold = 0.02f;
 
 }
 
@@ -27,53 +27,69 @@ EnvironmentBuilder::EnvironmentBuilder(
   : width_(width)
   , height_(height)
   , undistort_(undistort)
+  , orbDetector_()
   , blurDetector_(new BlurDetector(360, 640))
 {
   assert(k.rows == 3 && k.cols == 3);
   assert(d.rows == 4 && d.cols == 1);
 
-  detector_ = cv::ORB::create();
   matcher_ = std::make_unique<cv::BFMatcher>(cv::NORM_HAMMING, true);
   cv::initUndistortRectifyMap(k, d, {}, k, {640, 360}, CV_16SC2, mapX_, mapY_);
 }
 
 
-void EnvironmentBuilder::AddFrame(
-    const cv::Mat &bgr,
-    const Eigen::Matrix<float, 3, 3> &P,
-    const Eigen::Matrix<float, 3, 3> &R)
-{
-  // Undistort the image if required & convert to grayscale.
-  if (undistort_) {
-    cv::remap(bgr, bgr, mapX_, mapY_, cv::INTER_LINEAR);
-  }
-  cv::Mat gray;
-  cv::cvtColor(bgr, gray, CV_BGR2GRAY);
+void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
 
-  // Check if the image is blurry.
+  // Per-frame processing, creating a list of frames.
+  std::vector<Frame> frames;
   {
-    float per, blur;
-    std::tie(per, blur) = (*blurDetector_)(gray);
-    if (per < kMinBlurThreshold) {
-      throw EnvironmentBuilderException(EnvironmentBuilderException::BLURRY);
+    cv::Mat bgr, gray;
+    for (size_t i = 0; i < rawFrames.size(); ++i) {
+      const auto &frame = rawFrames[i];
+
+      // Undistort the image if required & convert to grayscale.
+      bgr = frame.bgr;
+      if (undistort_) {
+        cv::remap(bgr, bgr, mapX_, mapY_, cv::INTER_LINEAR);
+      }
+      cv::cvtColor(bgr, gray, CV_BGR2GRAY);
+
+      // Check if the image is blurry.
+      {
+        float per, blur;
+        std::tie(per, blur) = (*blurDetector_)(gray);
+        if (per < kMinBlurThreshold) {
+          throw EnvironmentBuilderException(EnvironmentBuilderException::BLURRY);
+        }
+      }
+
+      // Extract ORB features & descriptors and make sure we have enough of them.
+      std::vector<cv::KeyPoint> keypoints;
+      cv::Mat descriptors;
+      orbDetector_(gray, {}, keypoints, descriptors);
+      if (keypoints.size() < kMinFeatures) {
+        throw EnvironmentBuilderException(EnvironmentBuilderException::NOT_ENOUGH_FEATURES);
+      }
+
+      // Invert Y to change coordinate systems.
+      for (auto &kp : keypoints) {
+        kp.pt.y = bgr.rows - kp.pt.y - 1;
+      }
+
+      // Get the rotation quaternion.
+      frames.emplace_back(
+          i,
+          bgr,
+          keypoints,
+          descriptors,
+          frame.R,
+          frame.P,
+          Eigen::Quaternion<float>(frame.R)
+      );
     }
   }
 
-  // Extract ORB features & descriptors and make sure we have enough of them.
-  std::vector<cv::KeyPoint> keypoints;
-  cv::Mat descriptors;
-  detector_->detectAndCompute(gray, {}, keypoints, descriptors);
-  if (keypoints.size() < kMinFeatures) {
-    throw EnvironmentBuilderException(EnvironmentBuilderException::NOT_ENOUGH_FEATURES);
-  }
-
-  // Invert Y to change coordinate systems.
-  for (auto &kp : keypoints) {
-    kp.pt.y = bgr.rows - kp.pt.y - 1;
-  }
-
-  // Get the rotation quaternion.
-  Eigen::Quaternion<float> q(R);
+  /*
 
   // Number of different images this frame is matched to & number of matches.
   size_t pairs = 0;
@@ -193,6 +209,7 @@ void EnvironmentBuilder::AddFrame(
   
   // Add the frame to the frame list.
   frames_.emplace_back(bgr, keypoints, descriptors, P, R, q);
+  */
 }
   
 }

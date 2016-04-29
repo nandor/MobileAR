@@ -12,9 +12,9 @@ BlurDetector::BlurDetector(int rows, int cols, int threshold)
   , cols_((cols >> 4) << 4)
   , threshold_(threshold)
   , levels({
-    std::make_shared<Level>(rows_ >> 1, cols_ >> 1, 8),
-    std::make_shared<Level>(rows_ >> 2, cols_ >> 2, 4),
-    std::make_shared<Level>(rows_ >> 3, cols_ >> 3, 2)
+    std::make_shared<Level>(rows_ >> 1, cols_ >> 1, 4),
+    std::make_shared<Level>(rows_ >> 2, cols_ >> 2, 2),
+    std::make_shared<Level>(rows_ >> 3, cols_ >> 3, 1)
   })
 {
 }
@@ -29,9 +29,9 @@ std::pair<float, float> BlurDetector::operator() (const cv::Mat &gray) {
   cv::cvtColor(LL, temp, CV_GRAY2BGR);
   
   // Build the 3 levels of the pyramid.
-  BuildLevel<1, 3>(           LL, levels[0]);
-  BuildLevel<2, 2>(levels[0]->LL, levels[1]);
-  BuildLevel<3, 1>(levels[1]->LL, levels[2]);
+  BuildLevel<1, 2>(           LL, levels[0]);
+  BuildLevel<2, 1>(levels[0]->LL, levels[1]);
+  BuildLevel<3, 0>(levels[1]->LL, levels[2]);
   
   // Count the number of different edge types.
   int Nedge = 0;
