@@ -13,9 +13,9 @@ let kExposures = [
   //CMTimeMake(1, 1000),
   //CMTimeMake(1, 250),
   //CMTimeMake(1, 100),
-  CMTimeMake(1, 120),
-  CMTimeMake(1, 60),
-  CMTimeMake(1, 30),
+  CMTimeMake(1, 160),
+  CMTimeMake(1, 80),
+  CMTimeMake(1, 40),
 ]
 
 
@@ -25,7 +25,8 @@ let kExposures = [
 @objc enum ARCaptureError : Int, ErrorType {
   case Blurry
   case NotEnoughFeatures
-  case NoMatches
+  case NoPairwiseMatches
+  case NoGlobalMatches
 }
 
 
@@ -258,7 +259,8 @@ class AREnvironmentCaptureController
       switch (ARCaptureError(rawValue: (error as NSError).code)!) {
         case .Blurry: print("Blurry")
         case .NotEnoughFeatures: print("NotEnoughFeatures")
-        case .NoMatches: print("NoMatches")
+        case .NoPairwiseMatches: print("NoPairwiseMatches")
+        case .NoGlobalMatches: print("NoGlobalMatches")
       }
       return
     }

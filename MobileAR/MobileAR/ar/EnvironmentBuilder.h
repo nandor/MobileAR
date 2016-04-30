@@ -5,6 +5,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 
 #include <Eigen/Eigen>
 
@@ -17,6 +18,18 @@
 
 namespace ar {
 
+
+/**
+ Hash for graph nodes.
+ */
+struct PairHash {
+  template<typename T, typename U>
+  size_t operator() (const std::pair<T, U> &x) const {
+    return std::hash<T>()(x.first) ^ std::hash<U>()(x.second);
+  }
+};
+
+
 /**
  Exceptions reported by the environment stitcher.
  */
@@ -25,7 +38,8 @@ class EnvironmentBuilderException {
   enum Error {
     BLURRY,
     NOT_ENOUGH_FEATURES,
-    NO_MATCHES
+    NO_PAIRWISE_MATCHES,
+    NO_GLOBAL_MATCHES
   };
 
   EnvironmentBuilderException(Error error)
@@ -74,6 +88,8 @@ class EnvironmentBuilder {
    Information collected from a single frame.
    */
   struct Frame {
+    // Unique index.
+    const int index;
     // Exposure level.
     const size_t level;
     // RGB version.
@@ -90,6 +106,7 @@ class EnvironmentBuilder {
     const Eigen::Quaternion<float> q;
 
     Frame(
+        int index,
         size_t level,
         const cv::Mat &bgr,
         const std::vector<cv::KeyPoint> &keypoints,
@@ -97,7 +114,8 @@ class EnvironmentBuilder {
         const Eigen::Matrix<float, 3, 3> &P,
         const Eigen::Matrix<float, 3, 3> &R,
         const Eigen::Quaternion<float> &q)
-    : level(level)
+    : index(index)
+    , level(level)
     , bgr(bgr)
     , keypoints(keypoints)
     , descriptors(descriptors)
@@ -107,6 +125,21 @@ class EnvironmentBuilder {
     {
     }
   };
+
+  /**
+   Graph of feature matches.
+   */
+  typedef std::unordered_map<
+      std::pair<int, int>,
+      std::vector<std::pair<int, int>>,
+      PairHash
+  > MatchGraph;
+
+  /**
+   Graph of feature groups.
+   */
+  typedef std::vector<std::pair<int, Eigen::Vector2f>> MatchGroup;
+
  public:
 
   /**
@@ -126,15 +159,27 @@ class EnvironmentBuilder {
    */
   void AddFrames(const std::vector<HDRFrame> &frames);
 
+  /**
+   Creates the panorama, performing bundle adjustment.
+   */
+  void Composite();
+
  private:
   /**
+   Returns the list of matches.
+   
+   @param reproj True if points are to be thresholded by gyro rotation.
    */
+  MatchGraph Match(const Frame &query, const Frame &train);
 
  private:
   // Width of the environment map.
   size_t width_;
   // Height of the environment map.
   size_t height_;
+
+  // Next available index.
+  int index_;
 
   /// Flag to enable distortion correction.
   bool undistort_;
@@ -151,7 +196,11 @@ class EnvironmentBuilder {
 
   // Keypoint detctor & matcher.
   cv::ORB orbDetector_;
-  std::unique_ptr<cv::BFMatcher> matcher_;
+  cv::BFMatcher bfMatcher_;
+
+  // Graph of feature matches.
+  MatchGraph graph_;
+  MatchGroup groups_;
   
 };
 

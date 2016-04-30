@@ -138,9 +138,9 @@ extension float4x4 {
   {
     self.init(
         projMat: float4x4([
-            float4(params.fx, 0, 0, 0),
-            float4(0, params.fy, 0, 0),
-            float4(params.cx, params.cy, 1, 0),
+            float4(2 * params.fx, 0, 0, 0),
+            float4(0, 2 * params.fy, 0, 0),
+            float4(2 * params.cx, 2 * params.cy, 1, 0),
             float4(0, 0, 0, 1)
         ]),
         rx: rx,

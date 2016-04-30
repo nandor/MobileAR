@@ -37,8 +37,8 @@ class AREnvironmentRenderBuffer: ARRenderBuffer {
     // Source texture.
     let compositeTextureDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
         .BGRA8Unorm,
-        width: Int(640),
-        height: Int(360),
+        width: Int(1280),
+        height: Int(720),
         mipmapped: false
     )
     compositeTexture = device.newTextureWithDescriptor(compositeTextureDesc)

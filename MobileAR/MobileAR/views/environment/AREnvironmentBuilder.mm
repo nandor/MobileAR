@@ -127,8 +127,12 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
         *error = [NSError errorWithDomain:ARCaptureErrorDomain code:ARCaptureErrorNotEnoughFeatures userInfo:nil];
         break;
 
-      case ar::EnvironmentBuilderException::NO_MATCHES:
-        *error = [NSError errorWithDomain:ARCaptureErrorDomain code:ARCaptureErrorNoMatches userInfo:nil];
+      case ar::EnvironmentBuilderException::NO_PAIRWISE_MATCHES:
+        *error = [NSError errorWithDomain:ARCaptureErrorDomain code:ARCaptureErrorNoPairwiseMatches userInfo:nil];
+        break;
+
+      case ar::EnvironmentBuilderException::NO_GLOBAL_MATCHES:
+        *error = [NSError errorWithDomain:ARCaptureErrorDomain code:ARCaptureErrorNoGlobalMatches userInfo:nil];
         break;
     }
     return NO;

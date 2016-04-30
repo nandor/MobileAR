@@ -59,6 +59,9 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
   internal var device: AVCaptureDevice!
   // Indicates that the camera is begin configured.
   internal var configuring: Bool = false
+
+  // Resolution of the image.
+  internal let resolution: ARCameraResolution
   
   
   /**
@@ -66,6 +69,7 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
    */
   init(delegate: ARCameraDelegate?, f: Float, resolution: ARCameraResolution) throws {
     self.delegate = delegate
+    self.resolution = resolution
 
     super.init()
 
@@ -143,11 +147,18 @@ class ARCamera : NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     let width = CVPixelBufferGetWidth(imageBuffer)
     let height = CVPixelBufferGetHeight(imageBuffer)
 
+    var crop = 0
+    switch resolution {
+      case .Low: crop = 60
+      case .Mid: crop = 0
+      case .High: crop = 0
+    }
+
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     let context = CGBitmapContextCreate(
-        addr + 60 * bytesPerRow,
+        addr + crop * bytesPerRow,
         width,
-        height - 120,
+        height - crop * 2,
         8,
         bytesPerRow,
         colorSpace,
