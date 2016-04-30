@@ -30,14 +30,14 @@ EnvironmentBuilder::EnvironmentBuilder(
   , height_(height)
   , index_(0)
   , undistort_(undistort)
-  , blurDetector_(new BlurDetector(360, 640))
+  , blurDetector_(new BlurDetector(720, 1280))
   , orbDetector_(500)
   , bfMatcher_(cv::NORM_HAMMING, true)
 {
   assert(k.rows == 3 && k.cols == 3);
   assert(d.rows == 4 && d.cols == 1);
 
-  cv::initUndistortRectifyMap(k, d, {}, k, {640, 360}, CV_16SC2, mapX_, mapY_);
+  cv::initUndistortRectifyMap(k, d, {}, k, {1280, 720}, CV_16SC2, mapX_, mapY_);
 }
 
 
@@ -62,7 +62,7 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
         float per, blur;
         std::tie(per, blur) = (*blurDetector_)(gray);
         if (per < kMinBlurThreshold) {
-          throw EnvironmentBuilderException(EnvironmentBuilderException::BLURRY);
+          //throw EnvironmentBuilderException(EnvironmentBuilderException::BLURRY);
         }
       }
 

@@ -70,6 +70,9 @@ class AREnvironmentCaptureController
   // Camera parameters.
   private var params: ARParameters!
 
+  // Number of frames processed.
+  private var count = 0
+
   /**
    Called when the view is first created.
    */
@@ -267,6 +270,8 @@ class AREnvironmentCaptureController
     
     // Queue the image for compositing.
     renderer.update(frames.last!.frame, pose: frames.last!.pose)
+
+    saveFrame(frame)
   }
 
   /**
@@ -292,6 +297,37 @@ class AREnvironmentCaptureController
         ty: 0.0,
         tz: 0.0
     ))
+
     renderer.renderFrame()
+  }
+
+  /**
+   Saves a frame to disk.
+   */
+  func saveFrame(frame: [(UIImage, CMAttitude, CMTime)]) {
+
+    let temp = NSFileManager.defaultManager().URLsForDirectory(
+      .DocumentDirectory,
+      inDomains: .UserDomainMask
+    )[0].URLByAppendingPathComponent("Temp")
+
+    let dir = temp.URLByAppendingPathComponent("\(count)")
+
+    if count == 0 {
+      try! NSFileManager.defaultManager().removeItemAtURL(temp)
+    }
+    try! NSFileManager.defaultManager().createDirectoryAtURL(
+      dir,
+      withIntermediateDirectories: true,
+      attributes: nil
+    )
+
+    count += 1
+
+    for i in 0...frame.count - 1 {
+      let att = frame[i].1
+      let path = dir.URLByAppendingPathComponent("img_\(i)_\(att.pitch)_\(att.yaw)_\(att.roll).png")
+      UIImagePNGRepresentation(frame[i].0)!.writeToFile(path.path!, atomically: false)
+    }
   }
 }
