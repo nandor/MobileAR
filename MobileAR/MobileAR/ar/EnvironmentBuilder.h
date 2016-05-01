@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <Eigen/Eigen>
 
@@ -99,11 +100,13 @@ class EnvironmentBuilder {
     // List of ORB descriptors.
     const cv::Mat descriptors;
     // Intrinsic matrix.
-    const Eigen::Matrix<float, 3, 3> P;
+    Eigen::Matrix<float, 3, 3> P;
     // Extrinsic matrix (Camera pose).
-    const Eigen::Matrix<float, 3, 3> R;
+    Eigen::Matrix<float, 3, 3> R;
     // Quaternion rotation.
-    const Eigen::Quaternion<float> q;
+    Eigen::Quaternion<double> q;
+    // Flag to indicate if frame is optimized.
+    bool optimized;
 
     Frame(
         int index,
@@ -113,7 +116,7 @@ class EnvironmentBuilder {
         const cv::Mat &descriptors,
         const Eigen::Matrix<float, 3, 3> &P,
         const Eigen::Matrix<float, 3, 3> &R,
-        const Eigen::Quaternion<float> &q)
+        const Eigen::Quaternion<double> &q)
     : index(index)
     , level(level)
     , bgr(bgr)
@@ -122,6 +125,7 @@ class EnvironmentBuilder {
     , P(P)
     , R(R)
     , q(q)
+    , optimized(false)
     {
     }
   };
@@ -138,7 +142,7 @@ class EnvironmentBuilder {
   /**
    Graph of feature groups.
    */
-  typedef std::vector<std::pair<int, Eigen::Vector2f>> MatchGroup;
+  typedef std::vector<std::vector<std::pair<int, int>>> MatchGroup;
 
  public:
 
@@ -162,7 +166,7 @@ class EnvironmentBuilder {
   /**
    Creates the panorama, performing bundle adjustment.
    */
-  void Composite();
+  std::vector<std::pair<cv::Mat, float>> Composite();
 
  private:
   /**
@@ -172,11 +176,35 @@ class EnvironmentBuilder {
    */
   MatchGraph Match(const Frame &query, const Frame &train);
 
+  /**
+   Optimizes the graph using Bundle Adjustment.
+   */
+  void Optimize();
+
+  /**
+   Groups the matches into buckets.
+   */
+  void GroupMatches();
+
+  /**
+   Projects all images.
+   */
+  std::vector<std::pair<cv::Mat, float>>  Project();
+
+  /**
+   Projects an image onto the panorama.
+   */
+  void Project(
+     const cv::Mat &src,
+     const Eigen::Matrix<float, 3, 3> &P,
+     cv::Mat &dst,
+     cv::Mat &w);
+
  private:
   // Width of the environment map.
-  size_t width_;
+  int width_;
   // Height of the environment map.
-  size_t height_;
+  int height_;
 
   // Next available index.
   int index_;
@@ -189,6 +217,7 @@ class EnvironmentBuilder {
 
   // List of processed frames.
   std::vector<Frame> frames_;
+  std::unordered_map<int, Frame>* framesIdx_;
 
   // Distortion maps.
   cv::Mat mapX_;
@@ -201,7 +230,9 @@ class EnvironmentBuilder {
   // Graph of feature matches.
   MatchGraph graph_;
   MatchGroup groups_;
-  
+
+  // Enumeration of exposure levels.
+  std::vector<float> exposures_;
 };
 
 }
