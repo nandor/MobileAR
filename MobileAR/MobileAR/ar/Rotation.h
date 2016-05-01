@@ -81,4 +81,14 @@ Eigen::Quaternion<T> QuaternionAverage(const std::vector<Eigen::Quaternion<T>> &
   return Eigen::Quaternion<T>(q(3), q(0), q(1), q(2));
 }
 
+
+/**
+ Returns the rotation angle of a quaternion, in [-pi, pi]
+ */
+template<typename T>
+T Angle(const Eigen::Quaternion<T> &q) {
+  const T& angle = 2.0f * std::acos(q.w());
+  return (angle > T(M_PI)) ? (angle - T(2.0 * M_PI)) : angle;
+}
+
 }

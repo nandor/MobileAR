@@ -154,7 +154,8 @@ class EnvironmentBuilder {
       size_t height,
       const cv::Mat &k,
       const cv::Mat &d,
-      bool undistort = false);
+      bool undistort = false,
+      bool checkBlur = false);
 
   /**
    Adds a new frame to the panorama.
@@ -211,6 +212,8 @@ class EnvironmentBuilder {
 
   /// Flag to enable distortion correction.
   bool undistort_;
+  /// Flag to enable blur thresholding.
+  bool checkBlur_;
 
   // Blur detector.
   std::unique_ptr<BlurDetector> blurDetector_;

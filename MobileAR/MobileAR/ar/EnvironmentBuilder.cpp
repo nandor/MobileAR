@@ -18,9 +18,9 @@ constexpr size_t kMinMatches = 25;
 constexpr size_t kMinGroupSize = 3;
 constexpr float kRansacReprojError = 5.0f;
 constexpr float kMaxHammingDistance = 20.0f;
-constexpr float kMaxReprojThreshold = 200.0f;
+constexpr float kMaxReprojThreshold = 150.0f;
 constexpr float kMaxRotation = 60.0f * M_PI / 180.0f;
-constexpr float kMinPairs = 2;
+constexpr float kMinPairs = 3;
 
 }
 
@@ -81,13 +81,15 @@ EnvironmentBuilder::EnvironmentBuilder(
     size_t height,
     const cv::Mat &k,
     const cv::Mat &d,
-    bool undistort)
+    bool undistort,
+    bool checkBlur)
   : width_(static_cast<int>(width))
   , height_(static_cast<int>(height))
   , index_(0)
   , undistort_(undistort)
-  , blurDetector_(new BlurDetector(720, 1280))
-  , orbDetector_(500)
+  , checkBlur_(checkBlur)
+  , blurDetector_(checkBlur_ ? new BlurDetector(720, 1280) : nullptr)
+  , orbDetector_(1000)
   , bfMatcher_(cv::NORM_HAMMING, true)
 {
   assert(k.rows == 3 && k.cols == 3);
@@ -126,11 +128,11 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
       cv::cvtColor(bgr, gray, CV_BGR2GRAY);
 
       // Check if the image is blurry.
-      {
+      if (blurDetector_) {
         float per, blur;
         std::tie(per, blur) = (*blurDetector_)(gray);
         if (per < kMinBlurThreshold) {
-          //throw EnvironmentBuilderException(EnvironmentBuilderException::BLURRY);
+          throw EnvironmentBuilderException(EnvironmentBuilderException::BLURRY);
         }
       }
 
@@ -183,7 +185,7 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
 
   // If not enough matches are avialble, bail out.
   if (frames_.size() != 0 && global.size() <= ((frames_.size() < 5) ? 0 : kMinPairs)) {
-    throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
+    //throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
   }
 
 
@@ -196,7 +198,6 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
     }
   }
 
-
   // Increment index only if frame accepted in order to keep it continouous.
   index_ += frames.size();
 }
@@ -208,8 +209,7 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 
   // Threshold by relative orientation. Orientation is extracted from the
   // quaternion in axis-angle format and must be less than 90 degrees.
-  const float angle = 2.0f * std::acos(static_cast<float>((query.q.inverse() * train.q).w()));
-  if (angle > kMaxRotation) {
+  if (std::abs(Angle(query.q.inverse() * train.q)) > kMaxRotation) {
     return {};
   }
 
@@ -239,31 +239,33 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 
   // Threshold features by gyro reprojection error if the angle is small.
   // Large angles are not thresholded in order to avoid discarding correct loop closures.
-  const Eigen::Matrix<float, 3, 3> F = (query.P * query.R) * (train.P * train.R).inverse();
-  matches.erase(std::remove_if(
-    matches.begin(),
-    matches.end(),
-    [&query, &train, &F](const cv::DMatch &m)
-    {
-      const auto &p0 = query.keypoints[m.queryIdx].pt;
-      const auto &p1 = train.keypoints[m.trainIdx].pt;
+  {
+    const Eigen::Matrix<float, 3, 3> F = (query.P * query.R) * (train.P * train.R).inverse();
+    matches.erase(std::remove_if(
+      matches.begin(),
+      matches.end(),
+      [&query, &train, &F](const cv::DMatch &m)
+      {
+        const auto &p0 = query.keypoints[m.queryIdx].pt;
+        const auto &p1 = train.keypoints[m.trainIdx].pt;
 
-      // Project the feature point from the current image onto the other image
-      // using the rotation matrices obtained from gyroscope measurements.
-      const auto proj = F * Eigen::Matrix<float, 3, 1>(p0.x, train.bgr.rows - p0.y - 1, 1);
-      const auto px = proj.x() / proj.z();
-      const auto py = query.bgr.rows - proj.y() / proj.z() - 1;
+        // Project the feature point from the current image onto the other image
+        // using the rotation matrices obtained from gyroscope measurements.
+        const auto proj = F * Eigen::Matrix<float, 3, 1>(p0.x, train.bgr.rows - p0.y - 1, 1);
+        const auto px = proj.x() / proj.z();
+        const auto py = query.bgr.rows - proj.y() / proj.z() - 1;
 
-      // Measure the pixel distance between the points.
-      const float dist = std::sqrt((p1.x - px) * (p1.x - px) + (p1.y - py) * (p1.y - py));
+        // Measure the pixel distance between the points.
+        const float dist = std::sqrt((p1.x - px) * (p1.x - px) + (p1.y - py) * (p1.y - py));
 
-      // Ensure the distance does not exceed a certain threshold.
-      return dist > kMaxReprojThreshold;
-    }),
-    matches.end()
-  );
-  if (matches.size() < kMinMatches) {
-    return {};
+        // Ensure the distance does not exceed a certain threshold.
+        return dist > kMaxReprojThreshold;
+      }),
+      matches.end()
+    );
+    if (matches.size() < kMinMatches) {
+      return {};
+    }
   }
 
   // Robustify features by finding a homography between the two planes.
@@ -351,7 +353,7 @@ void EnvironmentBuilder::Optimize() {
   options.use_nonmonotonic_steps = true;
   options.preconditioner_type = ceres::SCHUR_JACOBI;
   options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.max_num_iterations = 5;
+  options.max_num_iterations = 10;
   options.gradient_tolerance = 1e-3;
   options.function_tolerance = 1e-3;
   options.minimizer_progress_to_stdout = true;
@@ -457,7 +459,7 @@ void EnvironmentBuilder::Project(
     for (int c = 0; c < dstC.cols; ++c) {
       // Projective texturing.
       const float phi = M_PI * (0.5f - static_cast<float>(r) / static_cast<float>(dstC.rows));
-      const float theta = static_cast<float>(c) / static_cast<float>(dstC.cols) * M_PI * 2;
+      const float theta = static_cast<float>(dstC.cols - c - 1) / static_cast<float>(dstC.cols) * M_PI * 2;
       const Eigen::Matrix<float, 3, 1> p = P * Eigen::Matrix<float, 3, 1>(
           cos(phi) * cos(theta),
           cos(phi) * sin(theta),

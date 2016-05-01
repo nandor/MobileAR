@@ -147,11 +147,13 @@ class AREnvironmentCaptureController
     )
     camera.start()
     camera.expose(x: 0.5, y: 0.5) { (_) in
-      self.builder = AREnvironmentBuilder(
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(10 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+        self.builder = AREnvironmentBuilder(
           params: self.params,
           width: AREnvironmentCaptureController.kWidth,
           height: AREnvironmentCaptureController.kHeight
-      )
+        )
+      }
     }
 
     // Timer to run the rendering/update loop.
