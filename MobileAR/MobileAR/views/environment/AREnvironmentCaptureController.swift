@@ -13,8 +13,8 @@ let kExposures = [
   //CMTimeMake(1, 1000),
   //CMTimeMake(1, 250),
   //CMTimeMake(1, 100),
-  CMTimeMake(1, 160),
-  CMTimeMake(1, 80),
+  //CMTimeMake(1, 160),
+  //CMTimeMake(1, 80),
   CMTimeMake(1, 40),
 ]
 
@@ -260,10 +260,10 @@ class AREnvironmentCaptureController
       try builder?.update(frames)
     } catch {
       switch (ARCaptureError(rawValue: (error as NSError).code)!) {
-        case .Blurry: print("Blurry")
+        case .Blurry:            print("Blurry")
         case .NotEnoughFeatures: print("NotEnoughFeatures")
         case .NoPairwiseMatches: print("NoPairwiseMatches")
-        case .NoGlobalMatches: print("NoGlobalMatches")
+        case .NoGlobalMatches:   print("NoGlobalMatches")
       }
       return
     }

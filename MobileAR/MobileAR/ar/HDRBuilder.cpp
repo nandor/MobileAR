@@ -25,7 +25,7 @@ float w(int32_t z) {
 
 }
 
-cv::Mat HDRBuilder::build(const std::vector<std::pair<cv::Mat, float>>& images) {
+cv::Mat HDRBuilder::build(const std::vector<std::pair<cv::Mat, float>>& images) const {
   
   // Retrieve resolution.
   assert(images.size() > 0);
@@ -64,7 +64,7 @@ cv::Mat HDRBuilder::build(const std::vector<std::pair<cv::Mat, float>>& images) 
 }
   
 HDRBuilder::ResponseFunction HDRBuilder::recover(
-    const std::vector<std::pair<cv::Mat, float>> &channel)
+    const std::vector<std::pair<cv::Mat, float>> &channel) const
 {
   // Make sure people don't pass in silly stuff.
   assert(channel.size() > 0);
@@ -153,7 +153,7 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   
 cv::Mat HDRBuilder::map(
     const std::vector<std::pair<cv::Mat, float>> &channel,
-    const ResponseFunction &g)
+    const ResponseFunction &g) const
 {
   
   // Make sure people don't pass in silly stuff.

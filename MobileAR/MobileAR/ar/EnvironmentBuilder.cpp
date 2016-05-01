@@ -86,14 +86,14 @@ EnvironmentBuilder::EnvironmentBuilder(
   , height_(static_cast<int>(height))
   , index_(0)
   , undistort_(undistort)
-  , blurDetector_(new BlurDetector(360, 640))
+  , blurDetector_(new BlurDetector(720, 1280))
   , orbDetector_(500)
   , bfMatcher_(cv::NORM_HAMMING, true)
 {
   assert(k.rows == 3 && k.cols == 3);
   assert(d.rows == 4 && d.cols == 1);
 
-  cv::initUndistortRectifyMap(k, d, {}, k, {640, 360}, CV_16SC2, mapX_, mapY_);
+  cv::initUndistortRectifyMap(k, d, {}, k, {1280, 720}, CV_16SC2, mapX_, mapY_);
 }
 
 
@@ -162,17 +162,14 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
     for (size_t j = i + 1; j < frames.size(); ++j) {
       matches.push_back(Match(frames[i], frames[j]));
       if (matches.rbegin()->empty()) {
-        //throw EnvironmentBuilderException(EnvironmentBuilderException::NO_PAIRWISE_MATCHES);
+        throw EnvironmentBuilderException(EnvironmentBuilderException::NO_PAIRWISE_MATCHES);
       }
     }
   }
 
   // Global matching, between the two images and all other image.
+  std::vector<MatchGraph> global;
   for (const auto &frame : frames) {
-    if (frame.level != 1) {
-      continue;
-    }
-
     // Save all the match graphs to other images.
     std::vector<MatchGraph> pairs;
     for (auto it = frames_.rbegin(); it != frames_.rend(); ++it) {
@@ -180,26 +177,25 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
       if (match.empty()) {
         continue;
       }
-      pairs.emplace_back(match);
+      global.emplace_back(match);
     }
-
-    // If not enough matches are avialble, bail out.
-    if (frames_.size() != 0 && pairs.size() <= ((frames_.size() < 5) ? 0 : kMinPairs)) {
-      throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
-    }
-
-    std::copy(pairs.begin(), pairs.end(), std::back_inserter(matches));
   }
 
-  // Add the frames to the buffer.
-  std::copy(frames.begin(), frames.end(), std::back_inserter(frames_));
+  // If not enough matches are avialble, bail out.
+  if (frames_.size() != 0 && global.size() <= ((frames_.size() < 5) ? 0 : kMinPairs)) {
+    throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
+  }
 
-  // Merge the graphs.
+
+  // Add the frame and matches to the buffer, merge graphs.
+  std::copy(frames.begin(), frames.end(), std::back_inserter(frames_));
+  std::copy(global.begin(), global.end(), std::back_inserter(matches));
   for (const auto &graph : matches) {
     for (const auto &node : graph) {
       std::copy(node.second.begin(), node.second.end(), std::back_inserter(graph_[node.first]));
     }
   }
+
 
   // Increment index only if frame accepted in order to keep it continouous.
   index_ += frames.size();
@@ -404,7 +400,6 @@ void EnvironmentBuilder::GroupMatches() {
 
 
 std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Project() {
-  size_t count = 2;
 
   // Temp struct to store weighted averages.
   struct Level {
@@ -412,7 +407,7 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Project() {
     cv::Mat weighted;
   };
   std::vector<Level> levels(exposures_.size());
-  for (size_t i = 0; i < count; ++i) {
+  for (size_t i = 0; i < exposures_.size(); ++i) {
     levels[i].weights = cv::Mat::zeros(height_, width_, CV_32FC1);
     levels[i].weighted = cv::Mat::zeros(height_, width_, CV_32FC3);
   }
@@ -429,8 +424,8 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Project() {
     );
   }
 
-  std::vector<std::pair<cv::Mat, float>> composited(exposures_.size());
-  for (size_t level = 0; level < count; ++level) {
+  std::vector<std::pair<cv::Mat, float>> composited;
+  for (size_t level = 0; level < exposures_.size(); ++level) {
     cv::Mat bgr = cv::Mat::zeros(height_, width_, CV_8UC3);
     for (int i = 0; i < height_; ++i) {
       for (int j = 0; j < width_; ++j) {
@@ -452,41 +447,42 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Project() {
 void EnvironmentBuilder::Project(
     const cv::Mat &src,
     const Eigen::Matrix<float, 3, 3> &P,
-    cv::Mat &dst,
-    cv::Mat &w)
+    cv::Mat &dstC,
+    cv::Mat &dstW)
 {
-  Eigen::Matrix4f iP = Eigen::Matrix4f::Identity();
-  iP.block<3, 3>(0, 0) = P.inverse();
+  assert(dstC.rows == dstW.rows);
+  assert(dstC.cols == dstW.cols);
 
-  for (int r = 0; r < src.rows; ++r) {
-    auto ptr = src.ptr<cv::Vec3b>(r);
-    for (int c = 0; c < src.cols; ++c) {
-      float d = std::min(
-          std::min(r, src.rows - r) / (float)src.rows,
-          std::min(c, src.cols - c) / (float)src.cols
-      ) + 1e-1;
-
-      // Cast a ray through the pixel.
-      const Eigen::Vector4f pr = iP * Eigen::Vector4f(
-          static_cast<float>(src.cols - c - 1),
-          static_cast<float>(r),
-          1.0f,
-          1.0f
+  for (int r = 0; r < dstC.rows; ++r) {
+    for (int c = 0; c < dstC.cols; ++c) {
+      // Projective texturing.
+      const float phi = M_PI * (0.5f - static_cast<float>(r) / static_cast<float>(dstC.rows));
+      const float theta = static_cast<float>(c) / static_cast<float>(dstC.cols) * M_PI * 2;
+      const Eigen::Matrix<float, 3, 1> p = P * Eigen::Matrix<float, 3, 1>(
+          cos(phi) * cos(theta),
+          cos(phi) * sin(theta),
+          sin(phi)
       );
-      const Eigen::Vector4f wr = (-pr / pr.w()).normalized();
 
-      // Project it onto the unit sphere & compute UV.
-      const auto u = static_cast<float>(atan2(wr.x(), wr.y()) / (2 * M_PI));
-      const auto v = static_cast<float>(acos(wr.z()) / M_PI);
-
-      // Compute texture coordinate, wrap around.
-      const auto fx = (static_cast<int>(dst.cols * u) + dst.cols) % dst.cols;
-      const auto fy = (static_cast<int>(dst.rows * v) + dst.rows) % dst.rows;
-      const auto px = cv::Vec3b(ptr[c][0], ptr[c][1], ptr[c][2]);
-      if (px[0] != 0 || px[1] != 0 || px[2] != 0) {
-        dst.at<cv::Vec3f>(fy, fx) += d * px;
-        w.at<float>(fy, fx) += d;
+      // Ensure the pixel is in bounds.
+      const float u = src.cols - p.x() / p.z() - 1;
+      const float v = p.y() / p.z();
+      if (u < 0 || v < 0 || u >= src.cols || v >= src.rows || p.z() >= 0.0f) {
+        continue;
       }
+
+      // Find the weights of the pixel.
+      const float w = std::min(
+          std::min(u, src.cols - u - 1) / static_cast<float>(src.cols),
+          std::min(v, src.rows - v - 1) / static_cast<float>(src.rows)
+      ) + 5e-2;
+
+      // Sample the texture.
+      cv::Vec3b pix = src.at<cv::Vec3b>(int(v), int(u));
+
+      // Add weights & weighted average.
+      dstC.at<cv::Vec3f>(r, c) += w * pix;
+      dstW.at<float>(r, c) += w;
     }
   }
 }

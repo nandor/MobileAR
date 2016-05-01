@@ -18,7 +18,7 @@ namespace ar {
 class HDRBuilder {
  public:
   
-  cv::Mat build(const std::vector<std::pair<cv::Mat, float>>& images);
+  cv::Mat build(const std::vector<std::pair<cv::Mat, float>>& images) const;
   
  private:
   /// Number of intensity levels.
@@ -56,14 +56,14 @@ class HDRBuilder {
    * Recovers the response function for a single channel.
    */
   ResponseFunction recover(
-      const std::vector<std::pair<cv::Mat, float>> &channel);
+      const std::vector<std::pair<cv::Mat, float>> &channel) const;
   
   /**
    * Maps a response function over an image.
    */
   cv::Mat map(
       const std::vector<std::pair<cv::Mat, float>> &channel,
-      const ResponseFunction &g);
+      const ResponseFunction &g) const;
   
 };
   

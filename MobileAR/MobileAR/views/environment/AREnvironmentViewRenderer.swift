@@ -23,6 +23,8 @@ class AREnvironmentRenderBuffer: ARRenderBuffer {
   private var compositeTexture: MTLTexture!
   // Light sources to be displayed.
   private var lights = ARBatchBuffer()
+  // Projection matrix of the preview.
+  private var preview: float4x4 = float4x4()
   
   required init(device: MTLDevice) {
     super.init(device: device)
