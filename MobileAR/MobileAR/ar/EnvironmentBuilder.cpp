@@ -5,6 +5,7 @@
 #include <ceres/ceres.h>
 
 #include "ar/EnvironmentBuilder.h"
+#include "ar/Jet.h"
 #include "ar/Rotation.h"
 
 
@@ -18,9 +19,14 @@ constexpr size_t kMinMatches = 25;
 constexpr size_t kMinGroupSize = 3;
 constexpr float kRansacReprojError = 5.0f;
 constexpr float kMaxHammingDistance = 20.0f;
-constexpr float kMaxReprojThreshold = 150.0f;
+constexpr float kConfidenceInterval = 0.103f;
+constexpr float kMinRotation = 15.0f * M_PI / 180.0f;
 constexpr float kMaxRotation = 60.0f * M_PI / 180.0f;
 constexpr float kMinPairs = 3;
+
+constexpr float operator"" _deg (long double deg) {
+  return deg / 180.0f * M_PI;
+}
 
 }
 
@@ -144,7 +150,9 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
         throw EnvironmentBuilderException(EnvironmentBuilderException::NOT_ENOUGH_FEATURES);
       }
 
-      // Get the rotation quaternion.
+      // Downsize images in order to compress them.
+      cv::Mat small;
+      cv::resize(bgr, small, {360, 640});
       frames.emplace_back(
           index_ + i,
           i,
@@ -185,7 +193,7 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
 
   // If not enough matches are avialble, bail out.
   if (frames_.size() != 0 && global.size() <= ((frames_.size() < 5) ? 0 : kMinPairs)) {
-    throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
+    //throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
   }
 
 
@@ -209,7 +217,8 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 
   // Threshold by relative orientation. Orientation is extracted from the
   // quaternion in axis-angle format and must be less than 90 degrees.
-  if (std::abs(Angle(query.q.inverse() * train.q)) > kMaxRotation) {
+  const float angle = std::abs(Angle(query.q.inverse() * train.q));
+  if (angle > kMaxRotation) {
     return {};
   }
 
@@ -240,26 +249,56 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
   // Threshold features by gyro reprojection error if the angle is small.
   // Large angles are not thresholded in order to avoid discarding correct loop closures.
   {
-    const Eigen::Matrix<float, 3, 3> F = (query.P * query.R) * (train.P * train.R).inverse();
+    // Jets with 3 elements, differentiating by noise.
+    typedef Jet<float, 3> J;
+    const J wx(0, 0);
+    const J wy(0, 1);
+    const J wz(0, 2);
+
+    // Noise covariance.
+    Eigen::Matrix<float, 3, 3> Q;
+    Q <<
+       4.00_deg,  0.00_deg,  0.00_deg,
+       0.00_deg,  4.00_deg,  0.00_deg,
+       0.00_deg,  0.00_deg,  8.00_deg;
+    Q = Q * std::max(kMinRotation, angle);
+
+    // Relative rotation, including noise.
+    const Eigen::Matrix<J, 3, 3> F =
+      (query.P * query.R).cast<J>() *
+      Eigen::Matrix<J, 3, 3>(
+          Eigen::AngleAxis<J>(wx, Eigen::Matrix<J, 3, 1>::UnitX()) *
+          Eigen::AngleAxis<J>(wy, Eigen::Matrix<J, 3, 1>::UnitY()) *
+          Eigen::AngleAxis<J>(wz, Eigen::Matrix<J, 3, 1>::UnitZ())
+      ) *
+      (train.P * train.R).inverse().cast<J>();
+
     matches.erase(std::remove_if(
       matches.begin(),
       matches.end(),
-      [&query, &train, &F](const cv::DMatch &m)
+      [&query, &train, &F, &Q](const cv::DMatch &m)
       {
+        // Read the matching points.
         const auto &p0 = query.keypoints[m.queryIdx].pt;
         const auto &p1 = train.keypoints[m.trainIdx].pt;
 
         // Project the feature point from the current image onto the other image
         // using the rotation matrices obtained from gyroscope measurements.
-        const auto proj = F * Eigen::Matrix<float, 3, 1>(p0.x, train.bgr.rows - p0.y - 1, 1);
+        const auto proj = F * Eigen::Matrix<J, 3, 1>(J(p0.x), J(query.bgr.rows - p0.y - 1), J(1));
         const auto px = proj.x() / proj.z();
-        const auto py = query.bgr.rows - proj.y() / proj.z() - 1;
+        const auto py = J(train.bgr.rows) - proj.y() / proj.z() - J(1);
 
-        // Measure the pixel distance between the points.
-        const float dist = std::sqrt((p1.x - px) * (p1.x - px) + (p1.y - py) * (p1.y - py));
+        // Extract the jacobian & compute the covariance.
+        Eigen::Matrix<float, 2, 3> J;
+        J <<
+          px.e(0), px.e(1), px.e(2),
+          py.e(0), py.e(1), py.e(2);
+        Eigen::Matrix<float, 2, 2> S = J * Q * J.transpose();
 
-        // Ensure the distance does not exceed a certain threshold.
-        return dist > kMaxReprojThreshold;
+        // Threshold by 95% confidence interval.
+        Eigen::Matrix<float, 2, 1> mu(px.s, py.s);
+        Eigen::Matrix<float, 2, 1> pp(p1.x, p1.y);
+        return (pp - mu).transpose() * S.inverse() * (pp - mu) > kConfidenceInterval;
       }),
       matches.end()
     );
@@ -463,9 +502,9 @@ void EnvironmentBuilder::Project(
       const float phi = M_PI * (0.5f - static_cast<float>(r) / static_cast<float>(dstC.rows));
       const float theta = static_cast<float>(dstC.cols - c - 1) / static_cast<float>(dstC.cols) * M_PI * 2;
       const Eigen::Matrix<float, 3, 1> p = P * Eigen::Matrix<float, 3, 1>(
-          cos(phi) * cos(theta),
-          cos(phi) * sin(theta),
-          sin(phi)
+          std::cos(phi) * std::cos(theta),
+          std::cos(phi) * std::sin(theta),
+          std::sin(phi)
       );
 
       // Ensure the pixel is in bounds.

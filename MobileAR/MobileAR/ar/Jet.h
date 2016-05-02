@@ -113,6 +113,20 @@ inline Jet<T, N> sqrt(const Jet<T, N> &x) {
   };
 }
   
+template<typename T, size_t N>
+inline Jet<T, N> sin(const Jet<T, N> &x) {
+  return {
+    std::sin(x.s),
+    std::cos(x.s) * x.e
+  };
+}
 
+template<typename T, size_t N>
+inline Jet<T, N> cos(const Jet<T, N> &x) {
+  return {
+    std::cos(x.s),
+    -std::sin(x.s) * x.e
+  };
+}
 
 }

@@ -10,12 +10,9 @@ import QuartzCore
  List of exposure times to capture.
  */
 let kExposures = [
-  //CMTimeMake(1, 1000),
-  //CMTimeMake(1, 250),
-  //CMTimeMake(1, 100),
-  //CMTimeMake(1, 160),
-  //CMTimeMake(1, 80),
+  CMTimeMake(1, 60),
   CMTimeMake(1, 40),
+  CMTimeMake(1, 30),
 ]
 
 
@@ -147,7 +144,7 @@ class AREnvironmentCaptureController
     )
     camera.start()
     camera.expose(x: 0.5, y: 0.5) { (_) in
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(10 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(3 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
         self.builder = AREnvironmentBuilder(
           params: self.params,
           width: AREnvironmentCaptureController.kWidth,
@@ -280,26 +277,27 @@ class AREnvironmentCaptureController
    Called when attitude is refreshed. Renders feedback to the user.
    */
   func onFrame() {
-    
+
     guard let attitude = motionManager.deviceMotion?.attitude else {
       return
     }
 
-    renderer.updatePose(ARPose(
-        projMat: float4x4(
-            aspect: Float(view.frame.size.width / view.frame.size.height),
-            fov: 45.0,
-            n: 0.1,
-            f: 100.0
-        ),
-        rx: Float(attitude.roll),
-        ry: -Float(attitude.pitch),
-        rz: -Float(attitude.yaw),
-        tx: 0.0,
-        ty: 0.0,
-        tz: 0.0
-    ))
-
+    if let _ = builder {
+      renderer.updatePose(ARPose(
+          projMat: float4x4(
+              aspect: Float(view.frame.size.width / view.frame.size.height),
+              fov: 45.0,
+              n: 0.1,
+              f: 100.0
+          ),
+          rx: Float(attitude.roll),
+          ry: -Float(attitude.pitch),
+          rz: -Float(attitude.yaw),
+          tx: 0.0,
+          ty: 0.0,
+          tz: 0.0
+      ))
+    }
     renderer.renderFrame()
   }
 

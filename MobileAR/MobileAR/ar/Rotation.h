@@ -33,12 +33,12 @@ class QuaternionParametrization : public ceres::LocalParameterization {
       return true;
     }
 
-    const double sin_delta_by_delta = sin(delta_norm) / delta_norm;
+    const double sin_delta_by_delta = std::sin(delta_norm) / delta_norm;
     Eigen::Quaterniond tmp(
-        cos(delta_norm),
-        sin_delta_by_delta*delta[0],
-        sin_delta_by_delta*delta[1],
-      sin_delta_by_delta*delta[2]
+        std::cos(delta_norm),
+        sin_delta_by_delta * delta[0],
+        sin_delta_by_delta * delta[1],
+        sin_delta_by_delta * delta[2]
     );
 
     x_plus_delta = tmp * x;
