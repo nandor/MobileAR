@@ -185,7 +185,7 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
 
   // If not enough matches are avialble, bail out.
   if (frames_.size() != 0 && global.size() <= ((frames_.size() < 5) ? 0 : kMinPairs)) {
-    //throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
+    throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
   }
 
 
@@ -288,7 +288,9 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
         robustMatches.push_back(matches[i]);
       }
     }
-    if (robustMatches.size() < kMinMatches) {
+
+    // Probabilistic match test.
+    if (robustMatches.size() < 5.9f + 0.22f * matches.size()) {
       return {};
     }
   }
