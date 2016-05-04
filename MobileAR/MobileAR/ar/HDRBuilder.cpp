@@ -86,6 +86,19 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
       do {
         r = dr(generator);
         c = dc(generator);
+
+        // Ensure that no black pixels are used.
+        bool okay = true;
+        for (const auto &img : channel) {
+          const auto &pix = img.first.at<cv::Vec3b>(static_cast<int>(r), static_cast<int>(c));
+          if (pix == cv::Vec3b(0, 0, 0) || pix == cv::Vec3b(0xFF, 0xFF, 0xFF)) {
+            okay = false;
+            break;
+          }
+        }
+        if (!okay) {
+          continue;
+        }
         coord = (r << 32ull) | c;
       } while (hashCoord.count(coord) > 0);
       
@@ -103,8 +116,8 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   // The gradient of the response curve is also fixed to 0, where the gradient is
   // defined as g''(z) = g(z - 1) - 2 * g(z) + g(z + 1). Values are weighted here
   // as well.
-  Eigen::MatrixXf A(channel.size() * pts.size() + N, N + pts.size() + 1);
-  Eigen::MatrixXf B(channel.size() * pts.size() + N, 1);
+  Eigen::MatrixXf A(channel.size() * pts.size() + N + 1, N + pts.size() + 1);
+  Eigen::MatrixXf B(channel.size() * pts.size() + N + 1, 1);
   
   // Fill in the matrix with constraints for pixel values.
   int k = 0;
@@ -128,15 +141,14 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   // Add the smoothness constraint.
   for (int z = 1; z <= N; ++z, ++k) {
     const float wz = w(z);
-    
-    A(k, z - 1) = wz;
+    A(k, z - 1) = L * wz;
     A(k, z + 0) = -2 * L * wz;
-    A(k, z + 1) = wz;
+    A(k, z + 1) = L * wz;
     B(k, 0)     = 0;
   }
   
   // Ensure all rows were filled. If not, the matrix will be singular.
-  assert(A.cols() == k && B.cols() == k);
+  assert(A.rows() == k && B.rows() == k);
   
   // Find the linear least mean squares solution using SVD.
   const Eigen::MatrixXf x = A.jacobiSvd(
@@ -145,9 +157,11 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   
   // Recover and return the response function.
   std::array<float, 256> t;
-  for (size_t i = 0; i <= N; ++i) {
+  for (size_t i = 1; i < N; ++i) {
     t[i] = x(i, 0);
   }
+  t[0] = t[0 + 1];
+  t[N] = t[N - 1];
   return { t };
 }
   
@@ -174,16 +188,28 @@ cv::Mat HDRBuilder::map(
       
       for (int c = 0; c < cols; ++c) {
         const float wz = w(iptr[c]);
-        
+
         sptr[c] += wz * (g(iptr[c]) - dt);
         wptr[c] += wz;
       }
     }
   }
+
+  // Avoid division by zero.
+  cv::Mat hdr = cv::Mat::zeros(rows, cols, CV_32FC1);
+  for (int r = 0; r < rows; ++r) {
+    const auto wptr = hdrW.ptr<float>(r);
+    const auto sptr = hdrS.ptr<float>(r);
+    auto hptr = hdr.ptr<float>(r);
+    for (int c = 0 ; c < cols; ++c) {
+      if (wptr[c] > 1e-3) {
+        hptr[c] = std::exp(sptr[c] / wptr[c]);
+      } else {
+        hptr[c] = 1.0f;
+      }
+    }
+  }
   
-  // Exponentiate the weighted averages.
-  cv::Mat hdr;
-  cv::exp(hdrS / hdrW, hdr);
   return hdr;
 }
   

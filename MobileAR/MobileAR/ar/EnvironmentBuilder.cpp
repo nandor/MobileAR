@@ -82,7 +82,7 @@ struct RayAlignCost {
     r1 = q1.inverse() * r1;
     
     // Compute the residual.
-    residual = (r0 - r1);// * a0 * a1;
+    residual = (r0 - r1) * a0 * a1;
     return true;
   }
 };

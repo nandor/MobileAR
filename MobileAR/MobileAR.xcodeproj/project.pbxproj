@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A1D62301CDA9B9D006CAA1D /* ToneMapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */; };
 		7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARMesh.metal */; };
 		7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A255CBC1CA1F277005D120A /* liblsd.a */; };
 		7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */; };
@@ -67,6 +68,8 @@
 
 /* Begin PBXFileReference section */
 		7A1B7FF71CC3E8E6002184B6 /* Jet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Jet.h; path = ar/Jet.h; sourceTree = "<group>"; };
+		7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ToneMapper.cpp; path = ar/ToneMapper.cpp; sourceTree = "<group>"; };
+		7A1D622F1CDA9B9D006CAA1D /* ToneMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ToneMapper.h; path = ar/ToneMapper.h; sourceTree = "<group>"; };
 		7A1E3BB81C5962AF00E63312 /* ARMesh.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARMesh.metal; sourceTree = "<group>"; };
 		7A255CBC1CA1F277005D120A /* liblsd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblsd.a; path = "../../../Library/Developer/Xcode/DerivedData/MobileAR-anqurysiqxcprzadtfucllnkhbrc/Build/Products/Debug-iphoneos/liblsd.a"; sourceTree = "<group>"; };
 		7A2FE8FA1C77C00F009BECCC /* Moments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Moments.h; path = ar/Moments.h; sourceTree = "<group>"; };
@@ -276,6 +279,8 @@
 				7A37CDE81CCA8A25007FA3CF /* BlurDetector.h */,
 				7AFBC3AF1CD274CB007D3127 /* EnvironmentBuilder.cpp */,
 				7AFBC3B01CD274CB007D3127 /* EnvironmentBuilder.h */,
+				7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */,
+				7A1D622F1CDA9B9D006CAA1D /* ToneMapper.h */,
 			);
 			name = ar;
 			sourceTree = "<group>";
@@ -404,6 +409,7 @@
 			files = (
 				7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */,
 				C13F845C0484D71FD4CEC8C8 /* MedianCutSampler.cpp in Sources */,
+				7A1D62301CDA9B9D006CAA1D /* ToneMapper.cpp in Sources */,
 				7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
