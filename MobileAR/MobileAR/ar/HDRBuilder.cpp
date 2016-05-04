@@ -150,17 +150,14 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   // Ensure all rows were filled. If not, the matrix will be singular.
   assert(A.rows() == k && B.rows() == k);
   
-  // Find the linear least mean squares solution using SVD.
-  const Eigen::MatrixXf x = A.jacobiSvd(
-      Eigen::ComputeThinU | Eigen::ComputeThinV
-  ).solve(B);
+  // Find the linear least mean squares solution using QR decomposition.
+  const Eigen::MatrixXf x = A.fullPivHouseholderQr().solve(B);
   
   // Recover and return the response function.
   std::array<float, N + 1> t;
   for (size_t i = 1; i < N; ++i) {
     t[i] = x(i, 0);
   }
-  std::cerr << std::endl;
   t[0] = t[0 + 1];
   t[N] = t[N - 1];
   return { t };
