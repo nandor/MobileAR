@@ -142,4 +142,8 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 }
 
 
+- (void)composite:(void(^)(NSString*, NSArray<UIImage*>*))progressBlock;
+{
+}
+
 @end

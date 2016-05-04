@@ -17,12 +17,13 @@ constexpr float kMinBlurThreshold = 0.01f;
 constexpr size_t kMinFeatures = 50;
 constexpr size_t kMinMatches = 25;
 constexpr size_t kMinGroupSize = 3;
+constexpr size_t kGapFrames = 5;
 constexpr float kRansacReprojError = 5.0f;
 constexpr float kMaxHammingDistance = 20.0f;
 constexpr float kConfidenceInterval = 0.103f;
 constexpr float kMinRotation = 15.0f * M_PI / 180.0f;
-constexpr float kMaxRotation = 60.0f * M_PI / 180.0f;
-constexpr float kMinPairs = 3;
+constexpr float kMaxRotation = 40.0f * M_PI / 180.0f;
+constexpr float kMinPairs = 2;
 
 constexpr float operator"" _deg (long double deg) {
   return deg / 180.0f * M_PI;
@@ -72,12 +73,16 @@ struct RayAlignCost {
         -T(1.0f)
     ).normalized();
 
+    // Compute weights that fall off as point departs from centre.
+    const T &a0 = r0.dot(Eigen::Matrix<T, 3, 1>::UnitZ());
+    const T &a1 = r1.dot(Eigen::Matrix<T, 3, 1>::UnitZ());
+
     // Convert them to world space.
     r0 = q0.inverse() * r0;
     r1 = q1.inverse() * r1;
     
     // Compute the residual.
-    residual = r0 - r1;
+    residual = (r0 - r1);// * a0 * a1;
     return true;
   }
 };
@@ -151,12 +156,12 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
       }
 
       // Downsize images in order to compress them.
-      cv::Mat small;
-      cv::resize(bgr, small, {360, 640});
+      cv::Mat scaled;
+      cv::resize(bgr, scaled, {640, 360});
       frames.emplace_back(
           index_ + i,
           i,
-          bgr,
+          scaled,
           keypoints,
           descriptors,
           frame.P,
@@ -193,7 +198,7 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
 
   // If not enough matches are avialble, bail out.
   if (frames_.size() != 0 && global.size() <= ((frames_.size() < 5) ? 0 : kMinPairs)) {
-    //throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
+    throw EnvironmentBuilderException(EnvironmentBuilderException::NO_GLOBAL_MATCHES);
   }
 
 
@@ -214,11 +219,15 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
     const Frame &train,
     const Frame &query)
 {
+  // If the images is at the start or end of the sequence, relax conditions for gap closing.
+  const bool gap =
+      train.index < kGapFrames * exposures_.size() ||
+      query.index < kGapFrames * exposures_.size();
 
   // Threshold by relative orientation. Orientation is extracted from the
-  // quaternion in axis-angle format and must be less than 90 degrees.
+  // quaternion in axis-angle format and must be less than 60 degrees.
   const float angle = std::abs(Angle(query.q.inverse() * train.q));
-  if (angle > kMaxRotation) {
+  if (gap ? (angle > kMaxRotation * 2.0f) : (angle > kMaxRotation)) {
     return {};
   }
 
@@ -257,26 +266,35 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 
     // Noise covariance.
     Eigen::Matrix<float, 3, 3> Q;
-    Q <<
-       4.00_deg,  0.00_deg,  0.00_deg,
-       0.00_deg,  4.00_deg,  0.00_deg,
-       0.00_deg,  0.00_deg,  8.00_deg;
-    Q = Q * std::max(kMinRotation, angle);
+    if (gap) {
+      Q <<
+         6.00_deg,  0.00_deg,  0.00_deg,
+         0.00_deg,  6.00_deg,  0.00_deg,
+         0.00_deg,  0.00_deg, 20.00_deg;
+    } else {
+      Q <<
+         6.00_deg,  0.00_deg,  0.00_deg,
+         0.00_deg,  6.00_deg,  0.00_deg,
+         0.00_deg,  0.00_deg, 15.00_deg;
+      Q = Q * std::max(kMinRotation, angle);
+    }
 
     // Relative rotation, including noise.
-    const Eigen::Matrix<J, 3, 3> F =
-      (query.P * query.R).cast<J>() *
+    const Eigen::Matrix<J, 3, 3> P = query.P.cast<J>();
+    const Eigen::Matrix<J, 3, 3> iP = query.P.inverse().cast<J>();
+    const Eigen::Matrix<J, 3, 3> E =
+      query.R.cast<J>() *
       Eigen::Matrix<J, 3, 3>(
           Eigen::AngleAxis<J>(wx, Eigen::Matrix<J, 3, 1>::UnitX()) *
           Eigen::AngleAxis<J>(wy, Eigen::Matrix<J, 3, 1>::UnitY()) *
           Eigen::AngleAxis<J>(wz, Eigen::Matrix<J, 3, 1>::UnitZ())
       ) *
-      (train.P * train.R).inverse().cast<J>();
+      train.R.inverse().cast<J>();
 
     matches.erase(std::remove_if(
       matches.begin(),
       matches.end(),
-      [&query, &train, &F, &Q](const cv::DMatch &m)
+      [&query, &train, &E, &Q, &P, &iP](const cv::DMatch &m)
       {
         // Read the matching points.
         const auto &p0 = query.keypoints[m.queryIdx].pt;
@@ -284,9 +302,17 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 
         // Project the feature point from the current image onto the other image
         // using the rotation matrices obtained from gyroscope measurements.
-        const auto proj = F * Eigen::Matrix<J, 3, 1>(J(p0.x), J(query.bgr.rows - p0.y - 1), J(1));
+        const auto x = iP * Eigen::Matrix<J, 3, 1>(
+            J(p0.x),
+            J(query.bgr.rows - p0.y - 1),
+            J(1)
+        );
+        const auto proj = P * E * x.normalized();
         const auto px = proj.x() / proj.z();
         const auto py = J(train.bgr.rows) - proj.y() / proj.z() - J(1);
+        if (proj.z() < J(0)) {
+          return true;
+        }
 
         // Extract the jacobian & compute the covariance.
         Eigen::Matrix<float, 2, 3> J;
@@ -394,7 +420,7 @@ void EnvironmentBuilder::Optimize() {
   options.use_nonmonotonic_steps = true;
   options.preconditioner_type = ceres::SCHUR_JACOBI;
   options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.max_num_iterations = 10;
+  options.max_num_iterations = 30;
   options.gradient_tolerance = 1e-3;
   options.function_tolerance = 1e-3;
   options.minimizer_progress_to_stdout = true;
@@ -459,9 +485,15 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Project() {
     if (!frame.optimized) {
       continue;
     }
+
+    // Adjust the projection matrix.
+    Eigen::Matrix<float, 3, 3> proj = frame.P * 0.5f;
+    proj(2, 2) = 1.0f;
+
+    // Project each frame onto the screen.
     Project(
         frame.bgr,
-        frame.P * frame.q.toRotationMatrix().cast<float>(),
+        proj * frame.q.toRotationMatrix().cast<float>(),
         levels[frame.level].weighted,
         levels[frame.level].weights
     );
@@ -496,6 +528,7 @@ void EnvironmentBuilder::Project(
   assert(dstC.rows == dstW.rows);
   assert(dstC.cols == dstW.cols);
 
+  // Adjust the projection matrix.
   for (int r = 0; r < dstC.rows; ++r) {
     for (int c = 0; c < dstC.cols; ++c) {
       // Projective texturing.

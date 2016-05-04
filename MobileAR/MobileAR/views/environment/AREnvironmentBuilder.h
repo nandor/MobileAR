@@ -45,4 +45,9 @@
 */
 - (BOOL)update:(NSArray<ARHDRFrame*>*)frames error:(NSError**)error;
 
+/**
+ Composites the panorama.
+ */
+- (void)composite:(void(^)(NSString*, NSArray<UIImage*>*))progressBlock;
+
 @end

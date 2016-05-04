@@ -545,6 +545,7 @@
 					/usr/local/Frameworks,
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/eigen3,
 					"/Users/nandor/Projects/ceres-solver/build/config",
@@ -563,13 +564,15 @@
 					/Users/nandor/Projects/ofxiOSBoost/libs/boost/ios,
 					"/opt/libjpeg-turbo/lib",
 				);
+				LLVM_LTO = YES;
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
+				MTL_OPTIMIZATION_LEVEL = 3;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
@@ -588,6 +591,7 @@
 					/usr/local/Frameworks,
 				);
 				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/eigen3,
 					"/Users/nandor/Projects/ceres-solver/build/config",
@@ -606,12 +610,15 @@
 					/Users/nandor/Projects/ofxiOSBoost/libs/boost/ios,
 					"/opt/libjpeg-turbo/lib",
 				);
+				LLVM_LTO = YES;
 				MTL_FAST_MATH = YES;
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
+				MTL_OPTIMIZATION_LEVEL = 3;
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;

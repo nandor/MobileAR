@@ -10,9 +10,9 @@ import QuartzCore
  List of exposure times to capture.
  */
 let kExposures = [
-  CMTimeMake(1, 60),
+  CMTimeMake(1, 80),
   CMTimeMake(1, 40),
-  CMTimeMake(1, 30),
+  CMTimeMake(1, 20),
 ]
 
 
@@ -35,8 +35,6 @@ class AREnvironmentCaptureController
     , CLLocationManagerDelegate
     , ARHDRCameraDelegate
 {
-  // Set of exposure times to capture.
-
   // Location manager used to sort environments by distance.
   private var locationManager : CLLocationManager!
 
@@ -207,19 +205,17 @@ class AREnvironmentCaptureController
         }
       }
 
-      // Create an environment object and save it.
-      let env = AREnvironment(
-          path: directory.URLByAppendingPathComponent(NSUUID().UUIDString),
-          name: name,
-          location: self.location
-      )
-      env.save()
+      // Creat the panorama.
+      self.builder?.composite() { _, images in
 
-      // Set environment as current.
-      NSUserDefaults().setObject(env.path.path!, forKey: "environment")
-
-      // Go back to the previous controller.
-      self.navigationController?.popViewControllerAnimated(true)
+        if let images = images {
+          self.saveEnvironment(
+              name,
+              path: directory.URLByAppendingPathComponent(NSUUID().UUIDString),
+              images: images
+          )
+        }
+      }
     })
 
     alert.addAction(UIAlertAction(
@@ -299,6 +295,26 @@ class AREnvironmentCaptureController
       ))
     }
     renderer.renderFrame()
+  }
+
+  /**
+   Saves a panorama to disk.
+   */
+  func saveEnvironment(name: String, path: NSURL, images: [UIImage]) {
+    // Create an environment object and save it.
+    let env = AREnvironment(
+      path: path,
+      name: name,
+      location: location
+    )
+    env.save()
+
+    // Set environment as current.
+    NSUserDefaults().setObject(env.path.path!, forKey: "environment")
+
+    // Go back to the previous controller.
+    self.navigationController?.popViewControllerAnimated(true)
+
   }
 
   /**

@@ -20,7 +20,7 @@ namespace {
  * Weighting function.
  */
 float w(int32_t z) {
-  return (z > 127.0f ? 255.0f - z : z) / 127.0f;
+  return (z > 128.0f ? 256.0f - z : z) / 128.0f;
 }
 
 }

@@ -5,23 +5,32 @@
 import Foundation
 import CoreLocation
 
+/// Number of levels to sample lights.
+let kSamplingLevels: Int = 5
+
+
+/**
+ Environment load errors.
+ */
 enum AREnvironmentError : ErrorType {
   case MalformedData
   case MissingEnvironmentMap
 }
 
-class AREnvironment {
-  let path: NSURL
 
+/**
+ Class storing environment information & light sources.
+ */
+class AREnvironment {
+  // Path where the environment is stored.
+  let path: NSURL
   // Name of the environment, provided by user.
   var name: String!
-
-  // Environment map.
-  var map: UIImage!
-
   // GPS coordinate where the image was taken.
   var location: CLLocation?
 
+  // Environment map.
+  var map: UIImage!
   // List of light sources.
   var lights: [ARLight] = []
 
@@ -84,8 +93,8 @@ class AREnvironment {
     }
     self.map = UIImage(contentsOfFile: environmentPath)
 
-    // TODO(nandor): Sample only when environment is saved.
-    self.lights = ARLightProbeSampler.sampleVarianceCut(map, levels: 5)
+    // Sample so we can adjust levels.
+    self.lights = ARLightProbeSampler.sampleVarianceCut(map, levels: kSamplingLevels)
   }
 
   /**
