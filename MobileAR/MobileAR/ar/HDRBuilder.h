@@ -24,7 +24,7 @@ class HDRBuilder {
   /// Number of intensity levels.
   static constexpr size_t N = 0xFF;
   /// Number of points sampled.
-  static constexpr size_t M = 256;
+  static constexpr size_t M = 512;
   /// Smoothness constraint.
   static constexpr float L = 50.0f;
   

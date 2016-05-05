@@ -31,35 +31,34 @@ cv::Mat HDRBuilder::build(const std::vector<std::pair<cv::Mat, float>>& images) 
   assert(images.size() > 0);
   int rows = images[0].first.rows;
   int cols = images[0].first.cols;
+  int chan = images[0].first.channels();
   
   // Split the input images into their R, G and B channels.
-  std::vector<std::pair<cv::Mat, float>> b, g, r;
+  std::vector<std::vector<std::pair<cv::Mat, float>>> split(chan);
   for (const auto &img : images) {
-  
+
     // Make sure all images are of the same size.
-    if (rows != img.first.rows || cols != img.first.cols) {
+    if (rows != img.first.rows || cols != img.first.cols || chan != img.first.channels()) {
       throw std::runtime_error("All exposures must be of the same size.");
     }
     
     // Split.
     std::vector<cv::Mat> channels;
     cv::split(img.first, channels);
-    if (channels.size() != 3 && channels.size() != 4) {
-      throw std::runtime_error("BGR or BGRA images expected.");
+    for (size_t i = 0; i < chan; ++i) {
+      split[i].emplace_back(channels[i], img.second);
     }
-    b.emplace_back(channels[0], img.second);
-    g.emplace_back(channels[1], img.second);
-    r.emplace_back(channels[2], img.second);
   }
   
   // Recover all three channels separately.
-  const auto cb = map(b, recover(b));
-  const auto cg = map(g, recover(g));
-  const auto cr = map(r, recover(r));
+  std::vector<cv::Mat> merged;
+  for (const auto &channel : split) {
+    merged.emplace_back(map(channel, recover(channel)));
+  }
   
   // Merge the channels for the final image.
   cv::Mat hdr;
-  cv::merge(std::vector<cv::Mat>{cb, cg, cr}, hdr);
+  cv::merge(merged, hdr);
   return hdr;
 }
   
@@ -74,13 +73,39 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   std::vector<std::pair<uint32_t, uint32_t>> pts;
   {
     // Random number generator for uniform x and y coordinates.
-    std::mt19937 generator(0xCAFEBABE);
+    std::mt19937 generator(0);
     std::uniform_int_distribution<> dr(0, channel[0].first.rows - 1);
     std::uniform_int_distribution<> dc(0, channel[0].first.cols - 1);
+
+    // Ensure no coordinate is sampled twice.
+    std::unordered_set<uint64_t> hashCoord;
+
+    // First, find a point for each graylevel.
+    std::array<std::pair<int, int>, N + 1> points;
+    for (auto &point : points) {
+      point.first = point.second = -1;
+    }
+    for (const auto &img : channel) {
+      const auto &mat = img.first;
+      for (int r = 0; r < mat.rows; ++r) {
+        for (int c = 0; c < mat.cols; ++c) {
+          const auto &pix = mat.at<uint8_t>(r, c);
+          points[pix] = { r, c };
+        }
+      }
+    }
+    for (int i = points.size() - 1; i >= 0; --i) {
+      const int r = points[i].first;
+      const int c = points[i].second;
+      if (r < 0 || c < 0) {
+        continue;
+      }
+      hashCoord.insert((static_cast<uint64_t>(r) << 32ull) | static_cast<uint64_t>(c));
+      pts.emplace_back(points[i]);
+    }
     
     // Sample points, ensuring they are distinct.
-    std::unordered_set<uint64_t> hashCoord;
-    for (size_t i = 0; i < M; ++i) {
+    while (pts.size() < M) {
       uint64_t coord = 0, r, c;
       do {
         r = dr(generator);
@@ -90,7 +115,7 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
         bool okay = true;
         for (const auto &img : channel) {
           const auto &pix = img.first.at<uint8_t>(static_cast<int>(r), static_cast<int>(c));
-          if (pix == 0 || pix == 0xFF) {
+          if (pix == 0) {
             okay = false;
             break;
           }
@@ -116,8 +141,8 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
   // The gradient of the response curve is also fixed to 0, where the gradient is
   // defined as g''(z) = g(z - 1) - 2 * g(z) + g(z + 1). Values are weighted here
   // as well.
-  Eigen::MatrixXf A(channel.size() * pts.size() + N, N + pts.size() + 1);
-  Eigen::MatrixXf B(channel.size() * pts.size() + N, 1);
+  Eigen::MatrixXf A = Eigen::MatrixXf::Zero(channel.size() * pts.size() + N, N + pts.size() + 1);
+  Eigen::MatrixXf B = Eigen::MatrixXf::Zero(channel.size() * pts.size() + N, 1);
   
   // Fill in the matrix with constraints for pixel values.
   int k = 0;
@@ -134,9 +159,9 @@ HDRBuilder::ResponseFunction HDRBuilder::recover(
       B(k, 0)         = wz * dt;
     }
   }
-  
+
   // Fix the middle of the curve to 0.
-  A(k++, 127) = 0;
+  A(k++, 127) = 1;
   
   // Add the smoothness constraint.
   for (int z = 1; z < N; ++k, ++z) {
