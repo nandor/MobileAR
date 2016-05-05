@@ -147,6 +147,20 @@ class EnvironmentBuilder {
  public:
 
   /**
+   Enumeration of Bundle Adjustment methods.
+   */
+  enum class BAMethod {
+    /// Optimize reprojection errors.
+    REPROJ,
+    /// Optimize distances between rays.
+    RAYS,
+    /// Optimize the projection of 3D points.
+    POINTS,
+    /// Optimize unit vectors and poses.
+    VECTORS
+  };
+
+  /**
    Initializes the environment builder.
    */
   EnvironmentBuilder(
@@ -154,6 +168,7 @@ class EnvironmentBuilder {
       size_t height,
       const cv::Mat &k,
       const cv::Mat &d,
+      BAMethod method = BAMethod::RAYS,
       bool undistort = false,
       bool checkBlur = false);
 
@@ -177,12 +192,6 @@ class EnvironmentBuilder {
    @param reproj True if points are to be thresholded by gyro rotation.
    */
   MatchGraph Match(const Frame &query, const Frame &train);
-
-  /**
-   Optimizes the graph using Bundle Adjustment.
-   */
-  void Optimize();
-
   /**
    Groups the matches into buckets.
    */
@@ -202,6 +211,18 @@ class EnvironmentBuilder {
      cv::Mat &dst,
      cv::Mat &w);
 
+  /**
+   Computes an estimated position for each point of a group.
+   */
+  std::vector<Eigen::Matrix<double, 3, 1>> EstimatePoints();
+
+  // Implementation of BA methods.
+  void OptimizeRays();
+  void OptimizePoints();
+  void OptimizeVectors();
+  void OptimizeReproj();
+  
+
  private:
   // Width of the environment map.
   int width_;
@@ -212,9 +233,11 @@ class EnvironmentBuilder {
   int index_;
 
   /// Flag to enable distortion correction.
-  bool undistort_;
+  const bool undistort_;
   /// Flag to enable blur thresholding.
-  bool checkBlur_;
+  const bool checkBlur_;
+  /// Bundle adjustment method to use.
+  const BAMethod method_;
 
   // Blur detector.
   std::unique_ptr<BlurDetector> blurDetector_;

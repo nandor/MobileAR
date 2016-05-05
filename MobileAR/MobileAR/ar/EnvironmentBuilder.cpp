@@ -31,6 +31,9 @@ constexpr float operator"" _deg (long double deg) {
 
 }
 
+/**
+ Cost function to align rays.
+ */
 struct RayAlignCost {
   /// First observed point.
   Eigen::Matrix<double, 2, 1> y0;
@@ -87,11 +90,107 @@ struct RayAlignCost {
   }
 };
 
+
+/**
+ Cost function to optimize both points & poses.
+ */
+struct PointAlignCost {
+  /// Observed point.
+  const Eigen::Matrix<double, 2, 1> y;
+  /// Projection matrix.
+  const Eigen::Matrix<double, 3, 3> P;
+
+  PointAlignCost(
+     const Eigen::Matrix<double, 2, 1> &y,
+     const Eigen::Matrix<double, 3, 3> &P)
+    : y(y)
+    , P(P)
+  {
+  }
+
+  template<typename T>
+  bool operator() (const T *const pq, const T *const px, T *pr) const {
+    // Map the parameters.
+    Eigen::Map<const Eigen::Quaternion<T>> q(pq);
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> x(px);
+    Eigen::Map<Eigen::Matrix<T, 2, 1>> residual(pr);
+
+    // Compute the reprojection error.
+    const Eigen::Matrix<T, 3, 1> w = q.toRotationMatrix() * x;
+    const Eigen::Matrix<T, 3, 1> proj = P.cast<T>() * Eigen::Matrix<T, 3, 1>(+w(0), -w(1), -w(2));
+    
+    // Compute the residual.
+    if (proj(2) > T(0.0)) {
+      residual(0) = T(proj(0)) / proj(2) - y(0);
+      residual(1) = T(proj(1)) / proj(2) - y(1);
+    } else {
+      residual(0) = T(0.0);
+      residual(1) = T(0.0);
+    }
+    return true;
+  }
+};
+
+
+/**
+ Cost function to optimize for reprojection error.
+ */
+struct ReprojectionCost {
+  /// First observed point.
+  Eigen::Matrix<double, 2, 1> y0;
+  /// Second observed point.
+  Eigen::Matrix<double, 2, 1> y1;
+  /// First projection matrix.
+  Eigen::Matrix<double, 3, 3> P0;
+  /// Second projection matrix.
+  Eigen::Matrix<double, 3, 3> P1;
+
+  ReprojectionCost(
+     const Eigen::Matrix<double, 2, 1> &y0,
+     const Eigen::Matrix<double, 2, 1> &y1,
+     const Eigen::Matrix<double, 3, 3> &P0,
+     const Eigen::Matrix<double, 3, 3> &P1)
+    : y0(y0)
+    , y1(y1)
+    , P0(P0)
+    , P1(P1)
+  {
+  }
+
+  template<typename T>
+  bool operator() (const T *const pq0, const T *const pq1, T *pr) const {
+
+    // Map the parameters.
+    Eigen::Map<const Eigen::Quaternion<T>> q0(pq0);
+    Eigen::Map<const Eigen::Quaternion<T>> q1(pq1);
+    Eigen::Map<Eigen::Matrix<T, 3, 1>> residual(pr);
+
+    // Unproject a ray from the first point.
+    const Eigen::Matrix<T, 3, 1> p0 = Eigen::Matrix<T, 3, 1>(
+       +T((y0(0) - P0(0, 2)) / P0(0, 0)),
+       -T((y0(1) - P0(1, 2)) / P0(1, 1)),
+       -T(1)
+    ).normalized();
+
+    // Project it onto the second image.
+    const Eigen::Matrix<T, 3, 1> p1 =
+        P1.cast<T>() *
+        (q1 * q0.inverse()).toRotationMatrix() *
+        p0;
+
+    // Compute the reprojection error.
+    residual(0) = p1(0) / p1(2) - y1(0);
+    residual(1) = p1(1) / p1(2) - y1(1);
+    return true;
+  }
+};
+
 EnvironmentBuilder::EnvironmentBuilder(
     size_t width,
     size_t height,
     const cv::Mat &k,
     const cv::Mat &d,
+    BAMethod method,
     bool undistort,
     bool checkBlur)
   : width_(static_cast<int>(width))
@@ -99,6 +198,7 @@ EnvironmentBuilder::EnvironmentBuilder(
   , index_(0)
   , undistort_(undistort)
   , checkBlur_(checkBlur)
+  , method_(method)
   , blurDetector_(checkBlur_ ? new BlurDetector(720, 1280) : nullptr)
   , orbDetector_(1000)
   , bfMatcher_(cv::NORM_HAMMING, true)
@@ -377,7 +477,12 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Composite(
   onProgress("Match Graph Optimization");
 
   // Global Bundle Adjustment.
-  Optimize();
+  switch (method_) {
+    case BAMethod::RAYS:    OptimizeRays();    break;
+    case BAMethod::POINTS:  OptimizePoints();  break;
+    case BAMethod::VECTORS: OptimizeVectors(); break;
+    case BAMethod::REPROJ:  OptimizeReproj();  break;
+  }
   onProgress("Bundle Adjustment");
 
   // Final compositing.
@@ -388,7 +493,7 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Composite(
 }
 
 
-void EnvironmentBuilder::Optimize() {
+void EnvironmentBuilder::OptimizeRays() {
 
   // Create the residual blocks based on pairwise matches.
   ceres::Problem problem;
@@ -438,6 +543,184 @@ void EnvironmentBuilder::Optimize() {
   options.minimizer_progress_to_stdout = true;
   ceres::Solve(options, &problem, &summary);
   std::cerr << summary.FullReport() << std::endl;
+}
+
+void EnvironmentBuilder::OptimizePoints() {
+
+  // Estimate point locations.
+  auto xs = EstimatePoints();
+
+  // Create the residual blocks based on reprojection errors.
+  ceres::Problem problem;
+  for (size_t i = 0; i < groups_.size(); ++i) {
+    for (const auto &node : groups_[i]) {
+      // Mark the frame as optimized.
+      frames_[node.first].optimized = true;
+
+      // Creat the residual.
+      const auto &pt = frames_[node.first].keypoints[node.second].pt;
+      problem.AddResidualBlock(
+          new ceres::AutoDiffCostFunction<PointAlignCost, 2, 4, 3>(
+              new PointAlignCost({pt.x, pt.y}, frames_[node.first].P.cast<double>())
+          ),
+          nullptr,
+          frames_[node.first].q.coeffs().data(),
+          xs[i].data()
+      );
+    }
+  }
+
+  // Set up the quaternion parametrization.
+  auto *qsParam = new QuaternionParametrization();
+  for (auto &frame : frames_) {
+    if (frame.optimized) {
+      problem.SetParameterization(frame.q.coeffs().data(), qsParam);
+    }
+  }
+    
+  // Run the solver!
+  ceres::Solver::Summary summary;
+  ceres::Solver::Options options;
+  options.use_nonmonotonic_steps = true;
+  options.use_inner_iterations = true;
+  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.max_num_iterations = 100;
+  options.gradient_tolerance = 1e-3;
+  options.function_tolerance = 1e-3;
+  options.minimizer_progress_to_stdout = true;
+  ceres::Solve(options, &problem, &summary);
+  std::cerr << summary.FullReport() << std::endl;
+}
+
+
+void EnvironmentBuilder::OptimizeVectors() {
+
+  // Estimate point locations.
+  auto xs = EstimatePoints();
+
+  // Create the residual blocks based on reprojection errors.
+  ceres::Problem problem;
+  for (size_t i = 0; i < groups_.size(); ++i) {
+    for (const auto &node : groups_[i]) {
+      // Mark the frame as optimized.
+      frames_[node.first].optimized = true;
+
+      // Creat the residual.
+      const auto &pt = frames_[node.first].keypoints[node.second].pt;
+      problem.AddResidualBlock(
+          new ceres::AutoDiffCostFunction<PointAlignCost, 2, 4, 3>(
+              new PointAlignCost({pt.x, pt.y}, frames_[node.first].P.cast<double>())
+          ),
+          nullptr,
+          frames_[node.first].q.coeffs().data(),
+          xs[i].data()
+      );
+    }
+  }
+
+  // Set up the quaternion parametrization.
+  auto *qsParam = new QuaternionParametrization();
+  for (auto &frame : frames_) {
+    if (frame.optimized) {
+      problem.SetParameterization(frame.q.coeffs().data(), qsParam);
+    }
+  }
+
+  // Set up the unit vector parametrization.
+  auto *xsParam = new UnitVectorParametrization();
+  for (auto &x : xs) {
+    problem.SetParameterization(x.data(), xsParam);
+  }
+
+  // Run the solver!
+  ceres::Solver::Summary summary;
+  ceres::Solver::Options options;
+  options.use_nonmonotonic_steps = true;
+  options.use_inner_iterations = true;
+  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.max_num_iterations = 100;
+  options.gradient_tolerance = 1e-3;
+  options.function_tolerance = 1e-3;
+  options.minimizer_progress_to_stdout = true;
+  ceres::Solve(options, &problem, &summary);
+  std::cerr << summary.FullReport() << std::endl;
+}
+
+void EnvironmentBuilder::OptimizeReproj() {
+
+  // Create the residual blocks based on pairwise matches.
+  ceres::Problem problem;
+  for (size_t i = 0; i < groups_.size(); ++i) {
+    for (const auto &n0 : groups_[i]) {
+      for (const auto &n1 : groups_[i]) {
+        if (n0.first == n1.first) {
+          continue;
+        }
+        frames_[n0.first].optimized = frames_[n1.first].optimized = true;
+
+        const auto &pt0 = frames_[n0.first].keypoints[n0.second].pt;
+        const auto &pt1 = frames_[n1.first].keypoints[n1.second].pt;
+
+        problem.AddResidualBlock(
+            new ceres::AutoDiffCostFunction<RayAlignCost, 3, 4, 4>(new RayAlignCost(
+                Eigen::Matrix<double, 2, 1>(pt0.x, pt0.y),
+                Eigen::Matrix<double, 2, 1>(pt1.x, pt1.y),
+                frames_[n0.first].P.cast<double>(),
+                frames_[n1.first].P.cast<double>()
+            )),
+            nullptr,
+            frames_[n0.first].q.coeffs().data(),
+            frames_[n1.first].q.coeffs().data()
+        );
+      }
+    }
+  }
+
+  // Set up the quaternion parametrization.
+  auto *qsParam = new QuaternionParametrization();
+  for (auto &frame : frames_) {
+    if (frame.optimized) {
+      problem.SetParameterization(frame.q.coeffs().data(), qsParam);
+    }
+  }
+  
+  // Run the solver!
+  ceres::Solver::Summary summary;
+  ceres::Solver::Options options;
+  options.use_nonmonotonic_steps = true;
+  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.max_num_iterations = 30;
+  options.gradient_tolerance = 1e-3;
+  options.function_tolerance = 1e-3;
+  options.minimizer_progress_to_stdout = true;
+  ceres::Solve(options, &problem, &summary);
+  std::cerr << summary.FullReport() << std::endl;
+}
+
+std::vector<Eigen::Matrix<double, 3, 1>> EnvironmentBuilder::EstimatePoints() {
+
+  // Create the vectors. Initialze each point to the average of points projected
+  // through the 2D image points, normalized to unit length.
+  std::vector<Eigen::Matrix<double, 3, 1>> xs(groups_.size(), Eigen::Vector3d(0, 0, 0));
+  for (size_t i = 0; i < groups_.size(); ++i) {
+    Eigen::Matrix<double, 3, 1> &x = xs[i];
+    for (const auto &node : groups_[i]) {
+      // Read the pose & point.
+      const auto R = frames_[node.first].q.inverse().toRotationMatrix();
+      const auto P = frames_[node.first].P.inverse();
+      const auto &pt = frames_[node.first].keypoints[node.second].pt;
+
+      // Project to world space & normalize.
+      const Eigen::Vector3f p = P * Eigen::Vector3f(pt.x, pt.y, 1.0f);
+      x += R * Eigen::Vector3d(p(0), -p(1), -p(2)).normalized();
+    }
+    x.normalize();
+  }
+
+  return xs;
 }
 
 void EnvironmentBuilder::GroupMatches() {
