@@ -46,14 +46,14 @@ struct Region {
 /**
  Computes the nth power of x in a rather funny way.
  */
-template<size_t N> inline int64_t power(int x) {
+template<size_t N> inline double power(int x) {
   const auto half = power<N >> 1>(x);
   const auto half2 = half * half;
   return (N & 1) ? (half2 * x) : half2;
 }
-template<> inline int64_t power<0>(int x) { return 1; }
-template<> inline int64_t power<1>(int x) { return x; }
-template<> inline int64_t power<2>(int x) { return x * x; }
+template<> inline double power<0>(int x) { return 1; }
+template<> inline double power<1>(int x) { return x; }
+template<> inline double power<2>(int x) { return x * x; }
   
 
 /**
@@ -77,17 +77,17 @@ class Moments {
     // First row of the SST. Copy from image.
     {
       const auto pow = power<I>(0);
-      const auto row = image.ptr<uint8_t>(0);
+      const auto row = image.ptr<float>(0);
       auto sum = 0ll;
       for (int x = 0; x < image.cols; ++x, ++id1) {
-        sum += pow * power<J>(x) * static_cast<int64_t>(row[x]);
+        sum += pow * power<J>(x) * static_cast<double>(row[x]);
         s_[id1] = sum;
       }
     }
 
     // Keep indices of current and last rows.
     for (int y = 1; y < image.rows; ++y) {
-      const auto row = image.ptr<uint8_t>(y);
+      const auto row = image.ptr<float>(y);
       
       // Keep a running sum of current row.
       const auto pow = power<I>(y);
@@ -95,7 +95,7 @@ class Moments {
       
       // Increment running sum and sum with previous row.
       for (int x = 0; x < image.cols; ++x, ++id0, ++id1) {
-        sum += pow * power<J>(x) * static_cast<int64_t>(row[x]);
+        sum += pow * power<J>(x) * static_cast<double>(row[x]);
         s_[id1] = s_[id0] + sum;
       }
     }
@@ -110,7 +110,7 @@ class Moments {
   /**
    Returns the sum in a region.
    */
-  inline int64_t operator() (const Region& r) const {
+  inline double operator() (const Region& r) const {
     assert(r.x1 < cols && r.y1 < rows);
     
     const auto y10 = r.y1, y01 = r.y0 - 1;
@@ -129,7 +129,7 @@ class Moments {
   /// Number of cols.
   int cols;
   /// R x C partial sums.
-  std::vector<int64_t> s_;
+  std::vector<double> s_;
 };
 
 }

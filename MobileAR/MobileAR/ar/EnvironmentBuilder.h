@@ -117,15 +117,15 @@ class EnvironmentBuilder {
         const Eigen::Matrix<float, 3, 3> &P,
         const Eigen::Matrix<float, 3, 3> &R,
         const Eigen::Quaternion<double> &q)
-    : index(index)
-    , level(level)
-    , bgr(bgr)
-    , keypoints(keypoints)
-    , descriptors(descriptors)
-    , P(P)
-    , R(R)
-    , q(q)
-    , optimized(false)
+      : index(index)
+      , level(level)
+      , bgr(bgr)
+      , keypoints(keypoints)
+      , descriptors(descriptors)
+      , P(P)
+      , R(R)
+      , q(q)
+      , optimized(false)
     {
     }
   };

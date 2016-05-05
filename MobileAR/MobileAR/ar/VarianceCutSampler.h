@@ -28,7 +28,7 @@ class VarianceCutSampler : public LightProbeSampler{
   /**
    Computes variance in a region.
    */
-  int64_t variance(const Region &region);
+  double variance(const Region &region);
   
  private:
   /// Moments.

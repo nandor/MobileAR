@@ -32,7 +32,7 @@ void VarianceCutSampler::split(const Region &region, int depth) {
   if (width(region) < height(region)) {
     // Try a cut along Y.
     auto bestY = region.y0;
-    auto bestVarY = std::numeric_limits<int64_t>::max();
+    auto bestVarY = std::numeric_limits<double>::max();
     {
       for (int y = region.y0; y < region.y1; ++y) {
         const Region r0(region.y0, region.x0, y + 0, region.x1);
@@ -50,7 +50,7 @@ void VarianceCutSampler::split(const Region &region, int depth) {
   } else {
     // Try a cut along X.
     auto bestX = region.x0;
-    auto bestVarX = std::numeric_limits<int64_t>::max();
+    auto bestVarX = std::numeric_limits<double>::max();
     {
       for (int x = region.x0; x < region.x1; ++x) {
         const Region r0(region.y0, region.x0, region.y1, x + 0);
@@ -70,7 +70,7 @@ void VarianceCutSampler::split(const Region &region, int depth) {
 }
   
 
-int64_t VarianceCutSampler::variance(const Region &r) {
+double VarianceCutSampler::variance(const Region &r) {
   
   const auto m00 = m00_(r);
   if (m00 == 0) {

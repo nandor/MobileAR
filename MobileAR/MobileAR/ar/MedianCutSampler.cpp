@@ -29,7 +29,7 @@ void MedianCutSampler::split(const Region &region, int depth) {
   if (width(region) < height(region)) {
     // Try best cut along Y.
     auto bestY = region.y0;
-    auto bestDiffY = std::numeric_limits<int64_t>::max();
+    auto bestDiffY = std::numeric_limits<double>::max();
     {
 
       for (int y = region.y0; y < region.y1; ++y) {
@@ -48,7 +48,7 @@ void MedianCutSampler::split(const Region &region, int depth) {
   } else {
     // Try best cut along X.
     auto bestX = region.x0;
-    auto bestDiffX = std::numeric_limits<int64_t>::max();
+    auto bestDiffX = std::numeric_limits<double>::max();
     {
 
       for (int x = region.x0; x < region.x1; ++x) {

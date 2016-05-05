@@ -11,22 +11,41 @@ LightProbeSampler::LightProbeSampler(size_t depth, const cv::Mat &image)
   : depth_(depth)
   , count_(1 << depth_)
   , height_(image.rows)
-  , image_(image.rows, image.cols, CV_8UC4)
-  , illum_(image.rows, image.cols, CV_8UC1)
+  , image_(image.rows, image.cols, CV_32FC4)
+  , illum_(image.rows, image.cols, CV_32FC1)
 {
-  assert(image_.channels() == 4);
+  cv::Mat floatImage;
+  switch (image.type()) {
+    case CV_32FC4: {
+      floatImage = image;
+      break;
+    }
+    case CV_32FC3: {
+      cv::cvtColor(image, floatImage, CV_BGR2BGRA);
+      break;
+    }
+    case CV_8UC3: {
+      image.convertTo(floatImage, CV_32FC3);
+      cv::cvtColor(floatImage, floatImage, CV_BGR2BGRA);
+      break;
+    }
+    case CV_8UC4: {
+      image.convertTo(floatImage, CV_32FC4);
+      break;
+    }
+  }
 
   // Scale the pixels to compensate for over-representation.
   for (int r = 0; r < image_.rows; ++r) {
-    const auto pi = image.ptr<cv::Vec4b>(r);
-    auto pj = image_.ptr<cv::Vec4b>(r);
+    const auto pi = floatImage.ptr<cv::Vec4f>(r);
+    auto pj = image_.ptr<cv::Vec4f>(r);
 
     // Compensate by cos(phi).
     const float w = std::cos(r / height_ * M_PI - M_PI / 2.0f);
 
     for (int c = 0; c < image_.cols; ++c) {
       const auto &pix = pi[c];
-      pj[c] = cv::Vec4b(
+      pj[c] = cv::Vec4f(
           cv::saturate_cast<uint8_t>(pix[0] * w),
           cv::saturate_cast<uint8_t>(pix[1] * w),
           cv::saturate_cast<uint8_t>(pix[2] * w),
@@ -37,8 +56,8 @@ LightProbeSampler::LightProbeSampler(size_t depth, const cv::Mat &image)
 
   // Compute the luminance map.
   for (int r = 0; r < image_.rows; ++r) {
-    const auto pi = image_.ptr<cv::Vec4b>(r);
-    auto pl = illum_.ptr<uint8_t>(r);
+    const auto pi = image_.ptr<cv::Vec4f>(r);
+    auto pl = illum_.ptr<float>(r);
 
     for (int c = 0; c < image_.cols; ++c) {
       const auto &pix = pi[c];
@@ -66,7 +85,7 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
   // to its distance from the cenroid.
   float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f, sumW = 0.0f;
   for (int r = region.y0; r <= region.y1; ++r) {
-    const auto &row = image_.ptr<cv::Vec4b>(r);
+    const auto &row = image_.ptr<cv::Vec4f>(r);
     for (int c = region.x0; c <= region.x1; ++c) {
       // Compute distance from centroid.
       const float d = std::sqrt((x - c) * (x - c) + (y - r) * (y - r));
