@@ -64,7 +64,7 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 @implementation AREnvironmentBuilder
 {
   // Panoramic stitcher.
-  std::unique_ptr<ar::EnvironmentBuilder> builder_;
+  std::unique_ptr<ar::EnvironmentBuilder> builder;
 }
 
 
@@ -90,7 +90,7 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
     d.at<float>(3) = params.r2;
 
     // Finally.
-    builder_ = std::make_unique<ar::EnvironmentBuilder>(width, height, k, d);
+    builder = std::make_unique<ar::EnvironmentBuilder>(width, height, k, d);
   }
   
   return self;
@@ -114,7 +114,7 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
     }
 
     // Add the image to the panorama & handle errors.
-    builder_->AddFrames(cframes);
+    builder->AddFrames(cframes);
     return YES;
   } catch (const ar::EnvironmentBuilderException &ex) {
     // Extract the error from C++ land.
@@ -144,6 +144,17 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 
 - (void)composite:(void(^)(NSString*, NSArray<UIImage*>*))progressBlock;
 {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+    
+    // Build the panorama & convert progress messages.
+    auto result = builder->Composite([&progressBlock](const std::string &message) {
+      progressBlock(@(message.c_str()), nil);
+    });
+
+    NSArray<UIImage*>* array = [[NSArray<UIImage*> alloc] init];
+    // TODO: fill in the array.
+    progressBlock(@"Finished", array);
+  });
 }
 
 @end

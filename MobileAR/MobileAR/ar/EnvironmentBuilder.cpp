@@ -369,10 +369,22 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 }
 
 
-std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Composite() {
+std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Composite(
+    const std::function<void(const std::string&)> &onProgress)
+{
+  // Start by grouping the matches and building the graph.
   GroupMatches();
+  onProgress("Match Graph Optimization");
+
+  // Global Bundle Adjustment.
   Optimize();
-  return Project();
+  onProgress("Bundle Adjustment");
+
+  // Final compositing.
+  auto result = Project();
+  onProgress("Compositing");
+
+  return result;
 }
 
 

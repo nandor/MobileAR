@@ -167,7 +167,8 @@ class EnvironmentBuilder {
   /**
    Creates the panorama, performing bundle adjustment.
    */
-  std::vector<std::pair<cv::Mat, float>> Composite();
+  std::vector<std::pair<cv::Mat, float>> Composite(
+      const std::function<void(const std::string&)> &onProgress);
 
  private:
   /**
