@@ -144,16 +144,16 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 
 - (void)composite:(void(^)(NSString*, NSArray<UIImage*>*))progressBlock;
 {
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-    
+  // Run the task on a background queue.
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
     // Build the panorama & convert progress messages.
     auto result = builder->Composite([&progressBlock](const std::string &message) {
-      progressBlock(@(message.c_str()), nil);
+      dispatch_async(dispatch_get_main_queue(), ^{ progressBlock(@(message.c_str()), nil);});
     });
 
     NSArray<UIImage*>* array = [[NSArray<UIImage*> alloc] init];
     // TODO: fill in the array.
-    progressBlock(@"Finished", array);
+      dispatch_async(dispatch_get_main_queue(), ^{ progressBlock(@"Finished", array); });
   });
 }
 

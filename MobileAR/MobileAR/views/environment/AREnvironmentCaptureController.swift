@@ -37,28 +37,21 @@ class AREnvironmentCaptureController
 {
   // Location manager used to sort environments by distance.
   private var locationManager : CLLocationManager!
-
   // Motion manager used to capture attitude data.
   private var motionManager: CMMotionManager!
-
   // Camera wrapper.
   private var camera: ARHDRCamera!
-
   // Location provided by the location manager.
   private var location : CLLocation?
-
   // Timer used to redraw frames.
   private var timer: CADisplayLink!
-
   // Renderer used to display the sphere.
   private var renderer: AREnvironmentViewRenderer!
-
   // Class used to build the environment.
   private var builder: AREnvironmentBuilder?
 
   // Width of the environment map.
   private static let kWidth = 2048
-
   // Height of the environment map.
   private static let kHeight = 1024
 
@@ -67,6 +60,11 @@ class AREnvironmentCaptureController
 
   // Number of frames processed.
   private var count = 0
+
+  // Message label.
+  private var uiMessage: UILabel!
+  // Spinner view.
+  private var uiSpinner: UIActivityIndicatorView!
 
   /**
    Called when the view is first created.
@@ -119,6 +117,27 @@ class AREnvironmentCaptureController
         width: AREnvironmentCaptureController.kWidth,
         height: AREnvironmentCaptureController.kHeight
     )
+
+    // Initialize the UI.
+    uiMessage = UILabel(frame: CGRect(
+        x: (view.frame.width - 200) / 2,
+        y: 100,
+        width: 200,
+        height: 20
+    ))
+    uiMessage.text = ""
+    uiMessage.textAlignment = .Center
+    uiMessage.textColor = UIColor.whiteColor()
+    uiMessage.hidden = true
+    view.addSubview(uiMessage)
+
+    uiSpinner = UIActivityIndicatorView(frame: CGRect(
+        x: (view.frame.width - 20) / 2,
+        y: 150,
+        width: 20,
+        height: 20
+    ))
+    view.addSubview(uiSpinner)
   }
 
   /**
@@ -142,13 +161,11 @@ class AREnvironmentCaptureController
     )
     camera.start()
     camera.expose(x: 0.5, y: 0.5) { (_) in
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(3 * NSEC_PER_SEC)), dispatch_get_main_queue()) {
-        self.builder = AREnvironmentBuilder(
-          params: self.params,
-          width: AREnvironmentCaptureController.kWidth,
-          height: AREnvironmentCaptureController.kHeight
-        )
-      }
+      self.builder = AREnvironmentBuilder(
+        params: self.params,
+        width: AREnvironmentCaptureController.kWidth,
+        height: AREnvironmentCaptureController.kHeight
+      )
     }
 
     // Timer to run the rendering/update loop.
@@ -205,15 +222,24 @@ class AREnvironmentCaptureController
         }
       }
 
-      // Creat the panorama.
-      self.builder?.composite() { _, images in
+      // Create the panorama.
+      self.uiSpinner.startAnimating()
+      self.builder?.composite() { message, images in
+        self.uiMessage.text = message
+        self.uiMessage.hidden = false
 
         if let images = images {
+          // Save the environment to disk.
           self.saveEnvironment(
               name,
               path: directory.URLByAppendingPathComponent(NSUUID().UUIDString),
               images: images
           )
+
+          // Clear the UI.
+          self.builder = .None
+          self.uiSpinner.stopAnimating()
+          self.uiMessage.hidden = true
         }
       }
     })
@@ -278,22 +304,21 @@ class AREnvironmentCaptureController
       return
     }
 
-    if let _ = builder {
-      renderer.updatePose(ARPose(
-          projMat: float4x4(
-              aspect: Float(view.frame.size.width / view.frame.size.height),
-              fov: 45.0,
-              n: 0.1,
-              f: 100.0
-          ),
-          rx: Float(attitude.roll),
-          ry: -Float(attitude.pitch),
-          rz: -Float(attitude.yaw),
-          tx: 0.0,
-          ty: 0.0,
-          tz: 0.0
-      ))
-    }
+    renderer.updatePose(ARPose(
+        projMat: float4x4(
+            aspect: Float(view.frame.size.width / view.frame.size.height),
+            fov: 45.0,
+            n: 0.1,
+            f: 100.0
+        ),
+        rx: Float(attitude.roll),
+        ry: -Float(attitude.pitch),
+        rz: -Float(attitude.yaw),
+        tx: 0.0,
+        ty: 0.0,
+        tz: 0.0
+    ))
+
     renderer.renderFrame()
   }
 
@@ -312,9 +337,8 @@ class AREnvironmentCaptureController
     // Set environment as current.
     NSUserDefaults().setObject(env.path.path!, forKey: "environment")
 
-    // Go back to the previous controller.
+    // Show the environment.
     self.navigationController?.popViewControllerAnimated(true)
-
   }
 
   /**

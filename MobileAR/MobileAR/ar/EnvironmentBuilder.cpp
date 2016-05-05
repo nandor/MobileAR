@@ -542,7 +542,6 @@ void EnvironmentBuilder::OptimizeRays() {
   options.function_tolerance = 1e-3;
   options.minimizer_progress_to_stdout = true;
   ceres::Solve(options, &problem, &summary);
-  std::cerr << summary.FullReport() << std::endl;
 }
 
 void EnvironmentBuilder::OptimizePoints() {
@@ -590,7 +589,6 @@ void EnvironmentBuilder::OptimizePoints() {
   options.function_tolerance = 1e-3;
   options.minimizer_progress_to_stdout = true;
   ceres::Solve(options, &problem, &summary);
-  std::cerr << summary.FullReport() << std::endl;
 }
 
 
@@ -645,7 +643,6 @@ void EnvironmentBuilder::OptimizeVectors() {
   options.function_tolerance = 1e-3;
   options.minimizer_progress_to_stdout = true;
   ceres::Solve(options, &problem, &summary);
-  std::cerr << summary.FullReport() << std::endl;
 }
 
 void EnvironmentBuilder::OptimizeReproj() {
@@ -697,7 +694,6 @@ void EnvironmentBuilder::OptimizeReproj() {
   options.function_tolerance = 1e-3;
   options.minimizer_progress_to_stdout = true;
   ceres::Solve(options, &problem, &summary);
-  std::cerr << summary.FullReport() << std::endl;
 }
 
 std::vector<Eigen::Matrix<double, 3, 1>> EnvironmentBuilder::EstimatePoints() {
