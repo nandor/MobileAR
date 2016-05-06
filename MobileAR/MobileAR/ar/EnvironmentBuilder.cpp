@@ -19,6 +19,7 @@ constexpr size_t kMinMatches = 25;
 constexpr size_t kMinGroupSize = 3;
 constexpr size_t kGapFrames = 5;
 constexpr float kRansacReprojError = 5.0f;
+constexpr float kLMedSReprojError = 3.0f;
 constexpr float kMaxHammingDistance = 20.0f;
 constexpr float kConfidenceInterval = 0.103f;
 constexpr float kMinRotation = 15.0f * M_PI / 180.0f;
@@ -190,7 +191,8 @@ EnvironmentBuilder::EnvironmentBuilder(
     size_t height,
     const cv::Mat &k,
     const cv::Mat &d,
-    BAMethod method,
+    BAMethod baMethod,
+    HMethod hMethod,
     bool undistort,
     bool checkBlur)
   : width_(static_cast<int>(width))
@@ -198,7 +200,8 @@ EnvironmentBuilder::EnvironmentBuilder(
   , index_(0)
   , undistort_(undistort)
   , checkBlur_(checkBlur)
-  , method_(method)
+  , baMethod_(baMethod)
+  , hMethod_(hMethod)
   , blurDetector_(checkBlur_ ? new BlurDetector(720, 1280) : nullptr)
   , orbDetector_(1000)
   , bfMatcher_(cv::NORM_HAMMING, true)
@@ -444,19 +447,41 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
       src.push_back(train.keypoints[match.trainIdx].pt);
       dst.push_back(query.keypoints[match.queryIdx].pt);
     }
-    cv::findHomography(src, dst, CV_RANSAC, kRansacReprojError, mask);
-    if (matches.size() != mask.rows) {
-      return {};
-    }
-    for (int i = 0; i < mask.rows; ++i) {
-      if (mask.at<bool>(i, 0)) {
-        robustMatches.push_back(matches[i]);
-      }
-    }
+    switch (hMethod_) {
+      case HMethod::RANSAC: {
+        cv::findHomography(src, dst, CV_RANSAC, kRansacReprojError, mask);
+        if (matches.size() != mask.rows) {
+          return {};
+        }
+        for (int i = 0; i < mask.rows; ++i) {
+          if (mask.at<bool>(i, 0)) {
+            robustMatches.push_back(matches[i]);
+          }
+        }
 
-    // Probabilistic match test.
-    if (robustMatches.size() < 5.9f + 0.22f * matches.size()) {
-      return {};
+        // Probabilistic match test.
+        if (robustMatches.size() < 5.9f + 0.22f * matches.size()) {
+          return {};
+        }
+        break;
+      }
+      case HMethod::LMEDS: {
+        cv::Mat h = cv::findHomography(src, dst, CV_RANSAC, kLMedSReprojError, mask);
+        if (matches.size() != mask.rows) {
+          return {};
+        }
+        for (int i = 0; i < mask.rows; ++i) {
+          if (mask.at<bool>(i, 0)) {
+            robustMatches.push_back(matches[i]);
+          }
+        }
+
+        // Make sure at least 50\% of the points are inliers.
+        if (robustMatches.size() < 0.5f * matches.size()) {
+          return {};
+        }
+        break;
+      }
     }
   }
 
@@ -477,7 +502,7 @@ std::vector<std::pair<cv::Mat, float>>  EnvironmentBuilder::Composite(
   onProgress("Match Graph Optimization");
 
   // Global Bundle Adjustment.
-  switch (method_) {
+  switch (baMethod_) {
     case BAMethod::RAYS:    OptimizeRays();    break;
     case BAMethod::POINTS:  OptimizePoints();  break;
     case BAMethod::VECTORS: OptimizeVectors(); break;

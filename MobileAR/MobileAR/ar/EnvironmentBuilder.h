@@ -161,6 +161,16 @@ class EnvironmentBuilder {
   };
 
   /**
+   Enumeration of homography computation methods.
+   */
+  enum class HMethod {
+    /// Classical RANSAC.
+    RANSAC,
+    /// Lead Median of Squares regression.
+    LMEDS
+  };
+
+  /**
    Initializes the environment builder.
    */
   EnvironmentBuilder(
@@ -168,7 +178,8 @@ class EnvironmentBuilder {
       size_t height,
       const cv::Mat &k,
       const cv::Mat &d,
-      BAMethod method = BAMethod::RAYS,
+      BAMethod baMethod = BAMethod::RAYS,
+      HMethod hMethod = HMethod::RANSAC,
       bool undistort = false,
       bool checkBlur = false);
 
@@ -237,7 +248,9 @@ class EnvironmentBuilder {
   /// Flag to enable blur thresholding.
   const bool checkBlur_;
   /// Bundle adjustment method to use.
-  const BAMethod method_;
+  const BAMethod baMethod_;
+  /// Homography estimation method to use.
+  const HMethod hMethod_;
 
   // Blur detector.
   std::unique_ptr<BlurDetector> blurDetector_;
