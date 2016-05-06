@@ -172,7 +172,7 @@ struct ReprojectionCost {
        +T((y0(0) - P0(0, 2)) / P0(0, 0)),
        -T((y0(1) - P0(1, 2)) / P0(1, 1)),
        -T(1)
-    ).normalized();
+    );
 
     // Project it onto the second image.
     const Eigen::Matrix<T, 3, 1> p1 =
@@ -384,21 +384,19 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
     }
 
     // Relative rotation, including noise.
-    const Eigen::Matrix<J, 3, 3> P = query.P.cast<J>();
-    const Eigen::Matrix<J, 3, 3> iP = query.P.inverse().cast<J>();
-    const Eigen::Matrix<J, 3, 3> E =
-      query.R.cast<J>() *
+    const Eigen::Matrix<J, 3, 3> F =
+      (query.P * query.R).cast<J>() *
       Eigen::Matrix<J, 3, 3>(
           Eigen::AngleAxis<J>(wx, Eigen::Matrix<J, 3, 1>::UnitX()) *
           Eigen::AngleAxis<J>(wy, Eigen::Matrix<J, 3, 1>::UnitY()) *
           Eigen::AngleAxis<J>(wz, Eigen::Matrix<J, 3, 1>::UnitZ())
       ) *
-      train.R.inverse().cast<J>();
+      (train.P * train.R).inverse().cast<J>();
 
     matches.erase(std::remove_if(
       matches.begin(),
       matches.end(),
-      [&query, &train, &E, &Q, &P, &iP](const cv::DMatch &m)
+      [&query, &train, &Q, &F](const cv::DMatch &m)
       {
         // Read the matching points.
         const auto &p0 = query.keypoints[m.queryIdx].pt;
@@ -406,12 +404,11 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
 
         // Project the feature point from the current image onto the other image
         // using the rotation matrices obtained from gyroscope measurements.
-        const auto x = iP * Eigen::Matrix<J, 3, 1>(
+        const auto proj = F * Eigen::Matrix<J, 3, 1>(
             J(p0.x),
             J(query.bgr.rows - p0.y - 1),
             J(1)
         );
-        const auto proj = P * E * x.normalized();
         const auto px = proj.x() / proj.z();
         const auto py = J(train.bgr.rows) - proj.y() / proj.z() - J(1);
         if (proj.z() < J(0)) {
