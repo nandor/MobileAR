@@ -16,7 +16,6 @@ namespace {
 constexpr float kMinBlurThreshold = 0.01f;
 constexpr size_t kMinFeatures = 50;
 constexpr size_t kMinMatches = 25;
-constexpr size_t kMinGroupSize = 3;
 constexpr size_t kGapFrames = 5;
 constexpr float kRansacReprojError = 5.0f;
 constexpr float kLMedSReprojError = 3.0f;
@@ -771,12 +770,6 @@ void EnvironmentBuilder::GroupMatches() {
   MatchGroup::iterator it = groups_.begin();
   while (it != groups_.end()) {
 
-    // If group is too small, discard it.
-    if (it->size() < kMinGroupSize) {
-      it = groups_.erase(it);
-      continue;
-    }
-
     // Check out if there are matches from the same image.
     std::unordered_map<int, std::vector<Eigen::Vector2f>> f;
     for (const auto &node : *it) {
@@ -828,6 +821,7 @@ void EnvironmentBuilder::GroupMatches() {
       ++it;
     }
   }
+  std::cerr << groups_.size() << std::endl;
 }
 
 
