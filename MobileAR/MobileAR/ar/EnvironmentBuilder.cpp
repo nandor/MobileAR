@@ -25,7 +25,8 @@ constexpr float kConfidenceInterval = 0.103f;
 constexpr float kMinRotation = 15.0f * M_PI / 180.0f;
 constexpr float kMaxRotation = 40.0f * M_PI / 180.0f;
 constexpr float kMinPairs = 2;
-
+constexpr float kMaxGroupStd = 15.0f;
+constexpr float kHuberLossThreshold = 5.0f * 5.0f;
 constexpr float operator"" _deg (long double deg) {
   return deg / 180.0f * M_PI;
 }
@@ -489,6 +490,7 @@ EnvironmentBuilder::MatchGraph EnvironmentBuilder::Match(
   MatchGraph graph;
   for (const auto &match : robustMatches) {
     graph[{query.index, match.queryIdx}].emplace_back(train.index, match.trainIdx);
+    graph[{train.index, match.trainIdx}].emplace_back(query.index, match.queryIdx);
   }
   return graph;
 }
@@ -530,17 +532,14 @@ void EnvironmentBuilder::OptimizeRays() {
         }
         frames_[n0.first].optimized = frames_[n1.first].optimized = true;
 
-        const auto &pt0 = frames_[n0.first].keypoints[n0.second].pt;
-        const auto &pt1 = frames_[n1.first].keypoints[n1.second].pt;
-
         problem.AddResidualBlock(
             new ceres::AutoDiffCostFunction<RayAlignCost, 3, 4, 4>(new RayAlignCost(
-                Eigen::Matrix<double, 2, 1>(pt0.x, pt0.y),
-                Eigen::Matrix<double, 2, 1>(pt1.x, pt1.y),
+                n0.second.cast<double>(),
+                n1.second.cast<double>(),
                 frames_[n0.first].P.cast<double>(),
                 frames_[n1.first].P.cast<double>()
             )),
-            nullptr,
+            new ceres::HuberLoss(kHuberLossThreshold),
             frames_[n0.first].q.coeffs().data(),
             frames_[n1.first].q.coeffs().data()
         );
@@ -582,12 +581,11 @@ void EnvironmentBuilder::OptimizePoints() {
       frames_[node.first].optimized = true;
 
       // Creat the residual.
-      const auto &pt = frames_[node.first].keypoints[node.second].pt;
       problem.AddResidualBlock(
           new ceres::AutoDiffCostFunction<PointAlignCost, 2, 4, 3>(
-              new PointAlignCost({pt.x, pt.y}, frames_[node.first].P.cast<double>())
+              new PointAlignCost(node.second.cast<double>(), frames_[node.first].P.cast<double>())
           ),
-          nullptr,
+          new ceres::HuberLoss(kHuberLossThreshold),
           frames_[node.first].q.coeffs().data(),
           xs[i].data()
       );
@@ -630,12 +628,11 @@ void EnvironmentBuilder::OptimizeVectors() {
       frames_[node.first].optimized = true;
 
       // Creat the residual.
-      const auto &pt = frames_[node.first].keypoints[node.second].pt;
       problem.AddResidualBlock(
           new ceres::AutoDiffCostFunction<PointAlignCost, 2, 4, 3>(
-              new PointAlignCost({pt.x, pt.y}, frames_[node.first].P.cast<double>())
+              new PointAlignCost(node.second.cast<double>(), frames_[node.first].P.cast<double>())
           ),
-          nullptr,
+          new ceres::HuberLoss(kHuberLossThreshold),
           frames_[node.first].q.coeffs().data(),
           xs[i].data()
       );
@@ -682,17 +679,14 @@ void EnvironmentBuilder::OptimizeReproj() {
         }
         frames_[n0.first].optimized = frames_[n1.first].optimized = true;
 
-        const auto &pt0 = frames_[n0.first].keypoints[n0.second].pt;
-        const auto &pt1 = frames_[n1.first].keypoints[n1.second].pt;
-
         problem.AddResidualBlock(
             new ceres::AutoDiffCostFunction<RayAlignCost, 3, 4, 4>(new RayAlignCost(
-                Eigen::Matrix<double, 2, 1>(pt0.x, pt0.y),
-                Eigen::Matrix<double, 2, 1>(pt1.x, pt1.y),
+                n0.second.cast<double>(),
+                n1.second.cast<double>(),
                 frames_[n0.first].P.cast<double>(),
                 frames_[n1.first].P.cast<double>()
             )),
-            nullptr,
+            new ceres::HuberLoss(kHuberLossThreshold),
             frames_[n0.first].q.coeffs().data(),
             frames_[n1.first].q.coeffs().data()
         );
@@ -732,10 +726,9 @@ std::vector<Eigen::Matrix<double, 3, 1>> EnvironmentBuilder::EstimatePoints() {
       // Read the pose & point.
       const auto R = frames_[node.first].q.inverse().toRotationMatrix();
       const auto P = frames_[node.first].P.inverse();
-      const auto &pt = frames_[node.first].keypoints[node.second].pt;
 
       // Project to world space & normalize.
-      const Eigen::Vector3f p = P * Eigen::Vector3f(pt.x, pt.y, 1.0f);
+      const Eigen::Vector3f p = P * Eigen::Vector3f(node.second.x(), node.second.y(), 1.0f);
       x += R * Eigen::Vector3d(p(0), -p(1), -p(2)).normalized();
     }
     x.normalize();
@@ -749,16 +742,17 @@ void EnvironmentBuilder::GroupMatches() {
   // Group the nodes by finding connected components using a depth first search.
   std::unordered_set<std::pair<int, int>, PairHash> visited;
   std::function<void(
-      std::vector<std::pair<int, int>> &group,
+      std::vector<std::pair<int, Eigen::Vector2f>> &group,
       const std::pair<int, int> &node)> dfs;
-  dfs = [&] (std::vector<std::pair<int, int>> &group, const std::pair<int, int> &node)
+  dfs = [&] (std::vector<std::pair<int, Eigen::Vector2f>> &group, const std::pair<int, int> &node)
   {
     if (visited.find(node) != visited.end()) {
       return;
     }
 
     visited.insert(node);
-    group.push_back(node);
+    const auto &pt = frames_[node.first].keypoints[node.second].pt;
+    group.push_back({node.first, Eigen::Vector2f(pt.x, pt.y) });
     for (const auto &next : graph_[node]) {
       dfs(group, next);
     }
@@ -771,16 +765,69 @@ void EnvironmentBuilder::GroupMatches() {
     groups_.emplace_back();
     dfs(*groups_.rbegin(), node.first);
   }
+  
+  // Remove groups where two features of the same image appear since that cannot happen.
+  // Or it can due to noise, in which case the component must be thrown away.
+  MatchGroup::iterator it = groups_.begin();
+  while (it != groups_.end()) {
 
-  // Remove groups that are too small.
-  groups_.erase(std::remove_if(
-      groups_.begin(),
-      groups_.end(),
-      [] (std::vector<std::pair<int, int>> &group) {
-          return group.size() < kMinGroupSize;
-      }),
-      groups_.end()
-  );
+    // If group is too small, discard it.
+    if (it->size() < kMinGroupSize) {
+      it = groups_.erase(it);
+      continue;
+    }
+
+    // Check out if there are matches from the same image.
+    std::unordered_map<int, std::vector<Eigen::Vector2f>> f;
+    for (const auto &node : *it) {
+      f[node.first].push_back(node.second);
+    }
+
+    // Clear the group, this is going to be robustified.
+    it->clear();
+    bool keep = true;
+
+    // Traverse each group where feaures from the same image are merged together.
+    for (const auto &group : f) {
+
+      // Nothing to do with sole matches.
+      if (group.second.size() == 1) {
+        it->push_back({ group.first, group.second[0] });
+        continue;
+      }
+
+      // Compute the mean & standard deviation in the group.
+      float sumX = 0.0f, sumY = 0.0f, sumX2 = 0.0f, sumY2 = 0.0f;
+      for (const auto &pt : group.second) {
+        sumX += pt.x();
+        sumY += pt.y();
+        sumX2 += pt.x() * pt.x();
+        sumY2 += pt.y() * pt.y();
+      }
+
+      const size_t n = group.second.size();
+      const Eigen::Vector2f mean(sumX / n, sumY / n);
+      const Eigen::Vector2f var(
+          sumX2 / n - mean.x() * mean.x(),
+          sumY2 / n - mean.y() * mean.y()
+      );
+
+      // Threshold by variance. If variance too large, discard group.
+      if (var.norm() > kMaxGroupStd * kMaxGroupStd) {
+        keep = false;
+        break;
+      }
+
+      // Otherwise, replace point by the mean.
+      it->push_back({ group.first, mean });
+    }
+
+    if (!keep) {
+      it = groups_.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 

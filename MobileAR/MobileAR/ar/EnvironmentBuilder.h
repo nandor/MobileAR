@@ -142,7 +142,7 @@ class EnvironmentBuilder {
   /**
    Graph of feature groups.
    */
-  typedef std::vector<std::vector<std::pair<int, int>>> MatchGroup;
+  typedef std::vector<std::vector<std::pair<int, Eigen::Vector2f>>> MatchGroup;
 
  public:
 
