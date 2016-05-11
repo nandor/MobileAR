@@ -25,7 +25,7 @@ constexpr float kMinRotation = 15.0f * M_PI / 180.0f;
 constexpr float kMaxRotation = 40.0f * M_PI / 180.0f;
 constexpr float kMinPairs = 2;
 constexpr float kMaxGroupStd = 15.0f;
-constexpr float kHuberLossThreshold = 5.0f * 5.0f;
+constexpr float kHuberLossThreshold = 1.0f;
 constexpr float operator"" _deg (long double deg) {
   return deg / 180.0f * M_PI;
 }
@@ -37,9 +37,9 @@ constexpr float operator"" _deg (long double deg) {
  */
 struct RayAlignCost {
   /// First observed point.
-  Eigen::Matrix<double, 2, 1> y0;
+  Eigen::Matrix<double, 3, 1> x0;
   /// Second observed point.
-  Eigen::Matrix<double, 2, 1> y1;
+  Eigen::Matrix<double, 3, 1> x1;
   /// First projection matrix.
   Eigen::Matrix<double, 3, 3> P0;
   /// Second projection matrix.
@@ -50,11 +50,20 @@ struct RayAlignCost {
      const Eigen::Matrix<double, 2, 1> &y1,
      const Eigen::Matrix<double, 3, 3> &P0,
      const Eigen::Matrix<double, 3, 3> &P1)
-    : y0(y0)
-    , y1(y1)
-    , P0(P0)
+    : P0(P0)
     , P1(P1)
   {
+    // Unproject the two rays.
+    x0 = Eigen::Matrix<double, 3, 1>(
+        +(y0(0) - P0(0, 2)) / P0(0, 0),
+        -(y0(1) - P0(1, 2)) / P0(1, 1),
+        -1.0f
+    ).normalized();
+    x1 = Eigen::Matrix<double, 3, 1>(
+        +(y1(0) - P1(0, 2)) / P1(0, 0),
+        -(y1(1) - P1(1, 2)) / P1(1, 1),
+        -1.0f
+    ).normalized();
   }
 
   template<typename T>
@@ -65,17 +74,9 @@ struct RayAlignCost {
     Eigen::Map<const Eigen::Quaternion<T>> q1(pq1);
     Eigen::Map<Eigen::Matrix<T, 3, 1>> residual(pr);
 
-    // Unproject the two rays.
-    Eigen::Matrix<T, 3, 1> r0 = Eigen::Matrix<T, 3, 1>(
-        +T((y0(0) - P0(0, 2)) / P0(0, 0)),
-        -T((y0(1) - P0(1, 2)) / P0(1, 1)),
-        -T(1.0f)
-    ).normalized();
-    Eigen::Matrix<T, 3, 1> r1 = Eigen::Matrix<T, 3, 1>(
-        +T((y1(0) - P1(0, 2)) / P1(0, 0)),
-        -T((y1(1) - P1(1, 2)) / P1(1, 1)),
-        -T(1.0f)
-    ).normalized();
+    // Convert the rays to the correct datatype.
+    Eigen::Matrix<T, 3, 1> r0 = x0.cast<T>();
+    Eigen::Matrix<T, 3, 1> r1 = x1.cast<T>();
 
     // Compute weights that fall off as point departs from centre.
     const T &a0 = r0.dot(Eigen::Matrix<T, 3, 1>::UnitZ());
@@ -203,7 +204,7 @@ EnvironmentBuilder::EnvironmentBuilder(
   , baMethod_(baMethod)
   , hMethod_(hMethod)
   , blurDetector_(checkBlur_ ? new BlurDetector(720, 1280) : nullptr)
-  , orbDetector_(1000)
+  , orbDetector_(cv::ORB::create(1000))
   , bfMatcher_(cv::NORM_HAMMING, true)
 {
   assert(k.rows == 3 && k.cols == 3);
@@ -253,7 +254,7 @@ void EnvironmentBuilder::AddFrames(const std::vector<HDRFrame> &rawFrames) {
       // Extract ORB features & descriptors and make sure we have enough of them.
       std::vector<cv::KeyPoint> keypoints;
       cv::Mat descriptors;
-      orbDetector_(gray, {}, keypoints, descriptors);
+      orbDetector_->detectAndCompute(gray, {}, keypoints, descriptors);
       if (keypoints.size() < kMinFeatures) {
         throw EnvironmentBuilderException(EnvironmentBuilderException::NOT_ENOUGH_FEATURES);
       }

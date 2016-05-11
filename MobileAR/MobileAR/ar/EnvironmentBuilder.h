@@ -264,7 +264,7 @@ class EnvironmentBuilder {
   cv::Mat mapY_;
 
   // Keypoint detctor & matcher.
-  cv::ORB orbDetector_;
+  cv::Ptr<cv::ORB> orbDetector_;
   cv::BFMatcher bfMatcher_;
 
   // Graph of feature matches.

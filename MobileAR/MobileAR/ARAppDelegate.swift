@@ -33,7 +33,7 @@ class ARAppDelegate: UIResponder, UIApplicationDelegate {
     
     // Create the navigation controller.
     navigation = UINavigationController()
-    navigation.viewControllers = [AREnvironmentViewController(environment: envs[0])]
+    navigation.viewControllers = [AREnvironmentCaptureController()]
 
     // Create the window.
     window = UIWindow(frame: UIScreen.mainScreen().bounds)
