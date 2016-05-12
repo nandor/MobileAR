@@ -68,7 +68,6 @@
 		7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ToneMapper.cpp; path = ar/ToneMapper.cpp; sourceTree = "<group>"; };
 		7A1D622F1CDA9B9D006CAA1D /* ToneMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ToneMapper.h; path = ar/ToneMapper.h; sourceTree = "<group>"; };
 		7A1E3BB81C5962AF00E63312 /* ARMesh.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARMesh.metal; sourceTree = "<group>"; };
-		7A255CBC1CA1F277005D120A /* liblsd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblsd.a; path = "../../../Library/Developer/Xcode/DerivedData/MobileAR-anqurysiqxcprzadtfucllnkhbrc/Build/Products/Debug-iphoneos/liblsd.a"; sourceTree = "<group>"; };
 		7A2FE8FA1C77C00F009BECCC /* Moments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Moments.h; path = ar/Moments.h; sourceTree = "<group>"; };
 		7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LightProbeSampler.cpp; path = ar/LightProbeSampler.cpp; sourceTree = "<group>"; };
 		7A2FE8FC1C77DF5A009BECCC /* LightProbeSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LightProbeSampler.h; path = ar/LightProbeSampler.h; sourceTree = "<group>"; };
@@ -91,7 +90,6 @@
 		7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARFXAA.metal; sourceTree = "<group>"; };
 		7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARLighting.metal; sourceTree = "<group>"; };
 		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
-		7A6B81F51CA29B9700D339AE /* libboost.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost.a; path = ../../ofxiOSBoost/libs/boost/ios/libboost.a; sourceTree = "<group>"; };
 		7A7093021CC639BE003D6742 /* ARQuaternion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARQuaternion.swift; sourceTree = "<group>"; };
 		7A7093041CC63EC4003D6742 /* Rotation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Rotation.h; path = ar/Rotation.h; sourceTree = "<group>"; };
 		7A7093071CC78F89003D6742 /* libceres.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libceres.a; path = ../../../../../usr/local/lib/libceres.a; sourceTree = "<group>"; };
@@ -181,8 +179,6 @@
 			isa = PBXGroup;
 			children = (
 				7A7093071CC78F89003D6742 /* libceres.a */,
-				7A6B81F51CA29B9700D339AE /* libboost.a */,
-				7A255CBC1CA1F277005D120A /* liblsd.a */,
 				7A78BE471CA1C5BD000EBBAE /* opencv2.framework */,
 				7A5B46AD1BCFAB1D003F87BE /* MetalKit.framework */,
 				7A5B46A91BCF2247003F87BE /* CoreMedia.framework */,
