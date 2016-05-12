@@ -120,7 +120,6 @@ extension CMDeviceMotion {
     switch NSUserDefaults().stringForKey("tracker") {
       case .Some("marker"):  tracker = ARMarkerPoseTracker(parameters: params)
       case .Some("demo"):    tracker = ARDemoPoseTracker(aspect: aspect)
-      case .Some("tracker"): tracker = ARSlamPoseTracker(parameters: params)
       default:               tracker = ARMarkerPoseTracker(parameters: params)
     }
 

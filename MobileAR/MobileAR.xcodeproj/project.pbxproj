@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		7A1D62301CDA9B9D006CAA1D /* ToneMapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */; };
 		7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARMesh.metal */; };
-		7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A255CBC1CA1F277005D120A /* liblsd.a */; };
 		7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */; };
 		7A37CDE91CCA8A25007FA3CF /* BlurDetector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A37CDE71CCA8A25007FA3CF /* BlurDetector.cpp */; };
 		7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3F5D991C5D1D010044F6FC /* ARFileReader.swift */; };
@@ -26,7 +25,6 @@
 		7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */; };
 		7A62D67D1C9B887C00BE42C8 /* ARLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */; };
 		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
-		7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A6B81F51CA29B9700D339AE /* libboost.a */; };
 		7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7093021CC639BE003D6742 /* ARQuaternion.swift */; };
 		7A7093091CC78FCB003D6742 /* libceres.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A7093071CC78F89003D6742 /* libceres.a */; };
 		7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A78BE471CA1C5BD000EBBAE /* opencv2.framework */; };
@@ -61,7 +59,6 @@
 		C13F8E421E67F5ED13FF349B /* ARSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F86B2B5B85BE1365D2D33 /* ARSceneViewController.swift */; };
 		C13F8EC72C77C8E5EAE1D201 /* ARRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */; };
 		C13F8EDD9DE8863D980351CC /* ARParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F88C686AAE8A50096E0AE /* ARParametersViewController.swift */; };
-		C13F8EDE948538A50F0D75EE /* ARSlamPoseTracker.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8F8FABC50146C2501D78 /* ARSlamPoseTracker.mm */; };
 		C13F8F30393D3043002256F5 /* UIImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = C13F8DF99955090111513222 /* UIImage+cvMat.mm */; };
 		C13F8F65B70AFD4AACB467B9 /* AREnvironmentListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13F8C65C26D8B7CB74A066B /* AREnvironmentListController.swift */; };
 /* End PBXBuildFile section */
@@ -125,7 +122,6 @@
 		C13F86B2B5B85BE1365D2D33 /* ARSceneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARSceneViewController.swift; sourceTree = "<group>"; };
 		C13F86DB5D164F37984285F8 /* UIImage+cvMat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+cvMat.h"; sourceTree = "<group>"; };
 		C13F8719222268FFF85FDECB /* AREnvironmentBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AREnvironmentBuilder.h; sourceTree = "<group>"; };
-		C13F871F4C5B63CE995729F5 /* ARSlamPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARSlamPoseTracker.h; sourceTree = "<group>"; };
 		C13F872B33A5DF135A8C5C15 /* ARRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARRenderer.swift; sourceTree = "<group>"; };
 		C13F879F0B032ECFC39BCFDE /* ARObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARObject.swift; sourceTree = "<group>"; };
 		C13F87AF09D79753A79B4B45 /* MedianCutSampler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MedianCutSampler.cpp; path = ar/MedianCutSampler.cpp; sourceTree = "<group>"; };
@@ -147,7 +143,6 @@
 		C13F8DF99955090111513222 /* UIImage+cvMat.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "UIImage+cvMat.mm"; sourceTree = "<group>"; };
 		C13F8E7AB65F2B19C88A7050 /* VarianceCutSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VarianceCutSampler.h; path = ar/VarianceCutSampler.h; sourceTree = "<group>"; };
 		C13F8F06BFBB22987C893E2E /* ARCalibrateController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARCalibrateController.swift; sourceTree = "<group>"; };
-		C13F8F8FABC50146C2501D78 /* ARSlamPoseTracker.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARSlamPoseTracker.mm; sourceTree = "<group>"; };
 		C13F8FA8928E90CB2384D35B /* PhotoSphereBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PhotoSphereBuilder.h; path = ar/PhotoSphereBuilder.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -157,8 +152,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A7093091CC78FCB003D6742 /* libceres.a in Frameworks */,
-				7A6B81F61CA29B9700D339AE /* libboost.a in Frameworks */,
-				7A255CBD1CA1F277005D120A /* liblsd.a in Frameworks */,
 				7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */,
 				7A5B46AA1BCF2247003F87BE /* CoreMedia.framework in Frameworks */,
 				7A5B46A81BCF1A58003F87BE /* AVFoundation.framework in Frameworks */,
@@ -323,8 +316,6 @@
 				7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */,
 				7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */,
 				7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */,
-				C13F8F8FABC50146C2501D78 /* ARSlamPoseTracker.mm */,
-				C13F871F4C5B63CE995729F5 /* ARSlamPoseTracker.h */,
 			);
 			path = scene;
 			sourceTree = "<group>";
@@ -448,7 +439,6 @@
 				7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */,
 				C13F84FB9F32C57887CC6362 /* ARLightProbeSampler.mm in Sources */,
 				C13F8955820B5D1446EA96FD /* ARDemoPoseTracker.swift in Sources */,
-				C13F8EDE948538A50F0D75EE /* ARSlamPoseTracker.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
