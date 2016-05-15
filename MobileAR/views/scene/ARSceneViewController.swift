@@ -116,7 +116,7 @@ extension CMDeviceMotion {
     let aspect = Float(view.frame.width / view.frame.height)
 
     // Initialize the scene tracker.
-    NSUserDefaults().setObject("demo", forKey: "tracker")
+    NSUserDefaults().setObject("marker", forKey: "tracker")
     switch NSUserDefaults().stringForKey("tracker") {
       case .Some("marker"):  tracker = ARMarkerPoseTracker(parameters: params)
       case .Some("demo"):    tracker = ARDemoPoseTracker(aspect: aspect)
@@ -257,7 +257,8 @@ extension CMDeviceMotion {
    Processes a frame from the device's camera.
    */
   func onCameraFrame(frame: UIImage) {
-    self.renderer.updateFrame(tracker.trackFrame(frame))
+    self.renderer.updateFrame(frame)
+    tracker.trackFrame(frame)
   }
 
   /**

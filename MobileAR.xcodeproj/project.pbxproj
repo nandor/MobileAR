@@ -27,6 +27,9 @@
 		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
 		7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7093021CC639BE003D6742 /* ARQuaternion.swift */; };
 		7A7093091CC78FCB003D6742 /* libceres.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A7093071CC78F89003D6742 /* libceres.a */; };
+		7A7204A21CE4892A00BED4F5 /* CalibTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A7204A01CE4892A00BED4F5 /* CalibTracker.cpp */; };
+		7A7204A81CE48A6400BED4F5 /* Tracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A7204A71CE48A6400BED4F5 /* Tracker.cpp */; };
+		7A7204AA1CE49DA400BED4F5 /* ArUcoTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A7204A91CE49DA400BED4F5 /* ArUcoTracker.cpp */; };
 		7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A78BE471CA1C5BD000EBBAE /* opencv2.framework */; };
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
@@ -93,6 +96,12 @@
 		7A7093021CC639BE003D6742 /* ARQuaternion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARQuaternion.swift; sourceTree = "<group>"; };
 		7A7093041CC63EC4003D6742 /* Rotation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Rotation.h; path = ar/Rotation.h; sourceTree = "<group>"; };
 		7A7093071CC78F89003D6742 /* libceres.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libceres.a; path = ../../../../../usr/local/lib/libceres.a; sourceTree = "<group>"; };
+		7A72049E1CE4890400BED4F5 /* Tracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Tracker.h; path = ar/Tracker.h; sourceTree = "<group>"; };
+		7A7204A01CE4892A00BED4F5 /* CalibTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CalibTracker.cpp; path = ar/CalibTracker.cpp; sourceTree = "<group>"; };
+		7A7204A11CE4892A00BED4F5 /* CalibTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CalibTracker.h; path = ar/CalibTracker.h; sourceTree = "<group>"; };
+		7A7204A51CE4894C00BED4F5 /* ArUcoTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ArUcoTracker.h; path = ar/ArUcoTracker.h; sourceTree = "<group>"; };
+		7A7204A71CE48A6400BED4F5 /* Tracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tracker.cpp; path = ar/Tracker.cpp; sourceTree = "<group>"; };
+		7A7204A91CE49DA400BED4F5 /* ArUcoTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ArUcoTracker.cpp; path = ar/ArUcoTracker.cpp; sourceTree = "<group>"; };
 		7A78BE471CA1C5BD000EBBAE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
@@ -270,6 +279,12 @@
 				7AFBC3B01CD274CB007D3127 /* EnvironmentBuilder.h */,
 				7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */,
 				7A1D622F1CDA9B9D006CAA1D /* ToneMapper.h */,
+				7A7204A71CE48A6400BED4F5 /* Tracker.cpp */,
+				7A72049E1CE4890400BED4F5 /* Tracker.h */,
+				7A7204A01CE4892A00BED4F5 /* CalibTracker.cpp */,
+				7A7204A11CE4892A00BED4F5 /* CalibTracker.h */,
+				7A7204A91CE49DA400BED4F5 /* ArUcoTracker.cpp */,
+				7A7204A51CE4894C00BED4F5 /* ArUcoTracker.h */,
 			);
 			name = ar;
 			sourceTree = "<group>";
@@ -397,11 +412,14 @@
 				7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */,
 				C13F845C0484D71FD4CEC8C8 /* MedianCutSampler.cpp in Sources */,
 				7A1D62301CDA9B9D006CAA1D /* ToneMapper.cpp in Sources */,
+				7A7204AA1CE49DA400BED4F5 /* ArUcoTracker.cpp in Sources */,
 				7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
 				7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */,
+				7A7204A81CE48A6400BED4F5 /* Tracker.cpp in Sources */,
 				7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */,
+				7A7204A21CE4892A00BED4F5 /* CalibTracker.cpp in Sources */,
 				C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */,
 				C13F80202E2E4BB0701AA1BB /* ARParameters.swift in Sources */,
 				C13F85B0A2D9C29A9765B5E9 /* AREnvironment.swift in Sources */,
@@ -561,6 +579,7 @@
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
 				MTL_OPTIMIZATION_LEVEL = 3;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
@@ -607,6 +626,7 @@
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
 				MTL_OPTIMIZATION_LEVEL = 3;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;

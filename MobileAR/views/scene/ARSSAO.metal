@@ -23,7 +23,7 @@ constant float SSAO_POWER = 5.0;
 /**
  Radius of the SSAO sampling.
  */
-constant float SSAO_FOCUS = 1.0;
+constant float SSAO_FOCUS = 0.3;
 
 
 /**

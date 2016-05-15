@@ -261,7 +261,7 @@ class EKFOrientation : public KalmanFilter<T, 10, 10> {
 
     // IMU measurement noise.
     Eigen::Matrix<T, 7, 1> rI;
-    rI << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2;
+    rI << 1e-3, 1e-3, 1e-3, 1e-3, 1e-2, 1e-2, 1e-2;
     rI_ = rI.asDiagonal();
   }
 
@@ -372,7 +372,7 @@ class EKFPosition : public KalmanFilter<T, 9, 9> {
   EKFPosition()
     : KalmanFilter<T, 9, 9>(
         (Eigen::Matrix<T, 9, 1>() <<
-           5e-2, 5e-2, 5e-2, 2e-1, 2e-1, 2e-1, 5e-2, 5e-2, 5e-2
+           5e-2, 5e-2, 5e-2, 1e-0, 1e-0, 1e-0, 5e-1, 5e-1, 5e-1
         ).finished().asDiagonal(),
         (Eigen::Matrix<T, 9, 1>() <<
            0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -383,13 +383,13 @@ class EKFPosition : public KalmanFilter<T, 9, 9> {
       )
   {
     rM_ <<
-      5e-2,    0,    0,
-         0, 5e-2,    0,
-         0,    0, 5e-2;
+      1e-0,    0,    0,
+         0, 1e-0,    0,
+         0,    0, 1e-0;
     rI_ <<
-      5e-2,    0,    0,
-         0, 5e-2,    0,
-         0,    0, 5e-2;
+      5e-1,    0,    0,
+         0, 5e-1,    0,
+         0,    0, 5e-1;
   }
 
   /**
