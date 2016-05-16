@@ -22,7 +22,11 @@ Tracker::Tracker(const cv::Mat &k, const cv::Mat &d)
   : k(k)
   , d(d)
 {
-
+  K = Eigen::Matrix<double, 4, 4>::Identity();
+  K(0, 0) = k.at<double>(0, 0);
+  K(1, 1) = k.at<double>(1, 1);
+  K(0, 2) = k.at<double>(0, 2);
+  K(1, 2) = k.at<double>(1, 2);
 }
 
 Tracker::~Tracker() {

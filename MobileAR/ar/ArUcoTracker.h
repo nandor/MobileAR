@@ -5,6 +5,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include <opencv2/aruco.hpp>
 #include <opencv2/opencv.hpp>
@@ -40,33 +41,30 @@ class ArUcoTracker : public Tracker {
   /**
    solvePnP wrapper because OpenCV is funny.
    */
-  std::pair<Eigen::Quaternion<float>, Eigen::Matrix<float, 3, 1>> solvePnP(
-      const std::vector<Eigen::Matrix<float, 3, 1>> &world,
-      const std::vector<cv::Point2f> &image,
-      bool ransac);
+  std::pair<Eigen::Quaternion<double>, Eigen::Matrix<double, 3, 1>> solvePnP(
+      const std::vector<Eigen::Matrix<double, 3, 1>> &world,
+      const std::vector<cv::Point2f> &image);
 
  private:
   /// ArUco dictionary.
   cv::Ptr<cv::aruco::Dictionary> dict_;
   /// ArUco detector config.
   cv::Ptr<cv::aruco::DetectorParameters> params_;
-  /// Objects points for a single marker.
-  std::vector<Eigen::Matrix<float, 3, 1>> grid_;
 
   /// Marker being tracked.
   struct Marker {
     /// Position of the marker.
-    Eigen::Matrix<float, 3, 1> t;
+    Eigen::Matrix<double, 3, 1> t;
+    /// Rotation of the marker plane with respect to the horizontal plane.
+    Eigen::Quaternion<double> q;
+
     /// Image points of the corners.
-    std::vector<Eigen::Matrix<float, 3, 1>> world;
+    std::vector<Eigen::Matrix<double, 3, 1>> world() const;
   };
 
 
   /// List of all markers.
   std::unordered_map<int, Marker> markers_;
-
-  /// OpenCV to real world conversion.
-  Eigen::Matrix<float, 4, 4> C;
 };
 
 }

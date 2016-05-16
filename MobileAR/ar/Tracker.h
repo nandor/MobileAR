@@ -74,6 +74,8 @@ class Tracker {
       float dt) = 0;
 
  protected:
+  /// Eigen version of the intrinsic matrix.
+  Eigen::Matrix<double, 4, 4> K;
   /// Intrinsic matrix.
   cv::Mat k;
   /// Calibrated distortion.
