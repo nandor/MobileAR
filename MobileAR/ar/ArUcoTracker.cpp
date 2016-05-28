@@ -5,15 +5,18 @@
 #include <ceres/ceres.h>
 
 #include "ar/ArUcoTracker.h"
+#include "ar/Rotation.h"
 
 namespace ar {
 
 namespace {
 
-// Marker size.
+/// Marker size.
 constexpr float kMarkerSize =  4.6;
-/// OpenCV to real world conversion.
-const Eigen::Matrix<double, 4, 4> kC((Eigen::Vector4d() << 1, -1, -1, 1).finished().asDiagonal());
+/// Minimum distance between graph poses.
+constexpr float kMinDistance = 10.0f;
+/// Minimum angle between two poses.
+constexpr float kMinAngle = 30.0f / 180.0f * M_PI;
 /// Objects points for a single marker.
 const std::vector<Eigen::Matrix<double, 3, 1>> kGrid = {
   { -kMarkerSize / 2.0f, +kMarkerSize / 2.0f, 0.0f },
@@ -24,7 +27,10 @@ const std::vector<Eigen::Matrix<double, 3, 1>> kGrid = {
 
 template<typename T>
 Eigen::Matrix<T, 4, 4> Compose(const Eigen::Quaternion<T> &q, const Eigen::Matrix<T, 3, 1> &t) {
-  return (Eigen::Matrix<T, 4, 4>() << q.toRotationMatrix(), t, 0, 0, 0, 1).finished();
+  Eigen::Matrix<T, 4, 4> m = Eigen::Matrix<T, 4, 4>::Identity();
+  m.block(0, 0, 3, 3) = q.toRotationMatrix();
+  m.block(0, 3, 3, 1) = t;
+  return m;
 }
 
 }
@@ -32,40 +38,44 @@ Eigen::Matrix<T, 4, 4> Compose(const Eigen::Quaternion<T> &q, const Eigen::Matri
 /**
  Residual block for both marker and pose.
  */
-struct PoseResidual {
+struct MarkerResidual {
  public:
-  const Eigen::Matrix<double, 4, 4> m;
-  const Eigen::Matrix<double, 4, 4> k;
+  const Eigen::Matrix<double, 4, 4> p;
+  const Eigen::Matrix<double, 4, 4> &k;
   const std::vector<cv::Point2f> &corners;
 
-  PoseResidual(
+  MarkerResidual(
       const Eigen::Matrix<double, 4, 4> &k,
       const Eigen::Matrix<double, 3, 1> &t,
       const Eigen::Quaternion<double> &q,
       const std::vector<cv::Point2f> &corners)
-    : m(Compose(q, t))
+    : p(Compose(q, t))
     , k(k)
     , corners(corners)
   {
+    assert(corners.size() == 4);
   }
 
   template<typename T>
-  bool operator() (const T *const ppt, const T *const ppq, T *pr) const {
-
+  bool operator() (
+      const T *const pmt,
+      const T *const pmq,
+      T *pr) const
+  {
     // Map inputs: pose rotation + translation.
-    Eigen::Map<const Eigen::Matrix<T, 3, 1>> pt(ppt);
-    Eigen::Map<const Eigen::Quaternion<T>> pq(ppq);
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> mt(pmt);
+    Eigen::Map<const Eigen::Quaternion<T>> mq(pmq);
 
-    // Compose the pose matrix.
-    Eigen::Matrix<T, 4, 4> p = Eigen::Matrix<T, 4, 4>::Identity();
-    p.block(0, 0, 3, 3) = pq.toRotationMatrix();
-    p.block(0, 3, 3, 1) = pt;
+    // Compose the marker matrix.
+    Eigen::Matrix<T, 4, 4> m = Eigen::Matrix<T, 4, 4>::Identity();
+    m.block(0, 0, 3, 3) = mq.toRotationMatrix();
+    m.block(0, 3, 3, 1) = mt;
 
-    // Map outputs: 8 residuals.
+    // Compute outputs: 8 residuals.
     for (size_t i = 0; i < kGrid.size(); ++i) {
       const Eigen::Matrix<T, 4, 1> gx(T(kGrid[i].x()), T(kGrid[i].y()), T(kGrid[i].z()), T(1));
 
-      const Eigen::Matrix<T, 4, 1> x = (k * kC).cast<T>() * p * (kC * m).cast<T>() * gx;
+      const Eigen::Matrix<T, 4, 1> x = k.cast<T>() * p.cast<T>() * m * gx;
       pr[i * 2 + 0] = x.x() / x.z() - T(corners[i].x);
       pr[i * 2 + 1] = x.y() / x.z() - T(corners[i].y);
     }
@@ -76,33 +86,57 @@ struct PoseResidual {
 
 
 /**
- Marker only residual.
+ Residual block for marker + pose.
  */
-struct MarkerResidual {
+struct MarkerPoseResidual {
  public:
+  const Eigen::Matrix<double, 4, 4> k;
+  const std::vector<cv::Point2f> &corners;
+
+  MarkerPoseResidual(
+      const Eigen::Matrix<double, 4, 4> &k,
+      const std::vector<cv::Point2f> &corners)
+    : k(k)
+    , corners(corners)
+  {
+    assert(corners.size() == kGrid.size());
+  }
+
   template<typename T>
   bool operator() (
-      const T *const pmt,
-      const T *const pmq,
       const T *const ppt,
       const T *const ppq,
+      const T *const pmt,
+      const T *const pmq,
       T *pr) const
   {
-    // Map inputs: marker + pose rotation/translation.
-    Eigen::Map<const Eigen::Matrix<T, 3, 1>> mt(pmt);
-    Eigen::Map<const Eigen::Quaternion<T>> mq(pmq);
+    // Map inputs: pose rotation + translation.
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> pt(ppt);
     Eigen::Map<const Eigen::Quaternion<T>> pq(ppq);
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> mt(pmt);
+    Eigen::Map<const Eigen::Quaternion<T>> mq(pmq);
 
-    // Map outputs: 8 residuals.
-    Eigen::Map<Eigen::Matrix<T, 8, 1>> r(pr);
+    // Compose the marker matrix.
+    Eigen::Matrix<T, 4, 4> m = Eigen::Matrix<T, 4, 4>::Identity();
+    m.block(0, 0, 3, 3) = mq.toRotationMatrix();
+    m.block(0, 3, 3, 1) = mt;
+    // Compose the pose matrix.
+    Eigen::Matrix<T, 4, 4> p = Eigen::Matrix<T, 4, 4>::Identity();
+    p.block(0, 0, 3, 3) = pq.toRotationMatrix();
+    p.block(0, 3, 3, 1) = pt;
 
+    // Compute outputs: 8 residuals.
+    for (size_t i = 0; i < kGrid.size(); ++i) {
+      const Eigen::Matrix<T, 4, 1> gx(T(kGrid[i].x()), T(kGrid[i].y()), T(kGrid[i].z()), T(1));
 
+      const Eigen::Matrix<T, 4, 1> x = k.cast<T>() * p * m * gx;
+      pr[i * 2 + 0] = x.x() / x.z() - T(corners[i].x);
+      pr[i * 2 + 1] = x.y() / x.z() - T(corners[i].y);
+    }
 
-    return false;
+    return true;
   }
 };
-
 
 
 std::vector<Eigen::Matrix<double, 3, 1>> ArUcoTracker::Marker::world() const {
@@ -118,11 +152,17 @@ ArUcoTracker::ArUcoTracker(const cv::Mat k, const cv::Mat d)
   : Tracker(k, d)
   , dict_(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250))
   , params_(new cv::aruco::DetectorParameters())
+  , running_(true)
+  , thread_(&ArUcoTracker::RunBundleAdjustment, this)
 {
 }
 
+
 ArUcoTracker::~ArUcoTracker() {
+  running_ = false;
+  thread_.join();
 }
+
 
 Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
     const cv::Mat &frame,
@@ -139,6 +179,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
   // If no markers were discovered yet, fix the coorinate system's origin to
   // the centre of the first marker that is detected.
   if (markers_.empty()) {
+    std::lock_guard<std::mutex> lock(markerMutex_);
     markers_[ids[0]] = { { 0, 0, 0 }, { 1, 0, 0, 0 } };
   }
 
@@ -210,7 +251,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
           rvec, tvec,
           false,
           100,
-          5.0f,
+          2.0f,
           0.99f,
           inlierCorners,
           CV_EPNP
@@ -225,70 +266,120 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
 
     // Convert result to Eigen.
     Eigen::Matrix<double, 3, 1> r;
-    r(0, 0) = +rvec.at<double>(0, 0);
-    r(1, 0) = -rvec.at<double>(1, 0);
-    r(2, 0) = -rvec.at<double>(2, 0);
+    r(0, 0) = rvec.at<double>(0, 0);
+    r(1, 0) = rvec.at<double>(1, 0);
+    r(2, 0) = rvec.at<double>(2, 0);
     q = Eigen::AngleAxis<double>{ r.norm(), r.normalized() },
-    t = { +tvec.at<double>(0, 0), -tvec.at<double>(1, 0), -tvec.at<double>(2, 0) };
+    t = { tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0) };
   }
 
   // Iterate again and find the new markers. Express their position in the global
   // coordinate system of the markers. If new markers were added, perform bundle adjustment.
   // Concurrently, create an optimization problem to fix all the new poses concurrently.
-  ceres::Problem problem;
+  std::vector<size_t> added;
   for (size_t i = 0; i < ids.size(); ++i) {
-    const auto marker = markers_.find(ids[i]);
-    if (marker != markers_.end()) {
-      if (inliers.find(marker->first) != inliers.end()) {
-        problem.AddResidualBlock(
-            new ceres::AutoDiffCostFunction<PoseResidual, 8, 3, 4>(new PoseResidual(
-                K,
-                marker->second.t,
-                marker->second.q,
-                corners[i]
-            )),
-            new ceres::HuberLoss(1.0f),
-            t.data(),
-            q.coeffs().data()
-        );
-      }
-    } else {
-      // Locate the camera relative to the marker.
-      auto r = solvePnP(kGrid, corners[i]);
+    if (markers_.find(ids[i]) != markers_.end()) {
+      continue;
+    }
 
-      // Find the relative transformation.
-      Eigen::Matrix4d P = (Compose(q, t) * kC).inverse() * Compose(r.first, r.second) * kC;
-      
-      // Find the center point.
-      Eigen::Vector4d t = P * Eigen::Vector4d(0, 0, 0, 1);
+    // Locate the camera relative to the marker.
+    auto r = solvePnP(kGrid, corners[i]);
 
-      // Add the markers.
-      markers_[ids[i]] = {
-        Eigen::Matrix<double, 3, 1>(t.x(), t.y(), t.z()),
-        Eigen::Quaternion<double>(P.block<3, 3>(0, 0))
-      };
+    // Find the relative transformation.
+    Eigen::Matrix4d P = Compose(q, t).inverse() * Compose(r.first, r.second);
+    
+    // Find the center point.
+    Eigen::Vector4d centre = P * Eigen::Vector4d(0, 0, 0, 1);
+
+    // Add the markers.
+    std::unordered_map<int, Marker>::iterator marker;
+    {
+      std::lock_guard<std::mutex> lock(markerMutex_);
+      std::tie(marker, std::ignore) = markers_.insert(std::make_pair(ids[i], Marker{
+          Eigen::Matrix<double, 3, 1>(centre.x(), centre.y(), centre.z()),
+          Eigen::Quaternion<double>(P.block<3, 3>(0, 0))
+      }));
+      added.push_back(i);
     }
   }
 
+  // Add the optimizable block.
+  ceres::Problem problem;
+  ceres::LocalParameterization *qsParam = new QuaternionParametrization();
+  for (const auto &id : added) {
+    auto marker = markers_.find(ids[id]);
+    assert(marker != markers_.end());
+    assert(id < ids.size() && id < corners.size());
 
-  ceres::Solver::Summary summary;
-  ceres::Solver::Options options;
-  options.use_nonmonotonic_steps = true;
-  options.preconditioner_type = ceres::SCHUR_JACOBI;
-  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-  options.max_num_iterations = 30;
-  options.gradient_tolerance = 1e-3;
-  options.function_tolerance = 1e-3;
-  options.minimizer_progress_to_stdout = false;
+    problem.AddResidualBlock(
+        new ceres::AutoDiffCostFunction<MarkerResidual, 8, 3, 4>(new MarkerResidual(
+            K,
+            t,
+            q,
+            corners[id]
+        )),
+        nullptr,
+        marker->second.t.data(),
+        marker->second.q.coeffs().data()
+    );
+    problem.SetParameterization(marker->second.q.coeffs().data(), qsParam);
+  }
 
+  // Make sure that the quaternion is of unit length.
+  if (problem.NumResidualBlocks() > 0) {
+    std::lock_guard<std::mutex> lock(markerMutex_);
 
-  std::cerr << "I " << t.transpose() << "  " << q.coeffs().transpose() << std::endl;
-  ceres::Solve(options, &problem, &summary);
-  std::cerr << "F " << t.transpose() << "  " << q.coeffs().transpose() << std::endl;
+    ceres::Solver::Summary summary;
+    ceres::Solver::Options options;
+    options.use_nonmonotonic_steps = true;
+    options.preconditioner_type = ceres::SCHUR_JACOBI;
+    options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+    options.max_num_iterations = 20;
+    options.gradient_tolerance = 1e-3;
+    options.function_tolerance = 1e-3;
+    options.minimizer_progress_to_stdout = false;
+    ceres::Solve(options, &problem, &summary);
+  }
 
-  return { true, q.cast<float>(), t.cast<float>() };
+  // Check if the current pose is worth adding to the previous poses.
+  {
+    std::unique_lock<std::mutex> lock(poseMutex_);
+
+    bool addPose = true;
+    std::unordered_set<MarkerID> allMarkers;
+
+    for (const auto &pose : poses_) {
+      for (const auto &obs : pose.observed) {
+        allMarkers.insert(obs.first);
+      }
+
+      // Ensure the poses are far enough from each other.
+      if (((pose.t - t).norm() < kMinDistance) && (Angle(pose.q * q.inverse()) < kMinAngle)) {
+        addPose = false;
+        break;
+      }
+    }
+
+    // Add the pose if it contains a marker not yet discovered.
+    for (const auto &id : ids) {
+      if (allMarkers.find(id) == allMarkers.end()) {
+        addPose = true;
+      }
+    }
+
+    if (addPose) {
+      poses_.emplace_back(t, q, ids, corners);
+      lock.unlock();
+      cond_.notify_all();
+    }
+  }
+
+  return {
+      true,
+      Eigen::Quaternion<float>(q.w(), q.x(), -q.y(), -q.z()),
+      Eigen::Matrix<float, 3, 1>(t.x(), -t.y(), -t.z())
+  };
 }
-
 
 std::pair<Eigen::Quaternion<double>, Eigen::Matrix<double, 3, 1>> ArUcoTracker::solvePnP(
     const std::vector<Eigen::Matrix<double, 3, 1>> &world,
@@ -309,19 +400,123 @@ std::pair<Eigen::Quaternion<double>, Eigen::Matrix<double, 3, 1>> ArUcoTracker::
 
   // Convert to eigen.
   Eigen::Matrix<double, 3, 1> r;
-  r(0, 0) = +rvec.at<double>(0, 0);
-  r(1, 0) = -rvec.at<double>(1, 0);
-  r(2, 0) = -rvec.at<double>(2, 0);
+  r(0, 0) = rvec.at<double>(0, 0);
+  r(1, 0) = rvec.at<double>(1, 0);
+  r(2, 0) = rvec.at<double>(2, 0);
 
   // Convert rotation to angle-axis.
   return {
     Eigen::Quaternion<double>(Eigen::AngleAxis<double>{ r.norm(), r.normalized() }),
     Eigen::Matrix<double, 3, 1>{
-      +tvec.at<double>(0, 0),
-      -tvec.at<double>(1, 0),
-      -tvec.at<double>(2, 0)
+      tvec.at<double>(0, 0),
+      tvec.at<double>(1, 0),
+      tvec.at<double>(2, 0)
     }
   };
+}
+
+size_t ArUcoTracker::BundleAdjust() {
+
+  // Create a copy of the markers.
+  std::unordered_map<MarkerID, Marker> markers;
+  {
+    std::lock_guard<std::mutex> lock(markerMutex_);
+    markers = markers_;
+  }
+
+  // Create the bundle adjustment problem for all the markers and poses.
+  // The pose mutex protects only the vector - data stored in it is modified
+  // only from this thread, so it is safe to unlock after creating the problem.
+  std::list<std::pair<Eigen::Quaterniond, Eigen::Vector3d>> poses;
+  std::set<double*> qsParams;
+  ceres::Problem problem;
+  {
+    std::lock_guard<std::mutex> lock(poseMutex_);
+
+    for (auto &pose : poses_) {
+      poses.emplace_back(pose.q, pose.t);
+      qsParams.insert(poses.back().first.coeffs().data());
+
+      for (const auto &obs : pose.observed) {
+        auto marker = markers.find(obs.first);
+        problem.AddResidualBlock(
+            new ceres::AutoDiffCostFunction<MarkerPoseResidual, 8, 3, 4, 3, 4>(
+                new MarkerPoseResidual(K, obs.second)
+            ),
+            nullptr,
+            poses.back().second.data(),
+            poses.back().first.coeffs().data(),
+            marker->second.t.data(),
+            marker->second.q.coeffs().data()
+        );
+      }
+    }
+  }
+
+  // Fix the first marker.
+  {
+    problem.SetParameterBlockConstant(markers.begin()->second.q.coeffs().data());
+    problem.SetParameterBlockConstant(markers.begin()->second.t.data());
+  }
+
+  // Constrain quaternions to unit length.
+  auto *qsParam = new QuaternionParametrization();
+  for (const auto &q : qsParams) {
+    problem.SetParameterization(q, qsParam);
+  }
+
+  // Solve the problem.
+  ceres::Solver::Summary summary;
+  ceres::Solver::Options options;
+  options.use_inner_iterations = true;
+  options.use_nonmonotonic_steps = true;
+  options.preconditioner_type = ceres::SCHUR_JACOBI;
+  options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+  options.max_num_iterations = 30;
+  options.gradient_tolerance = 1e-3;
+  options.function_tolerance = 1e-3;
+  options.minimizer_progress_to_stdout = false;
+  ceres::Solve(options, &problem, &summary);
+
+  // Copy back the optimized markers.
+  {
+    std::unique_lock<std::mutex> lock(markerMutex_);
+    for (const auto &marker : markers) {
+      markers_[marker.first].q = marker.second.q;
+      markers_[marker.first].t = marker.second.t;
+    }
+  }
+
+  // Copy the optimized poses.
+  {
+    std::unique_lock<std::mutex> lock(poseMutex_);
+    auto pt = poses_.begin();
+    for (const auto &pose : poses) {
+      pt->q = pose.first;
+      pt->t = pose.second;
+      ++pt;
+    }
+  }
+
+  return poses.size();
+}
+
+void ArUcoTracker::RunBundleAdjustment() {
+
+  // Track the number of poses processed. Run BA once a new pose arrives.
+  size_t processed = 0;
+
+  while (running_) {
+    {
+      std::unique_lock<std::mutex> lock(poseMutex_);
+      cond_.wait(lock, [&]() { return processed < poses_.size() || !running_; });
+      if (!running_) {
+        break;
+      }
+    }
+
+    processed = BundleAdjust();
+  }
 }
 
 }
