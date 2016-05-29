@@ -45,12 +45,7 @@ LightProbeSampler::LightProbeSampler(size_t depth, const cv::Mat &image)
 
     for (int c = 0; c < image_.cols; ++c) {
       const auto &pix = pi[c];
-      pj[c] = cv::Vec4f(
-          cv::saturate_cast<uint8_t>(pix[0] * w),
-          cv::saturate_cast<uint8_t>(pix[1] * w),
-          cv::saturate_cast<uint8_t>(pix[2] * w),
-          pix[3]
-      );
+      pj[c] = cv::Vec4f(pix[0] * w, pix[1] * w, pix[2] * w, pix[3]);
     }
   }
 

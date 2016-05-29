@@ -46,7 +46,7 @@ class ArUcoTracker : public Tracker {
   /**
    solvePnP wrapper because OpenCV is funny.
    */
-  std::pair<Eigen::Quaternion<double>, Eigen::Matrix<double, 3, 1>> solvePnP(
+  std::tuple<Eigen::Quaternion<double>, Eigen::Matrix<double, 3, 1>, bool> solvePnP(
       const std::vector<Eigen::Matrix<double, 3, 1>> &world,
       const std::vector<cv::Point2f> &image);
 
@@ -109,6 +109,9 @@ class ArUcoTracker : public Tracker {
       }
     }
   };
+  
+  /// ID of the first marker, the reference point.
+  MarkerID reference_;
 
   /// List of poses to be optimized for.
   std::list<Pose> poses_;
