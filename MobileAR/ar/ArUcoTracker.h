@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <list>
@@ -20,6 +21,12 @@
 #include "ar/Tracker.h"
 
 namespace ar {
+
+/**
+ Number of tracked markers.
+ */
+constexpr size_t kNumMarkers = 200;
+
 
 /**
  ArUco Marker Tracking.
@@ -78,8 +85,22 @@ class ArUcoTracker : public Tracker {
     /// Rotation of the marker plane with respect to the horizontal plane.
     Eigen::Quaternion<double> q;
 
+
+    /// True if the marker was found.
+    bool found;
+    /// Measured poses from which the final position will be inferred.
+    std::vector<Eigen::Quaterniond> mq;
+    std::vector<Eigen::Vector3d> mt;
+
     /// Image points of the corners.
     std::vector<Eigen::Matrix<double, 3, 1>> world() const;
+
+    Marker()
+      : t(0, 0, 0)
+      , q(1, 0, 0, 0)
+      , found(false)
+    {
+    }
   };
 
   /// Pose with marker measurements.
@@ -119,7 +140,7 @@ class ArUcoTracker : public Tracker {
   std::mutex poseMutex_;
 
   /// List of all markers.
-  std::unordered_map<MarkerID, Marker> markers_;
+  std::array<Marker, kNumMarkers> markers_;
   /// Guard protecting markers.
   std::mutex markerMutex_;
 

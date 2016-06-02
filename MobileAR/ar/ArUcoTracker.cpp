@@ -19,9 +19,9 @@ namespace {
 /// Marker size.
 constexpr float kMarkerSize =  4.6;
 /// Minimum distance between graph poses.
-constexpr float kMinDistance = 10.0f;
+constexpr float kMinDistance = 20.0f;
 /// Minimum angle between two poses.
-constexpr float kMinAngle = 60.0f / 180.0f * M_PI;
+constexpr float kMinAngle = 45.0f / 180.0f * M_PI;
 /// Objects points for a single marker.
 const std::vector<Eigen::Matrix<double, 3, 1>> kGrid = {
   { -kMarkerSize / 2.0f, +kMarkerSize / 2.0f, 0.0f },
@@ -36,6 +36,8 @@ const Eigen::Matrix<double, 4, 4> kC = (Eigen::Matrix<double, 4, 4>() <<
      0,  0, -1,  0,
      0,  0,  0,  1
 ).finished();
+/// Maximum scene size.
+constexpr float kMaxDistance = 1000.0f;
 
 template<typename T>
 Eigen::Matrix<T, 4, 4> Compose(const Eigen::Quaternion<T> &q, const Eigen::Matrix<T, 3, 1> &t) {
@@ -107,6 +109,10 @@ struct MarkerResidual {
     m.block(0, 0, 3, 3) = mq.toRotationMatrix();
     m.block(0, 3, 3, 1) = mt;
 
+    if (mt.norm() > T(kMaxDistance)) {
+      return false;
+    }
+
     // Compute outputs: 8 residuals.
     for (size_t i = 0; i < kGrid.size(); ++i) {
       const Eigen::Matrix<T, 4, 1> gx(T(kGrid[i].x()), T(kGrid[i].y()), T(kGrid[i].z()), T(1));
@@ -161,6 +167,10 @@ struct MarkerPoseResidual {
     p.block(0, 0, 3, 3) = pq.toRotationMatrix();
     p.block(0, 3, 3, 1) = pt;
 
+    if (mt.norm() > T(kMaxDistance) || pt.norm() > T(kMaxDistance)) {
+      return false;
+    }
+
     // Compute outputs: 8 residuals.
     for (size_t i = 0; i < kGrid.size(); ++i) {
       const Eigen::Matrix<T, 4, 1> gx(T(kGrid[i].x()), T(kGrid[i].y()), T(kGrid[i].z()), T(1));
@@ -211,6 +221,10 @@ struct PoseResidual {
     p.block(0, 0, 3, 3) = pq.toRotationMatrix();
     p.block(0, 3, 3, 1) = pt;
 
+    if (pt.norm() > T(kMaxDistance)) {
+      return false;
+    }
+
     // Compute outputs: 8 residuals.
     for (size_t i = 0; i < kGrid.size(); ++i) {
       const Eigen::Matrix<T, 4, 1> gx(T(kGrid[i].x()), T(kGrid[i].y()), T(kGrid[i].z()), T(1));
@@ -238,6 +252,7 @@ ArUcoTracker::ArUcoTracker(const cv::Mat k, const cv::Mat d)
   : Tracker(k, d)
   , dict_(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250))
   , params_(new cv::aruco::DetectorParameters())
+  , reference_(kNumMarkers)
   , running_(true)
   , thread_(&ArUcoTracker::RunBundleAdjustment, this)
 {
@@ -246,6 +261,7 @@ ArUcoTracker::ArUcoTracker(const cv::Mat k, const cv::Mat d)
 
 ArUcoTracker::~ArUcoTracker() {
   running_ = false;
+  cond_.notify_all();
   thread_.join();
 }
 
@@ -261,13 +277,12 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
   if (ids.empty()) {
     return { false, {}, {} };
   }
-  ids.erase(std::remove_if(ids.begin(), ids.end(), [](int id) { return id % 5 != 0; }), ids.end());
 
   // If no markers were discovered yet, fix the coorinate system's origin to
   // the centre of the first marker that is detected.
-  if (markers_.empty()) {
+  if (reference_ >= kNumMarkers) {
     std::lock_guard<std::mutex> lock(markerMutex_);
-    markers_[ids[0]] = { { 0, 0, 0 }, { 1, 0, 0, 0 } };
+    markers_[ids[0]].found = true;
     reference_ = ids[0];
   }
 
@@ -275,7 +290,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
   {
     bool found = false;
     for (const auto &id : ids) {
-      if (markers_.find(id) != markers_.end()) {
+      if (markers_[id].found) {
         found = true;
         break;
       }
@@ -299,13 +314,12 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
       assert(corners[i].size() == 4);
 
       // Fetch the marker from the database.
-      auto marker = markers_.find(ids[i]);
-      if (marker == markers_.end()) {
+      if (!markers_[ids[i]].found) {
         continue;
       }
 
       // Fetch the markerse.
-      const auto object = marker->second.world();
+      const auto object = markers_[ids[i]].world();
 
       // Array to recover inlier IDs from.
       markerID.push_back(ids[i]);
@@ -338,7 +352,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
           k, d,
           rvec, tvec,
           false,
-          100,
+          50,
           1.0f,
           0.99f,
           inlierCorners,
@@ -367,8 +381,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
   ceres::Problem problem;
   ceres::LocalParameterization *qsParam = new QuaternionParametrization();
   for (size_t i = 0; i < ids.size(); ++i) {
-    std::unordered_map<int, Marker>::iterator marker = markers_.find(ids[i]);
-    if (marker != markers_.end()) {
+    if (markers_[ids[i]].found) {
       continue;
     }
 
@@ -383,35 +396,49 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
     
     // Find the center point.
     Eigen::Vector4d centre = P * Eigen::Vector4d(0, 0, 0, 1);
-    std::cout
-        << "Discovered: " << std::endl
-        << ids[i] << " "
-        << centre.x() << " " << centre.y() << " " << centre.z() << " "
-        << Eigen::Quaterniond(P.block<3, 3>(0, 0)).coeffs().transpose()
-        << std::endl;
+    Eigen::Vector3d mt(centre.x(), centre.y(), centre.z());
+    Eigen::Quaterniond mq(P.block<3, 3>(0, 0));
 
-    // Create the marker in the hash map.
-    {
-      std::lock_guard<std::mutex> lock(markerMutex_);
-      std::tie(marker, std::ignore) = markers_.insert(std::make_pair(ids[i], Marker{
-          Eigen::Matrix<double, 3, 1>(centre.x(), centre.y(), centre.z()),
-          Eigen::Quaternion<double>(P.block<3, 3>(0, 0))
-      }));
+    // Add the measurement to the list.
+    assert(markers_[ids[i]].mq.size() == markers_[ids[i]].mt.size());
+    if (markers_[ids[i]].mq.size() < 5) {
+      markers_[ids[i]].mq.push_back(mq);
+      markers_[ids[i]].mt.push_back(mt);
     }
 
-    // Add the marker to the list of markers.
-    problem.AddResidualBlock(
-        new ceres::AutoDiffCostFunction<MarkerResidual, 8, 3, 4>(new MarkerResidual(
-            K,
-            t,
-            q,
-            corners[i]
-        )),
-        nullptr,
-        marker->second.t.data(),
-        marker->second.q.coeffs().data()
-    );
-    problem.SetParameterization(marker->second.q.coeffs().data(), qsParam);
+    // If enough measurements were made, find the pose.
+    if (markers_[ids[i]].mq.size() >= 5) {
+
+      // Create the marker in the hash map.
+      {
+        std::lock_guard<std::mutex> lock(markerMutex_);
+        markers_[ids[i]].found = true;
+        markers_[ids[i]].t = VectorMedian<double, 3>(markers_[ids[i]].mt);
+        markers_[ids[i]].q = QuaternionAverage<double>(markers_[ids[i]].mq);
+
+        std::cout
+            << "Discovered: " << std::endl
+            << ids[i] << " "
+            << markers_[ids[i]].t.transpose() << " "
+            << markers_[ids[i]].q.coeffs().transpose()
+            << std::endl;
+
+      }
+
+      // Add the marker to the list of markers.
+      problem.AddResidualBlock(
+          new ceres::AutoDiffCostFunction<MarkerResidual, 8, 3, 4>(new MarkerResidual(
+              K,
+              t,
+              q,
+              corners[i]
+          )),
+          nullptr,
+          markers_[ids[i]].t.data(),
+          markers_[ids[i]].q.coeffs().data()
+      );
+      problem.SetParameterization(markers_[ids[i]].q.coeffs().data(), qsParam);
+    }
   }
 
   // Make sure that the quaternion is of unit length.
@@ -463,6 +490,12 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
       if (allMarkers.find(id) == allMarkers.end()) {
         addPose = true;
       }
+    }
+
+    // Add the pose if there are any outliers.
+    if (inliers.size() != ids.size()) {
+      std::cerr << inliers.size() << " " << ids.size() << std::endl;
+      addPose = true;
     }
 
     if (addPose) {
@@ -519,7 +552,7 @@ std::tuple<Eigen::Quaternion<double>, Eigen::Matrix<double, 3, 1>, bool> ArUcoTr
 size_t ArUcoTracker::BundleAdjust() {
 
   // Create a copy of the markers.
-  std::unordered_map<MarkerID, Marker> markers;
+  std::array<Marker, kNumMarkers> markers;
   {
     std::lock_guard<std::mutex> lock(markerMutex_);
     markers = markers_;
@@ -539,18 +572,18 @@ size_t ArUcoTracker::BundleAdjust() {
       qsParams.insert(poses.back().first.coeffs().data());
 
       for (const auto &obs : pose.observed) {
-        auto marker = markers.find(obs.first);
+        auto &marker = markers[obs.first];
         problem.AddResidualBlock(
             new ceres::AutoDiffCostFunction<MarkerPoseResidual, 8, 3, 4, 3, 4>(
                 new MarkerPoseResidual(K, obs.second)
             ),
-            new ceres::HuberLoss(2.0f),
+            nullptr,
             poses.back().second.data(),
             poses.back().first.coeffs().data(),
-            marker->second.t.data(),
-            marker->second.q.coeffs().data()
+            marker.t.data(),
+            marker.q.coeffs().data()
         );
-        qsParams.insert(marker->second.q.coeffs().data());
+        qsParams.insert(marker.q.coeffs().data());
       }
     }
   }
@@ -588,15 +621,17 @@ size_t ArUcoTracker::BundleAdjust() {
     std::unique_lock<std::mutex> lock(markerMutex_);
 
     std::cout << "Optimized:" << std::endl;
-    for (const auto &marker : markers) {
-      markers_[marker.first].q = marker.second.q;
-      markers_[marker.first].t = marker.second.t;
+    for (size_t i = 0; i < kNumMarkers; ++i) {
+      if (markers[i].found) {
+        markers_[i].q = markers[i].q;
+        markers_[i].t = markers[i].t;
 
-      std::cout
-          << marker.first << " "
-          << marker.second.t.transpose() << " "
-          << marker.second.q.coeffs().transpose()
-          << std::endl;
+        std::cout
+            << std::setw(3)  << i << " "
+            << std::setw(5) << markers[i].t.transpose() << " "
+            << std::setw(5) << markers[i].q.coeffs().transpose()
+            << std::endl;
+      }
     }
   }
 
@@ -618,7 +653,6 @@ void ArUcoTracker::RunBundleAdjustment() {
 
   // Track the number of poses processed. Run BA once a new pose arrives.
   size_t processed = 0;
-
   while (running_) {
     {
       std::unique_lock<std::mutex> lock(poseMutex_);
@@ -627,6 +661,7 @@ void ArUcoTracker::RunBundleAdjustment() {
         break;
       }
     }
+    std::cout << processed << "/" << poses_.size() << std::endl;
     processed = BundleAdjust();
   }
 }

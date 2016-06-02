@@ -257,7 +257,7 @@ extension CMDeviceMotion {
    Processes a frame from the device's camera.
    */
   func onCameraFrame(frame: UIImage) {
-    self.renderer.updateFrame(frame)
+    renderer.updateFrame(frame)
     tracker.trackFrame(frame)
   }
 
@@ -285,7 +285,9 @@ extension CMDeviceMotion {
    Called when the user taps on the screen and an object is to be added.
    */
   override func touchesEnded(touches: Set<UITouch>, withEvent: UIEvent?) {
-    let pose = tracker.getPose()
+    guard let pose = tracker.getPose() else {
+      return
+    }
 
     for touch in touches {
       // Find the screen space coordinate of the touch.

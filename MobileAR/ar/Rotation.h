@@ -141,6 +141,26 @@ Eigen::Quaternion<T> QuaternionAverage(const std::vector<Eigen::Quaternion<T>> &
 
 
 /**
+ Median of N-D vectors.
+ */
+template<typename T, size_t N>
+Eigen::Matrix<T, N, 1> VectorMedian(const std::vector<Eigen::Matrix<T, N, 1>> &vs) {
+  Eigen::Matrix<T, N, 1> v;
+
+  // Find the median in each dimension.
+  for (size_t i = 0; i < N; ++i) {
+    std::vector<T> xs;
+    for (const auto &v : vs) {
+      xs.push_back(v(i, 0));
+    }
+    std::sort(xs.begin(), xs.end());
+    v(i, 0) = xs[xs.size() / 2];
+  }
+  return v;
+}
+
+
+/**
  Returns the rotation angle of a quaternion, in [-pi, pi]
  */
 template<typename T>

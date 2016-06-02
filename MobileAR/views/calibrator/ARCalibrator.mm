@@ -20,6 +20,7 @@ static constexpr double kMinDistance = 5.0f;
 static const cv::Size kPatternSize(4, 11);
 
 
+
 /**
  Computes the distance between two sets of image points.
  */

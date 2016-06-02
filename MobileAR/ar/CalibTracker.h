@@ -33,10 +33,6 @@ class CalibTracker : public Tracker {
  private:
   // Reference grid.
   std::vector<cv::Point3f> grid_;
-  
-  // Temporary OpenCV mats.
-  cv::Mat rvec_;
-  cv::Mat tvec_;
 };
 
 }

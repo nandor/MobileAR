@@ -44,22 +44,23 @@ Tracker::TrackingResult CalibTracker::TrackFrameImpl(const cv::Mat &frame, float
   }
 
   // If pattern found, use solvePnP to compute pose.
-  cv::solvePnP({ grid_ }, corners, k, d, rvec_, tvec_, false, CV_EPNP);
+  cv::Mat rvec, tvec;
+  cv::solvePnP({ grid_ }, corners, k, d, rvec, tvec, false, CV_EPNP);
 
   // Pass to Eigen.
   Eigen::Matrix<float, 3, 1> r;
-  r(0, 0) =  rvec_.at<double>(0, 0);
-  r(1, 0) = -rvec_.at<double>(1, 0);
-  r(2, 0) = -rvec_.at<double>(2, 0);
+  r(0, 0) =  rvec.at<double>(0, 0);
+  r(1, 0) = -rvec.at<double>(1, 0);
+  r(2, 0) = -rvec.at<double>(2, 0);
 
   // Convert rotation to angle-axis.
   return {
       true,
       Eigen::Quaternion<float>(Eigen::AngleAxis<float>{ r.norm(), r.normalized() }),
       Eigen::Matrix<float, 3, 1>{
-          +tvec_.at<double>(0, 0),
-          -tvec_.at<double>(1, 0),
-          -tvec_.at<double>(2, 0)
+          +tvec.at<double>(0, 0),
+          -tvec.at<double>(1, 0),
+          -tvec.at<double>(2, 0)
       }
   };
 }
