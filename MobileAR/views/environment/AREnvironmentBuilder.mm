@@ -42,6 +42,24 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 }
 
 
+
+@implementation AREnvironmentMap
+
+- (instancetype)initWithMap:(UIImage*)map exposure:(float)exposure
+{
+  if (!(self = [super init])) {
+    return nil;
+  }
+
+  self.map = map;
+  self.exposure = exposure;
+  return self;
+}
+
+@end
+
+
+
 @implementation ARHDRFrame
 {
 }
@@ -142,18 +160,29 @@ simd::float4x4 ToSIMD(const Eigen::Matrix<float, 3, 3> &r) {
 }
 
 
-- (void)composite:(void(^)(NSString*, NSArray<UIImage*>*))progressBlock;
+- (void)composite:(void(^)(NSString*, NSArray<AREnvironmentMap*>*))progressBlock;
 {
   // Run the task on a background queue.
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
     // Build the panorama & convert progress messages.
-    auto result = builder->Composite([&progressBlock](const std::string &message) {
+    auto results = builder->Composite([&progressBlock](const std::string &message) {
       dispatch_async(dispatch_get_main_queue(), ^{ progressBlock(@(message.c_str()), nil);});
     });
 
-    NSArray<UIImage*>* array = [[NSArray<UIImage*> alloc] init];
-    // TODO: fill in the array.
-      dispatch_async(dispatch_get_main_queue(), ^{ progressBlock(@"Finished", array); });
+    // Convert the envmaps to Objective C types.
+    std::vector<AREnvironmentMap*> envmaps;
+    for (const auto &result : results) {
+      UIImage *image = [UIImage imageWithCvMat:result.first];
+      envmaps.push_back([[AREnvironmentMap alloc] initWithMap:image exposure:result.second]);
+    }
+
+    // Pass the array to the callback.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      progressBlock(
+          @"Finished",
+          [[NSArray<AREnvironmentMap*> alloc] initWithObjects:&envmaps[0] count:envmaps.size()]
+      );
+    });
   });
 }
 

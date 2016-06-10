@@ -29,6 +29,21 @@
 
 @end
 
+/**
+ A single environment map with an exposure duration.
+ */
+@interface AREnvironmentMap : NSObject
+
+@property (nonatomic) UIImage *map;
+@property (nonatomic) float exposure;
+
+/**
+ Initializes the environment map.
+ */
+- (instancetype)initWithMap:(UIImage*)map exposure:(float)exposure;
+
+@end
+
 
 /**
  Bridge between Swift and C++ spherical stitching.
@@ -48,6 +63,6 @@
 /**
  Composites the panorama.
  */
-- (void)composite:(void(^)(NSString*, NSArray<UIImage*>*))progressBlock;
+- (void)composite:(void(^)(NSString*, NSArray<AREnvironmentMap*>*))progressBlock;
 
 @end

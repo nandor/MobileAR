@@ -127,10 +127,15 @@ extension CMDeviceMotion {
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
 
     // Add a single test cube.
-    renderer.objects.append(ARObject(
-      mesh: "cube",
-      model: float4x4(t: float3(0, 0, 0))
-    ))
+    let n = 1
+    for i in 0...n-1 {
+      for j in 0...n-1 {
+        renderer.objects.append(ARObject(
+          mesh: "cube",
+          model: float4x4(t: float3(Float(i - n / 2) * 5, Float(j - n / 2) * 5, 0))
+        ))
+      }
+    }
 
 
     // Timer to run the rendering/update loop.

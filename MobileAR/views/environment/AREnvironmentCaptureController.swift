@@ -325,7 +325,7 @@ class AREnvironmentCaptureController
   /**
    Saves a panorama to disk.
    */
-  func saveEnvironment(name: String, path: NSURL, images: [UIImage]) {
+  func saveEnvironment(name: String, path: NSURL, images: [AREnvironmentMap]) {
     // Create an environment object and save it.
     let env = AREnvironment(
       path: path,

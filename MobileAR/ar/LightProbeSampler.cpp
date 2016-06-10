@@ -103,7 +103,7 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
       std::cos(M_PI / 2.0f - region.y1 / height_ * M_PI)
   ) / 2.0f;
 
-  sumW *= (image_.cols * image_.cols / M_PI) / (area * 2);
+  sumW *= (image_.cols * image_.cols / M_PI) / (area * 4);
 
   // Compute average intensity.
   const float b = sumB / (sumW * 255.0f);
