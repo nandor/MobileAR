@@ -6,7 +6,7 @@ import Foundation
 import CoreLocation
 
 /// Number of levels to sample lights.
-let kSamplingLevels: Int = 5
+let kSamplingLevels: Int = 7
 
 
 /**
@@ -15,6 +15,7 @@ let kSamplingLevels: Int = 5
 enum AREnvironmentError : ErrorType {
   case MalformedData
   case MissingEnvironmentMap
+  case MissingHDRMap
 }
 
 
@@ -29,10 +30,16 @@ class AREnvironment {
   // GPS coordinate where the image was taken.
   var location: CLLocation?
 
-  // Environment map.
-  var map: UIImage!
+  // Tone-Mapped environment map preview.
+  var ldr: UIImage!
+  // High Dynamic Range environment map.
+  var hdr: ARHDRImage!
   // List of light sources.
-  var lights: [ARLight] = []
+  var lightsLDR: [ARLight] = []
+  // List of light sources.
+  var lightsHDR: [ARLight] = []
+  // List of images.
+  var images: [AREnvironmentMap] = []
 
   /**
    Creates a new environment.
@@ -40,11 +47,15 @@ class AREnvironment {
   init(
       path: NSURL,
       name: String,
-      location: CLLocation?)
+      location: CLLocation?,
+      images: [AREnvironmentMap])
   {
     self.path = path
     self.name = name
     self.location = location
+    self.images = images
+    self.hdr = ARHDRBuilder.build(self.images)
+    self.ldr = ARToneMapper.map(self.hdr)
   }
 
   /**
@@ -91,40 +102,89 @@ class AREnvironment {
     guard NSFileManager.defaultManager().fileExistsAtPath(environmentPath) else {
       throw AREnvironmentError.MissingEnvironmentMap
     }
-    self.map = UIImage(contentsOfFile: environmentPath)
+    self.ldr = UIImage(contentsOfFile: environmentPath)
+
+    // Locate the HDR map.
+    guard let hdrPath = path.URLByAppendingPathComponent("envmap.hdr").path else {
+      throw AREnvironmentError.MissingHDRMap
+    }
+    guard NSFileManager.defaultManager().fileExistsAtPath(hdrPath) else {
+      throw AREnvironmentError.MissingHDRMap
+    }
+    self.hdr = ARHDRImage(data: NSData(contentsOfFile: hdrPath)!)
 
     // Sample so we can adjust levels.
-    self.lights = ARLightProbeSampler.sampleVarianceCut(map, levels: kSamplingLevels)
+    self.lightsLDR = ARLightProbeSampler.sampleVarianceCutLDR(ldr, levels: kSamplingLevels)
+    self.lightsHDR = ARLightProbeSampler.sampleVarianceCutHDR(hdr, levels: kSamplingLevels)
   }
 
   /**
    Saves the environment.
    */
-  func save() {
+  func save() throws {
+    do {
+      // Create the directory where the environment will be stored.
+      try NSFileManager.defaultManager().createDirectoryAtURL(
+          path,
+          withIntermediateDirectories: true,
+          attributes: nil
+      )
 
-    // Create the directory where the environment will be stored.
-    try! NSFileManager.defaultManager().createDirectoryAtURL(
-        path,
-        withIntermediateDirectories: true,
-        attributes: nil
-    )
+      // Write the data to the json file.
+      var data : [String : AnyObject] = [ "name": name ]
 
-    // Write the data to the json file.
-    var data : [String : AnyObject ] = [ "name": name ]
-    if let loc = location {
-      data["location"] = [
-          "lat": loc.coordinate.latitude,
-          "lng": loc.coordinate.longitude,
-          "alt": loc.altitude
-      ]
+      // If position is available, save it.
+      if let loc = location {
+        data["location"] = [
+            "lat": loc.coordinate.latitude,
+            "lng": loc.coordinate.longitude,
+            "alt": loc.altitude
+        ]
+      }
+
+      // Save all images.
+      var index = 0
+      var imageData : [String: AnyObject] = [:]
+      for image in images {
+        imageData["\(index)"] = [
+          "exposure": image.exposure,
+          "image": "\(index)"
+        ]
+
+        // Write the exposure level.
+        try UIImagePNGRepresentation(image.map)?.writeToURL(
+          path.URLByAppendingPathComponent("exp_\(index).png"),
+          options: NSDataWritingOptions()
+        )
+
+        index = index + 1
+      }
+      data["images"] = imageData
+
+      // Write the HDR image.
+      try hdr.data().writeToURL(
+          path.URLByAppendingPathComponent("envmap.hdr"),
+          options: NSDataWritingOptions()
+      )
+
+      // Write the tone-mapped envmap.
+      try UIImagePNGRepresentation(ldr)?.writeToURL(
+          path.URLByAppendingPathComponent("envmap.png"),
+          options: NSDataWritingOptions()
+      )
+
+      // Write the JSON dict.
+      (try NSJSONSerialization.dataWithJSONObject(
+          data,
+          options: NSJSONWritingOptions()
+      )).writeToURL(
+          path.URLByAppendingPathComponent("data.json"),
+          atomically: true
+      )
+    } catch {
+      try NSFileManager.defaultManager().removeItemAtURL(path)
+      throw error
     }
-    (try! NSJSONSerialization.dataWithJSONObject(
-        data,
-        options: NSJSONWritingOptions()
-    )).writeToURL(
-        path.URLByAppendingPathComponent("data.json"),
-        atomically: true
-    )
   }
 
   /**

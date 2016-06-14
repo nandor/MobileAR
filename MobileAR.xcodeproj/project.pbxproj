@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A03217E1D0AB776005FBBC1 /* ARToneMapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A03217D1D0AB776005FBBC1 /* ARToneMapper.mm */; };
 		7A1D62301CDA9B9D006CAA1D /* ToneMapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */; };
 		7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A1E3BB81C5962AF00E63312 /* ARMesh.metal */; };
 		7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A2FE8FB1C77DF5A009BECCC /* LightProbeSampler.cpp */; };
@@ -25,6 +26,9 @@
 		7A62D67B1C9B881900BE42C8 /* ARFXAA.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */; };
 		7A62D67D1C9B887C00BE42C8 /* ARLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */; };
 		7A62D67F1C9B889300BE42C8 /* ARSSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */; };
+		7A6738DE1D0DB9830031489B /* ARHDRBuilder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A6738DD1D0DB9830031489B /* ARHDRBuilder.mm */; };
+		7A6738E11D0DC3BF0031489B /* ARHDRImage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A6738E01D0DC3BF0031489B /* ARHDRImage.mm */; };
+		7A6738E41D0DC43D0031489B /* ARHDRImage+cvMat.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7A6738E31D0DC43D0031489B /* ARHDRImage+cvMat.mm */; };
 		7A7093031CC639BE003D6742 /* ARQuaternion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7093021CC639BE003D6742 /* ARQuaternion.swift */; };
 		7A7093091CC78FCB003D6742 /* libceres.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A7093071CC78F89003D6742 /* libceres.a */; };
 		7A7204A21CE4892A00BED4F5 /* CalibTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A7204A01CE4892A00BED4F5 /* CalibTracker.cpp */; };
@@ -67,6 +71,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7A03217C1D0AB776005FBBC1 /* ARToneMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARToneMapper.h; sourceTree = "<group>"; };
+		7A03217D1D0AB776005FBBC1 /* ARToneMapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARToneMapper.mm; sourceTree = "<group>"; };
 		7A1B7FF71CC3E8E6002184B6 /* Jet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Jet.h; path = ar/Jet.h; sourceTree = "<group>"; };
 		7A1D622E1CDA9B9D006CAA1D /* ToneMapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ToneMapper.cpp; path = ar/ToneMapper.cpp; sourceTree = "<group>"; };
 		7A1D622F1CDA9B9D006CAA1D /* ToneMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ToneMapper.h; path = ar/ToneMapper.h; sourceTree = "<group>"; };
@@ -93,6 +99,12 @@
 		7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARFXAA.metal; sourceTree = "<group>"; };
 		7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARLighting.metal; sourceTree = "<group>"; };
 		7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARSSAO.metal; sourceTree = "<group>"; };
+		7A6738DC1D0DB9830031489B /* ARHDRBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARHDRBuilder.h; sourceTree = "<group>"; };
+		7A6738DD1D0DB9830031489B /* ARHDRBuilder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARHDRBuilder.mm; sourceTree = "<group>"; };
+		7A6738DF1D0DC3BF0031489B /* ARHDRImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARHDRImage.h; sourceTree = "<group>"; };
+		7A6738E01D0DC3BF0031489B /* ARHDRImage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARHDRImage.mm; sourceTree = "<group>"; };
+		7A6738E21D0DC43D0031489B /* ARHDRImage+cvMat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ARHDRImage+cvMat.h"; sourceTree = "<group>"; };
+		7A6738E31D0DC43D0031489B /* ARHDRImage+cvMat.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "ARHDRImage+cvMat.mm"; sourceTree = "<group>"; };
 		7A7093021CC639BE003D6742 /* ARQuaternion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARQuaternion.swift; sourceTree = "<group>"; };
 		7A7093041CC63EC4003D6742 /* Rotation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Rotation.h; path = ar/Rotation.h; sourceTree = "<group>"; };
 		7A7093071CC78F89003D6742 /* libceres.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libceres.a; path = ../../../../../usr/local/lib/libceres.a; sourceTree = "<group>"; };
@@ -220,6 +232,8 @@
 				C13F8DF99955090111513222 /* UIImage+cvMat.mm */,
 				C13F8CE8241A1256290EF954 /* UIImage+MTLTexture.mm */,
 				C13F85C9D9D52C8EBB2DDBCC /* UIImage+MTLTexture.h */,
+				7A6738E21D0DC43D0031489B /* ARHDRImage+cvMat.h */,
+				7A6738E31D0DC43D0031489B /* ARHDRImage+cvMat.mm */,
 			);
 			path = MobileAR;
 			sourceTree = "<group>";
@@ -241,6 +255,12 @@
 				C13F89E4952DA243444FDE06 /* ARLightProbeSampler.mm */,
 				C13F8671F134CD5EC313C960 /* ARLightProbeSampler.h */,
 				7A7093021CC639BE003D6742 /* ARQuaternion.swift */,
+				7A03217C1D0AB776005FBBC1 /* ARToneMapper.h */,
+				7A03217D1D0AB776005FBBC1 /* ARToneMapper.mm */,
+				7A6738DC1D0DB9830031489B /* ARHDRBuilder.h */,
+				7A6738DD1D0DB9830031489B /* ARHDRBuilder.mm */,
+				7A6738DF1D0DC3BF0031489B /* ARHDRImage.h */,
+				7A6738E01D0DC3BF0031489B /* ARHDRImage.mm */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -416,6 +436,8 @@
 				7A3F5D9A1C5D1D010044F6FC /* ARFileReader.swift in Sources */,
 				C13F815F06C2347ED7E8731C /* PhotoSphereBuilder.cpp in Sources */,
 				C13F80C0886DF2EF0DF14E40 /* VarianceCutSampler.cpp in Sources */,
+				7A6738E41D0DC43D0031489B /* ARHDRImage+cvMat.mm in Sources */,
+				7A6738DE1D0DB9830031489B /* ARHDRBuilder.mm in Sources */,
 				7A2FE8FD1C77DF5A009BECCC /* LightProbeSampler.cpp in Sources */,
 				7A7204A81CE48A6400BED4F5 /* Tracker.cpp in Sources */,
 				7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */,
@@ -443,6 +465,8 @@
 				C13F8471FB56C1D1286409A8 /* ARSceneRenderer.swift in Sources */,
 				C13F8922F94928E19AF4B060 /* ARMesh.swift in Sources */,
 				7A1E3BB91C5962AF00E63312 /* ARMesh.metal in Sources */,
+				7A03217E1D0AB776005FBBC1 /* ARToneMapper.mm in Sources */,
+				7A6738E11D0DC3BF0031489B /* ARHDRImage.mm in Sources */,
 				C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */,
 				7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */,
 				7A37CDE91CCA8A25007FA3CF /* BlurDetector.cpp in Sources */,
@@ -547,7 +571,7 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_ENABLE_MODULES = YES;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -579,7 +603,10 @@
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
 				MTL_OPTIMIZATION_LEVEL = 3;
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-std=c++1y",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;
@@ -594,7 +621,7 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_ENABLE_MODULES = YES;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -626,7 +653,10 @@
 				MTL_HEADER_SEARCH_PATHS = MobileAR/core;
 				MTL_LANGUAGE_REVISION = Metal11;
 				MTL_OPTIMIZATION_LEVEL = 3;
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-std=c++1y",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "uk.ac.ic---build-git--classes--arc-diff.MobileAR";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = MobileAR/ARBridgingHeader.h;

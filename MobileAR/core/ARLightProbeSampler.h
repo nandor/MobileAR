@@ -5,6 +5,7 @@
 #import <UIKit/UIKit.h>
 
 @class ARLight;
+@class ARHDRImage;
 
 /**
  Encapsulates and wraps light probe sampling logic.
@@ -12,13 +13,23 @@
 @interface ARLightProbeSampler : NSObject
 
 /**
- Creates a new Variance Cut Sampler.
+ Samples using variance cut sampling.
  */
-+ (NSArray<ARLight*>*)sampleVarianceCut:(UIImage*)image levels:(size_t)levels;
++ (NSArray<ARLight*>*)sampleVarianceCutLDR:(UIImage*)image levels:(size_t)levels;
 
 /**
- Initializes a new Median Cut Sampler.
+ Samples using median cut sampling.
  */
-+ (NSArray<ARLight*>*)sampleMedianCut:(UIImage*)image levels:(size_t)levels;
++ (NSArray<ARLight*>*)sampleMedianCutLDR:(UIImage*)image levels:(size_t)levels;
+
+/**
+ Samples a HDR image using variance cut smapling.
+ */
++ (NSArray<ARLight*>*)sampleVarianceCutHDR:(ARHDRImage*)image levels:(size_t)levels;
+
+/**
+ Samples a HDR image using median cut sampling.
+ */
++ (NSArray<ARLight*>*)sampleMedianCutHDR:(ARHDRImage*)image levels:(size_t)levels;
 
 @end

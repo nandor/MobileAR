@@ -292,7 +292,7 @@ class AREnvironmentCaptureController
     // Queue the image for compositing.
     renderer.update(frames.last!.frame, pose: frames.last!.pose)
 
-    saveFrame(frame)
+    //saveFrame(frame)
   }
 
   /**
@@ -326,13 +326,15 @@ class AREnvironmentCaptureController
    Saves a panorama to disk.
    */
   func saveEnvironment(name: String, path: NSURL, images: [AREnvironmentMap]) {
+    
     // Create an environment object and save it.
     let env = AREnvironment(
       path: path,
       name: name,
-      location: location
+      location: location,
+      images: images
     )
-    env.save()
+    try! env.save()
 
     // Set environment as current.
     NSUserDefaults().setObject(env.path.path!, forKey: "environment")

@@ -4,6 +4,7 @@
 
 #import "MobileAR-Swift.h"
 #import "UIImage+cvMat.h"
+#import "ARHDRImage+cvMat.h"
 
 #include <memory>
 
@@ -17,13 +18,24 @@
 }
 
 
-+ (NSArray<ARLight*>*)sampleVarianceCut:(UIImage*)image levels:(size_t)levels
++ (NSArray<ARLight*>*)sampleVarianceCutLDR:(UIImage*)image levels:(size_t)levels
 {
   return [ARLightProbeSampler sample: ar::VarianceCutSampler(levels, [image cvMat])];
 }
 
 
-+ (NSArray<ARLight*>*)sampleMedianCut:(UIImage*)image levels:(size_t)levels
++ (NSArray<ARLight*>*)sampleMedianCutLDR:(UIImage*)image levels:(size_t)levels
+{
+  return [ARLightProbeSampler sample: ar::MedianCutSampler(levels, [image cvMat])];
+}
+
++ (NSArray<ARLight*>*)sampleVarianceCutHDR:(ARHDRImage*)image levels:(size_t)levels
+{
+  return [ARLightProbeSampler sample: ar::VarianceCutSampler(levels, [image cvMat])];
+}
+
+
++ (NSArray<ARLight*>*)sampleMedianCutHDR:(ARHDRImage*)image levels:(size_t)levels
 {
   return [ARLightProbeSampler sample: ar::MedianCutSampler(levels, [image cvMat])];
 }

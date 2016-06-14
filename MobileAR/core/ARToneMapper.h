@@ -2,11 +2,16 @@
 // Licensing information can be found in the LICENSE file.
 // (C) 2015 Nandor Licker. All rights reserved.
 
-#import "ARCalibrator.h"
+#import <Foundation/Foundation.h>
+
 #import "AREnvironmentBuilder.h"
-#import "ARLightProbeSampler.h"
-#import "ARMarkerPoseTracker.h"
-#import "ARPoseTracker.h"
-#import "ARToneMapper.h"
 #import "ARHDRBuilder.h"
-#import "UIImage+MTLTexture.h"
+#import "ARHDRImage.h"
+
+
+
+@interface ARToneMapper : NSObject
+
++ (UIImage*)map:(ARHDRImage*)hdr;
+
+@end

@@ -114,14 +114,14 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
   init(view: UIView, environment: AREnvironment) throws {
     try super.init(view: view, buffers: 3)
 
-    self.lights = environment.lights
+    self.lights = environment.lightsLDR
 
     try setupObject()
     try setupGeometryBuffer()
     try setupFXPrograms()
     try setupSSAOBuffers()
     try setupPedestal()
-    try setupEnvironmentMap(environment.map)
+    try setupEnvironmentMap(environment.ldr)
   }
 
   /**

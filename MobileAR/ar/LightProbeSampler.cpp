@@ -68,7 +68,7 @@ LightProbeSampler::~LightProbeSampler() {
 
 std::vector<LightSource> LightProbeSampler::operator() () {
   if (lights_.empty()) {
-    split({ 1, 0, illum_.rows - 1, illum_.cols - 1 }, 0);
+    split({ 0, 0, illum_.rows - 1, illum_.cols - 1 }, 0);
   }
   return lights_;
 }

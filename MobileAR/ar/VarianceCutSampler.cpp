@@ -34,7 +34,7 @@ void VarianceCutSampler::split(const Region &region, int depth) {
     auto bestY = region.y0;
     auto bestVarY = std::numeric_limits<double>::max();
     {
-      for (int y = region.y0; y < region.y1; ++y) {
+      for (int y = region.y0 + 1; y <= region.y1 - 2; ++y) {
         const Region r0(region.y0, region.x0, y + 0, region.x1);
         const Region r1(y + 1, region.x0, region.y1, region.x1);
         const auto var = std::max(variance(r0), variance(r1));
@@ -52,7 +52,7 @@ void VarianceCutSampler::split(const Region &region, int depth) {
     auto bestX = region.x0;
     auto bestVarX = std::numeric_limits<double>::max();
     {
-      for (int x = region.x0; x < region.x1; ++x) {
+      for (int x = region.x0 + 1; x <= region.x1 - 2; ++x) {
         const Region r0(region.y0, region.x0, region.y1, x + 0);
         const Region r1(region.y0, x + 1, region.y1, region.x1);
         const auto var = std::max(variance(r0), variance(r1));

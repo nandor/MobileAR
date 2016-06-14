@@ -209,8 +209,8 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
     // Initialize the rest of the stuff.
     try self.init(view: view)
     
-    envWidth = Int(environment.map.size.width)
-    envHeight = Int(environment.map.size.height)
+    envWidth = Int(environment.ldr.size.width)
+    envHeight = Int(environment.ldr.size.height)
 
     // Initialize the environment map texture.
     let texDesc = MTLTextureDescriptor.texture2DDescriptorWithPixelFormat(
@@ -221,10 +221,10 @@ class AREnvironmentViewRenderer: ARRenderer<AREnvironmentRenderBuffer> {
     )
     texture = device.newTextureWithDescriptor(texDesc)
     texture.label = "TEXEnvironment"
-    environment.map.toMTLTexture(texture)
+    environment.ldr.toMTLTexture(texture)
     
     // Fill in the lights.
-    lights = environment.lights
+    lights = environment.lightsLDR
   }
 
   /**

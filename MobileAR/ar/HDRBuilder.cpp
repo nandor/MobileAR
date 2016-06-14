@@ -27,11 +27,11 @@ float w(uint8_t z) {
 
 cv::Mat HDRBuilder::build(const std::vector<std::pair<cv::Mat, float>>& images) const {
   
-  // Retrieve resolution.
+  // Retrieve resolution. Drop alpha channels.
   assert(images.size() > 0);
   int rows = images[0].first.rows;
   int cols = images[0].first.cols;
-  int chan = images[0].first.channels();
+  int chan = std::min(3, images[0].first.channels());
   
   // Split the input images into their R, G and B channels.
   std::vector<std::vector<std::pair<cv::Mat, float>>> split(chan);
