@@ -21,11 +21,21 @@ void VarianceCutSampler::split(const Region &region, int depth) {
   
   // If max depth was reached, return light source.
   if (depth >= depth_) {
-    lights_.push_back(sample(
-        region,
-        static_cast<int>(m10_(region) / m00_(region)),
-        static_cast<int>(m01_(region) / m00_(region))
-    ));
+    const double area = m00_(region);
+    if (std::abs(area) < 1e-5) {
+      lights_.push_back(sample(
+          region,
+          (region.y0 + region.y1) / 2,
+          (region.x0 + region.x1) / 2
+      ));
+    } else {
+      std::cerr << m10_(region) << " " << m01_(region) << " " << m00_(region) << std::endl;
+      lights_.push_back(sample(
+          region,
+          static_cast<int>(m10_(region) / area),
+          static_cast<int>(m01_(region) / area)
+      ));
+    }
     return;
   }
 
@@ -45,6 +55,7 @@ void VarianceCutSampler::split(const Region &region, int depth) {
         }
       }
     }
+    
     split({ region.y0, region.x0, bestY + 0, region.x1 }, depth + 1);
     split({ bestY + 1, region.x0, region.y1, region.x1 }, depth + 1);
   } else {

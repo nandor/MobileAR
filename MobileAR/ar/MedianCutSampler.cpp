@@ -43,6 +43,7 @@ void MedianCutSampler::split(const Region &region, int depth) {
         }
       }
     }
+    
     split({ region.y0, region.x0, bestY + 0, region.x1 }, depth + 1);
     split({ bestY + 1, region.x0, region.y1, region.x1 }, depth + 1);
   } else {

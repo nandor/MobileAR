@@ -14,7 +14,7 @@ using namespace metal;
 /**
  Number of regions to split the sphere into.
  */
-constant int SPLIT = 9;
+constant int SPLIT = 5;
 
 
 /**

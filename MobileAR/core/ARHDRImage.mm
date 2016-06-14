@@ -5,6 +5,7 @@
 #import "ARHDRImage.h"
 
 #include <memory>
+#include <iostream>
 
 
 @implementation ARHDRImage

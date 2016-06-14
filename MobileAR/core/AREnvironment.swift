@@ -114,7 +114,9 @@ class AREnvironment {
     self.hdr = ARHDRImage(data: NSData(contentsOfFile: hdrPath)!)
 
     // Sample so we can adjust levels.
+    print("LDR")
     self.lightsLDR = ARLightProbeSampler.sampleVarianceCutLDR(ldr, levels: kSamplingLevels)
+    print("HDR")
     self.lightsHDR = ARLightProbeSampler.sampleVarianceCutHDR(hdr, levels: kSamplingLevels)
   }
 

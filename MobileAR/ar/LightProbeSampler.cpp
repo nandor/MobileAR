@@ -75,18 +75,24 @@ std::vector<LightSource> LightProbeSampler::operator() () {
 
 
 LightSource LightProbeSampler::sample(const Region &region, int y, int x) const {
+  std::cerr << region.x0 << " " << x << " " << region.x1 << std::endl;
+  std::cerr << region.y0 << " " << y << " " << region.y1 << std::endl;
+
+  // Ensure the centroid is in its proper place.
+  assert(region.x0 <= x && x <= region.x1);
+  assert(region.y0 <= y && y <= region.y1);
 
   // Sum up light intensities. The value of each pixel is weighted inversely
   // to its distance from the cenroid.
-  float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f, sumW = 0.0f;
+  double sumB = 0.0f, sumG = 0.0f, sumR = 0.0f, sumW = 0.0f;
   for (int r = region.y0; r <= region.y1; ++r) {
     const auto &row = image_.ptr<cv::Vec4f>(r);
     for (int c = region.x0; c <= region.x1; ++c) {
       // Compute distance from centroid.
-      const float d = std::sqrt((x - c) * (x - c) + (y - r) * (y - r));
+      const double d = std::sqrt((x - c) * (x - c) + (y - r) * (y - r));
 
       // Weight inversely proportional to distance.
-      const float w = 1.0f / (d * d + 1.0f);
+      const double w = 1.0f / (d * d + 1.0f);
 
       // Sum up the weighted pixel.
       const auto &pix = row[c];
@@ -98,7 +104,7 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
   }
 
   // Compute the area occupied by the light.
-  const float area = (region.y1 - region.y0) * (region.x1 - region.x0) * (
+  const double area = (region.y1 - region.y0 + 1) * (region.x1 - region.x0 + 1) * (
       std::cos(M_PI / 2.0f - region.y0 / height_ * M_PI) +
       std::cos(M_PI / 2.0f - region.y1 / height_ * M_PI)
   ) / 2.0f;
@@ -143,12 +149,12 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
     region,
     y,
     x,
-    area
+    static_cast<float>(area)
   };
 }
 
 float LightProbeSampler::width(const Region &region) const {
-  const float width = region.x1 - region.x0;
+  const float width = region.x1 - region.x0 + 1;
   return std::max(
       std::cos(region.y0 / height_ * M_PI - M_PI / 2.0f) * width,
       std::cos(region.y1 / height_ * M_PI - M_PI / 2.0f) * width

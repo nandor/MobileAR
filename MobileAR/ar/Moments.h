@@ -62,7 +62,6 @@ template<> inline double power<2>(int x) { return x * x; }
 template<size_t I, size_t J>
 class Moments {
  public:
-  
   /**
    Creates a new table from an 8 bit luminance image.
    */
@@ -78,7 +77,7 @@ class Moments {
     {
       const auto pow = power<I>(0);
       const auto row = image.ptr<float>(0);
-      auto sum = 0ll;
+      double sum = 0.0;
       for (int x = 0; x < image.cols; ++x, ++id1) {
         sum += pow * power<J>(x) * static_cast<double>(row[x]);
         s_[id1] = sum;
@@ -91,7 +90,7 @@ class Moments {
       
       // Keep a running sum of current row.
       const auto pow = power<I>(y);
-      auto sum = 0ll;
+      double sum = 0.0;
       
       // Increment running sum and sum with previous row.
       for (int x = 0; x < image.cols; ++x, ++id0, ++id1) {
