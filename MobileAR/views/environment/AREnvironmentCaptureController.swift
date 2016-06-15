@@ -291,8 +291,6 @@ class AREnvironmentCaptureController
     
     // Queue the image for compositing.
     renderer.update(frames.last!.frame, pose: frames.last!.pose)
-
-    //saveFrame(frame)
   }
 
   /**

@@ -11,7 +11,7 @@
 
 @class ARParameters;
 @class ARPose;
-
+@class ARMarker;
 
 /**
  Class responsible for tracking using a patterna and sensors.
@@ -37,5 +37,10 @@
  Returns the tracked pose.
  */
 - (ARPose *)getPose;
+
+/**
+ Returns the markers tracked.
+ */
+- (NSArray<ARMarker*>*)getMarkers;
 
 @end

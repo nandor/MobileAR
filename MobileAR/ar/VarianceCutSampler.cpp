@@ -29,7 +29,6 @@ void VarianceCutSampler::split(const Region &region, int depth) {
           (region.x0 + region.x1) / 2
       ));
     } else {
-      std::cerr << m10_(region) << " " << m01_(region) << " " << m00_(region) << std::endl;
       lights_.push_back(sample(
           region,
           static_cast<int>(m10_(region) / area),

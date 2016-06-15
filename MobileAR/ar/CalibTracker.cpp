@@ -65,4 +65,8 @@ Tracker::TrackingResult CalibTracker::TrackFrameImpl(const cv::Mat &frame, float
   };
 }
 
+std::vector<std::vector<cv::Point2f>> CalibTracker::GetMarkers() const {
+  return {};
+}
+
 }

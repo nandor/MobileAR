@@ -272,8 +272,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
 {
   // Detect the markers & find their corners.
   std::vector<int> ids;
-  std::vector<std::vector<cv::Point2f>> corners;
-  cv::aruco::detectMarkers(frame, dict_, corners, ids, params_);
+  cv::aruco::detectMarkers(frame, dict_, markersCorners_, ids, params_);
   if (ids.empty()) {
     return { false, {}, {} };
   }
@@ -311,7 +310,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
 
     for (size_t i = 0; i < ids.size(); ++i) {
       // OpenCV never disappoints.
-      assert(corners[i].size() == 4);
+      assert(markersCorners_[i].size() == 4);
 
       // Fetch the marker from the database.
       if (!markers_[ids[i]].found) {
@@ -325,10 +324,10 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
       markerID.push_back(ids[i]);
 
       // Fetch the world-image correspondences.
-      assert(object.size() == corners[i].size());
-      for (size_t j = 0; j < corners[i].size(); ++j) {
+      assert(object.size() == markersCorners_[i].size());
+      for (size_t j = 0; j < markersCorners_[i].size(); ++j) {
         world.emplace_back(object[j].x(), object[j].y(), object[j].z());
-        image.push_back(corners[i][j]);
+        image.push_back(markersCorners_[i][j]);
       }
     }
 
@@ -386,7 +385,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
     }
 
     // Locate the camera relative to the marker.
-    auto r = solvePnP(kGrid, corners[i]);
+    auto r = solvePnP(kGrid, markersCorners_[i]);
     if (!std::get<2>(r)) {
       continue;
     }
@@ -431,7 +430,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
               K,
               t,
               q,
-              corners[i]
+              markersCorners_[i]
           )),
           nullptr,
           markers_[ids[i]].t.data(),
@@ -499,7 +498,7 @@ Tracker::TrackingResult ArUcoTracker::TrackFrameImpl(
     }
 
     if (addPose) {
-      poses_.emplace_back(t, q, ids, corners);
+      poses_.emplace_back(t, q, ids, markersCorners_);
       lock.unlock();
       cond_.notify_all();
     }
@@ -664,6 +663,10 @@ void ArUcoTracker::RunBundleAdjustment() {
     std::cout << processed << "/" << poses_.size() << std::endl;
     processed = BundleAdjust();
   }
+}
+
+std::vector<std::vector<cv::Point2f>> ArUcoTracker::GetMarkers() const {
+  return markersCorners_;
 }
 
 }

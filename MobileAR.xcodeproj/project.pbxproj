@@ -36,6 +36,8 @@
 		7A7204AA1CE49DA400BED4F5 /* ArUcoTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A7204A91CE49DA400BED4F5 /* ArUcoTracker.cpp */; };
 		7A78BE481CA1C5BD000EBBAE /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A78BE471CA1C5BD000EBBAE /* opencv2.framework */; };
 		7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */; };
+		7AB58A031D10ABB000FEAD2F /* ARMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB58A021D10ABB000FEAD2F /* ARMarker.swift */; };
+		7AB58A051D10B0FD00FEAD2F /* ARMarker.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7AB58A041D10B0FD00FEAD2F /* ARMarker.metal */; };
 		7AC9F6121C5E7BF100AF86BC /* cup.obj in Resources */ = {isa = PBXBuildFile; fileRef = 7AC9F6111C5E7BF100AF86BC /* cup.obj */; };
 		7AEBBCF91C5E8F0C00DD4FAD /* ARLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */; };
 		7AFBC3B11CD274CB007D3127 /* EnvironmentBuilder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBC3AF1CD274CB007D3127 /* EnvironmentBuilder.cpp */; };
@@ -117,6 +119,8 @@
 		7A78BE471CA1C5BD000EBBAE /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ../../../../../usr/local/Frameworks/opencv2.framework; sourceTree = "<group>"; };
 		7A7B3C871C62D5E200D843B7 /* ARHDRCamera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARHDRCamera.swift; sourceTree = "<group>"; };
 		7A9E91881C6A091100C52C68 /* ARPoseTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARPoseTracker.h; sourceTree = "<group>"; };
+		7AB58A021D10ABB000FEAD2F /* ARMarker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARMarker.swift; sourceTree = "<group>"; };
+		7AB58A041D10B0FD00FEAD2F /* ARMarker.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = ARMarker.metal; sourceTree = "<group>"; };
 		7AC9F6111C5E7BF100AF86BC /* cup.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cup.obj; path = MobileAR/models/cup.obj; sourceTree = "<group>"; };
 		7AEBBCF81C5E8F0C00DD4FAD /* ARLight.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ARLight.swift; sourceTree = "<group>"; };
 		7AFBC3AF1CD274CB007D3127 /* EnvironmentBuilder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnvironmentBuilder.cpp; path = ar/EnvironmentBuilder.cpp; sourceTree = "<group>"; };
@@ -261,6 +265,7 @@
 				7A6738DD1D0DB9830031489B /* ARHDRBuilder.mm */,
 				7A6738DF1D0DC3BF0031489B /* ARHDRImage.h */,
 				7A6738E01D0DC3BF0031489B /* ARHDRImage.mm */,
+				7AB58A021D10ABB000FEAD2F /* ARMarker.swift */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -347,6 +352,7 @@
 				7A62D67A1C9B881900BE42C8 /* ARFXAA.metal */,
 				7A62D67C1C9B887C00BE42C8 /* ARLighting.metal */,
 				7A62D67E1C9B889300BE42C8 /* ARSSAO.metal */,
+				7AB58A041D10B0FD00FEAD2F /* ARMarker.metal */,
 			);
 			path = scene;
 			sourceTree = "<group>";
@@ -443,6 +449,7 @@
 				7A7B3C881C62D5E200D843B7 /* ARHDRCamera.swift in Sources */,
 				7A7204A21CE4892A00BED4F5 /* CalibTracker.cpp in Sources */,
 				C13F88BCD2DB5F614F066137 /* ARAppDelegate.swift in Sources */,
+				7AB58A031D10ABB000FEAD2F /* ARMarker.swift in Sources */,
 				C13F80202E2E4BB0701AA1BB /* ARParameters.swift in Sources */,
 				C13F85B0A2D9C29A9765B5E9 /* AREnvironment.swift in Sources */,
 				C13F875D61FE475D5A12851E /* ARCamera.swift in Sources */,
@@ -470,6 +477,7 @@
 				C13F8B380DB34555FEECAABB /* UIImage+MTLTexture.mm in Sources */,
 				7A48122F1C8DB0AC00521E35 /* HDRBuilder.cpp in Sources */,
 				7A37CDE91CCA8A25007FA3CF /* BlurDetector.cpp in Sources */,
+				7AB58A051D10B0FD00FEAD2F /* ARMarker.metal in Sources */,
 				C13F89111BD3F1F1FC03D84D /* ARPostFX.metal in Sources */,
 				C13F8C886918E43EBB1E4A6F /* ARObject.swift in Sources */,
 				7AFBC3B11CD274CB007D3127 /* EnvironmentBuilder.cpp in Sources */,

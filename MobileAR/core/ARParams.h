@@ -80,3 +80,8 @@ constant float PI = 3.1415926535897932384626433833795;
  Size of the screen for the iPhone 6S.
  */
 constant float2 SCREEN_SIZE = float2(667, 375);
+
+/**
+ Size of the camera feed.
+ */
+constant float2 CAMERA_SIZE = float2(640, 360);

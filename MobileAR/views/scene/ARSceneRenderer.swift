@@ -21,9 +21,10 @@ private let kInstanceBatch = 32
  index to a buffer holding enough elements to render a batch.
  */
 class ARSceneRenderBuffer: ARRenderBuffer {
-  internal var models = ARBatchBuffer()
-  internal var lights = ARBatchBuffer()
+  internal var models    = ARBatchBuffer()
+  internal var lights    = ARBatchBuffer()
   internal var pedestals = ARBatchBuffer()
+  internal var markers   = ARBatchBuffer()
 }
 
 
@@ -82,6 +83,9 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
   private var pedestalRenderState: MTLRenderPipelineState!
   private var pedestalBuffer: MTLBuffer!
 
+  // Shader overlaying markers on top of the background.
+  private var markerRenderState: MTLRenderPipelineState!
+
   // Background queue for loading data.
   private let backgroundQueue = dispatch_queue_create(
       "uk.ac.ic.MobileAR.ARSceneRenderer",
@@ -106,6 +110,8 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
   internal var objects: [ARObject] = []
   // Light sources to be used.
   internal var lights: [ARLight] = []
+  // Markers to be hidden.
+  internal var markers: [ARMarker] = []
 
 
   /**
@@ -114,13 +120,14 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
   init(view: UIView, environment: AREnvironment) throws {
     try super.init(view: view, buffers: 3)
 
-    self.lights = environment.lightsLDR
+    self.lights = environment.lightsHDR
 
     try setupObject()
     try setupGeometryBuffer()
     try setupFXPrograms()
     try setupSSAOBuffers()
     try setupPedestal()
+    try setupMarkers()
     try setupEnvironmentMap(environment.ldr)
   }
 
@@ -143,6 +150,7 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
     renderSSAO(buffer, params: params)
     renderSSAOBlur(buffer, params: params)
     renderBackground(buffer, params: params)
+    renderMarkers(buffer, params: params)
     renderLights(buffer, params: params)
     renderFXAA(buffer, params: params)
   }
@@ -425,6 +433,61 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
     backgroundEncoder.setFragmentTexture(fboSSAOBlurEnv, atIndex: 1)
     backgroundEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
     backgroundEncoder.endEncoding()
+  }
+
+  /**
+   Draw markers on top of the video feed.
+   */
+  private func renderMarkers(
+    buffer: MTLCommandBuffer,
+    params: ARSceneRenderBuffer)
+  {
+    let markerPass = MTLRenderPassDescriptor()
+    markerPass.colorAttachments[0].texture = fboFXAA
+    markerPass.colorAttachments[0].loadAction = .Load
+    markerPass.colorAttachments[0].storeAction = .Store
+    markerPass.depthAttachment.loadAction = .Load
+    markerPass.depthAttachment.storeAction = .DontCare
+    markerPass.depthAttachment.texture = fboDepthStencil
+    markerPass.stencilAttachment.loadAction = .Load
+    markerPass.stencilAttachment.storeAction = .DontCare
+    markerPass.stencilAttachment.texture = fboDepthStencil
+
+    let markerEncoder = buffer.renderCommandEncoderWithDescriptor(markerPass)
+    markerEncoder.label = "Markers"
+    markerEncoder.setStencilReferenceValue(0xF0)
+    markerEncoder.setDepthStencilState(quadGE)
+    markerEncoder.setRenderPipelineState(markerRenderState)
+
+    for i in 0..<markers.count {
+      // Create or fetch a buffer to hold light parameters.
+      let markerBuffer = params.markers.get(i, create: {
+        return self.device.newBufferWithLength(
+          sizeof(float4) * 6,
+          options: MTLResourceOptions()
+        )
+      })
+
+      // Fetch the marker.
+      let marker = markers[i]
+
+      // Fill in the buffer with light parameters.
+      var d = UnsafeMutablePointer<float4>(markerBuffer.contents())
+      d.memory.x = marker.p0.x; d.memory.y = marker.p0.y; d.memory.z = 0; d.memory.w = 0; d = d.successor()
+      d.memory.x = marker.p2.x; d.memory.y = marker.p2.y; d.memory.z = 1; d.memory.w = 1; d = d.successor()
+      d.memory.x = marker.p1.x; d.memory.y = marker.p1.y; d.memory.z = 1; d.memory.w = 0; d = d.successor()
+      d.memory.x = marker.p3.x; d.memory.y = marker.p3.y; d.memory.z = 0; d.memory.w = 1; d = d.successor()
+      d.memory.x = marker.p2.x; d.memory.y = marker.p2.y; d.memory.z = 1; d.memory.w = 1; d = d.successor()
+      d.memory.x = marker.p0.x; d.memory.y = marker.p0.y; d.memory.z = 0; d.memory.w = 0; d = d.successor()
+
+      // Issue the command.
+      markerEncoder.setFragmentTexture(backgroundTexture, atIndex: 0)
+      markerEncoder.setFragmentBuffer(markerBuffer, offset: 0, atIndex: 0)
+      markerEncoder.setVertexBuffer(markerBuffer, offset: 0, atIndex: 0)
+      markerEncoder.drawPrimitives(.Triangle, vertexStart: 0, vertexCount: 6)
+    }
+
+    markerEncoder.endEncoding()
   }
 
   /**
@@ -865,6 +928,30 @@ class ARSceneRenderer: ARRenderer<ARSceneRenderBuffer> {
     objectRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
     objectRenderState = try device.newRenderPipelineStateWithDescriptor(objectRenderDesc)
+  }
+
+  /**
+   Sets up the marker renderer.
+   */
+  private func setupMarkers() throws {
+
+    // Set up the shaders.
+    guard let markerVert = library.newFunctionWithName("markerVert") else {
+      throw ARRendererError.MissingFunction
+    }
+    guard let markerFrag = library.newFunctionWithName("markerFrag") else {
+      throw ARRendererError.MissingFunction
+    }
+
+    // Create the pipeline descriptor.
+    let markerRenderDesc = MTLRenderPipelineDescriptor()
+    markerRenderDesc.sampleCount = 1
+    markerRenderDesc.vertexFunction = markerVert
+    markerRenderDesc.fragmentFunction = markerFrag
+    markerRenderDesc.colorAttachments[0].pixelFormat = .BGRA8Unorm
+    markerRenderDesc.stencilAttachmentPixelFormat = .Depth32Float_Stencil8
+    markerRenderDesc.depthAttachmentPixelFormat = .Depth32Float_Stencil8
+    markerRenderState = try device.newRenderPipelineStateWithDescriptor(markerRenderDesc)
   }
 
   /**

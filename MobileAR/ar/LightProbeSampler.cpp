@@ -26,11 +26,13 @@ LightProbeSampler::LightProbeSampler(size_t depth, const cv::Mat &image)
     }
     case CV_8UC3: {
       image.convertTo(floatImage, CV_32FC3);
+      floatImage /= 255.0f;
       cv::cvtColor(floatImage, floatImage, CV_BGR2BGRA);
       break;
     }
     case CV_8UC4: {
       image.convertTo(floatImage, CV_32FC4);
+      floatImage /= 255.0f;
       break;
     }
   }
@@ -75,8 +77,6 @@ std::vector<LightSource> LightProbeSampler::operator() () {
 
 
 LightSource LightProbeSampler::sample(const Region &region, int y, int x) const {
-  std::cerr << region.x0 << " " << x << " " << region.x1 << std::endl;
-  std::cerr << region.y0 << " " << y << " " << region.y1 << std::endl;
 
   // Ensure the centroid is in its proper place.
   assert(region.x0 <= x && x <= region.x1);
@@ -88,6 +88,7 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
   for (int r = region.y0; r <= region.y1; ++r) {
     const auto &row = image_.ptr<cv::Vec4f>(r);
     for (int c = region.x0; c <= region.x1; ++c) {
+
       // Compute distance from centroid.
       const double d = std::sqrt((x - c) * (x - c) + (y - r) * (y - r));
 
@@ -103,18 +104,19 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
     }
   }
 
+
   // Compute the area occupied by the light.
   const double area = (region.y1 - region.y0 + 1) * (region.x1 - region.x0 + 1) * (
       std::cos(M_PI / 2.0f - region.y0 / height_ * M_PI) +
       std::cos(M_PI / 2.0f - region.y1 / height_ * M_PI)
-  ) / 2.0f;
+  ) / 4.0f;
 
   sumW *= (image_.cols * image_.cols / M_PI) / (area * 4);
 
   // Compute average intensity.
-  const float b = sumB / (sumW * 255.0f);
-  const float g = sumG / (sumW * 255.0f);
-  const float r = sumR / (sumW * 255.0f);
+  const float b = sumB / sumW;
+  const float g = sumG / sumW;
+  const float r = sumR / sumW;
 
   // Find the direction of the light source.
   const auto phi = static_cast<float>(M_PI / 2.0 - M_PI * y / image_.rows);
@@ -132,9 +134,9 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
       -vz
     },
     simd::float3{
-      r / 5.0f,
-      g / 5.0f,
-      b / 5.0f
+      0.0f, // r / 5.0f,
+      0.0f, // g / 5.0f,
+      0.0f, // b / 5.0f
     },
     simd::float3{
       r,
@@ -142,9 +144,9 @@ LightSource LightProbeSampler::sample(const Region &region, int y, int x) const 
       b
     },
     simd::float3{
-      r * 1.5f,
-      g * 1.5f,
-      b * 1.5f
+      r,
+      g,
+      b,
     },
     region,
     y,

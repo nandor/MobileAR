@@ -24,6 +24,11 @@ class CalibTracker : public Tracker {
    */
   virtual ~CalibTracker();
 
+  /**
+   Returns the tracked markers.
+   */
+  std::vector<std::vector<cv::Point2f>> GetMarkers() const;
+
  protected:
   /**
    Tracker-specific implementation of frame processing.

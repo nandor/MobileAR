@@ -225,7 +225,7 @@ cv::Mat HDRBuilder::map(
     const auto sptr = hdrS.ptr<float>(r);
     auto hptr = hdr.ptr<float>(r);
     for (int c = 0 ; c < cols; ++c) {
-      if (wptr[c] > 1e-3) {
+      if (wptr[c] > 1e-5) {
         hptr[c] = std::exp(sptr[c] / wptr[c]);
       } else {
         hptr[c] = 1.0f;

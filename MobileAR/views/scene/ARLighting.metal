@@ -50,7 +50,7 @@ fragment float4 lighting(
   const float ao = aoEnv.x;
   const float env = aoEnv.y;
   const float3 n = float3(normal.xy, sqrt(1 - dot(normal.xy, normal.xy)));
-  const float3 objAlbedo = float3(material.xyz);
+  const float3 objAlbedo = pow(float3(material.xyz), 2.2);
   const float  spec = float(material.w + 0.01) * 100.0 * MU;
   const float4 vproj = params.invProj * float4(
       in.uv.x * 2 - 1.0,
@@ -90,5 +90,6 @@ fragment float4 lighting(
   }
   
   // Sample the environment map.
-  return float4(albedo * (ao * ambient + diffuse + specular), 1);
+  const float3 colour = albedo * (ao * ambient + diffuse + specular);
+  return float4(colour / (colour + 1), 1);
 }

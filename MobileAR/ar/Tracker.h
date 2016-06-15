@@ -56,6 +56,11 @@ class Tracker {
     return kfr.GetOrientation();
   }
 
+  /**
+   Returns the tracked markers.
+   */
+  virtual std::vector<std::vector<cv::Point2f>> GetMarkers() const = 0;
+
  protected:
   /**
    Data returned from the tracker.

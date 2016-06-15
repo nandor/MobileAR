@@ -69,6 +69,11 @@ class ArUcoTracker : public Tracker {
    */
   size_t BundleAdjust();
 
+  /**
+   Returns the tracked markers.
+   */
+  std::vector<std::vector<cv::Point2f>> GetMarkers() const;
+
  private:
   /// Type for marker identifiers.
   typedef int MarkerID;
@@ -150,6 +155,9 @@ class ArUcoTracker : public Tracker {
   std::atomic<bool> running_;
   /// Condition variable to wake the thread up.
   std::condition_variable cond_;
+
+  /// Currently tracked markers.
+  std::vector<std::vector<cv::Point2f>> markersCorners_;
 };
 
 }

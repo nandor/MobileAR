@@ -154,4 +154,27 @@
   return dt;
 }
 
+/**
+ Returns the markers tracked.
+ */
+- (NSArray<ARMarker*>*)getMarkers
+{
+  if (!tracker) {
+    return [[NSArray alloc] init];
+  }
+
+  std::vector<ARMarker*> markers;
+  for (const auto &marker : tracker->GetMarkers()) {
+    assert(marker.size() == 4);
+    markers.emplace_back([[ARMarker alloc]
+        initWithP0:CGPointMake(marker[0].x, marker[0].y)
+        p1:CGPointMake(marker[1].x, marker[1].y)
+        p2:CGPointMake(marker[2].x, marker[2].y)
+        p3:CGPointMake(marker[3].x, marker[3].y)
+    ]);
+  }
+
+  return [[NSArray alloc] initWithObjects:&markers[0] count:markers.size()];
+}
+
 @end

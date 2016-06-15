@@ -4,6 +4,7 @@
 
 #include "MedianCutSampler.h"
 
+
 namespace ar {
 
 MedianCutSampler::MedianCutSampler(size_t depth, const cv::Mat &image)
@@ -18,11 +19,20 @@ void MedianCutSampler::split(const Region &region, int depth) {
 
   // If max depth was reached, return light source.
   if (depth >= depth_) {
-    lights_.push_back(sample(
-        region,
-        static_cast<int>(m10_(region) / m00_(region)),
-        static_cast<int>(m01_(region) / m00_(region))
-    ));
+    const double area = m00_(region);
+    if (std::abs(area) < 1e-5) {
+      lights_.push_back(sample(
+          region,
+          (region.y0 + region.y1) / 2,
+          (region.x0 + region.x1) / 2
+      ));
+    } else {
+      lights_.push_back(sample(
+          region,
+          static_cast<int>(m10_(region) / area),
+          static_cast<int>(m01_(region) / area)
+      ));
+    }
     return;
   }
 

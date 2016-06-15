@@ -127,6 +127,7 @@ extension CMDeviceMotion {
     renderer = try! ARSceneRenderer(view: view, environment: environment!)
 
     // Add a single test cube.
+    /*
     let n = 1
     for i in 0...n-1 {
       for j in 0...n-1 {
@@ -136,7 +137,7 @@ extension CMDeviceMotion {
         ))
       }
     }
-
+    */
 
     // Timer to run the rendering/update loop.
     timer = QuartzCore.CADisplayLink(target: self, selector: #selector(onFrame))
@@ -262,8 +263,11 @@ extension CMDeviceMotion {
    Processes a frame from the device's camera.
    */
   func onCameraFrame(frame: UIImage) {
-    renderer.updateFrame(frame)
     tracker.trackFrame(frame)
+    if let tracker = tracker as? ARMarkerPoseTracker {
+      renderer.markers = tracker.getMarkers()
+    }
+    renderer.updateFrame(frame)
   }
 
   /**
@@ -283,7 +287,7 @@ extension CMDeviceMotion {
     if let pose = tracker.getPose() {
       renderer.updatePose(pose)
     }
-    self.renderer.renderFrame()
+    renderer.renderFrame()
   }
 
   /**
